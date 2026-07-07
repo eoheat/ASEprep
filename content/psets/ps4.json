@@ -1,0 +1,403 @@
+{
+  "id": "ps4",
+  "number": 4,
+  "title": "Recursion + Caesar Cipher (OOP)",
+  "ocwUrl": "https://ocw.mit.edu/courses/6-100l-introduction-to-cs-and-programming-using-python-fall-2022/pages/problem-sets/",
+  "overview": "**Problem Set 4 — Recursion + a one-time-pad cipher.** Part A is pure recursion over a binary tree (a `Node` class is provided). Parts B and C are object-oriented: a `Message` base class, a `PlaintextMessage` subclass that encrypts with a randomly generated pad, and an `EncryptedMessage` subclass that decrypts. Part C then brute-forces a message against a list of candidate pads and (checkoff-only) decodes a hidden story.\n\nRandomness note: `generate_pad` uses `random.randint`. The test harness seeds `random.seed(0)` before every test, so the pad values are deterministic — every expected value below was computed under seed 0. Source: MIT OCW 6.100L Fall 2022, Problem Set 4 (statements and provided/starter code from OCW; reference solutions and tests written and validated for this study tool).",
+  "reconstructed": false,
+  "problems": [
+    {
+      "id": "ps4-a-height",
+      "kind": "coding",
+      "source": "pset",
+      "reconstructed": false,
+      "topicSlug": "15-recursion",
+      "unit": 3,
+      "difficulty": "exam-level",
+      "title": "Part A — find_tree_height",
+      "statement": "Implement `find_tree_height(tree)` recursively. The height of a tree is the number of edges on the longest path from the root down to a leaf.\n\n- A single node (a leaf) has height **0**.\n- A tree whose root has children has height `1 + max(height of its subtrees)`.\n\nThe provided `Node` class (top of the editor, do not modify) gives you `get_left_child()`, `get_right_child()` — each returns a child `Node` or `None` — and `get_value()`.\n\nThe clean base case is the *empty* subtree: define the height of `None` as `-1`, so a single leaf works out to `1 + max(-1, -1) = 0` with no special-casing.",
+      "functionSignature": "def find_tree_height(tree):",
+      "starterCode": "# tree.py is provided as a data file; the Node class is imported from it.\n# DO NOT MODIFY the Node class.\nfrom tree import Node\n\ndef find_tree_height(tree):\n    '''\n    Find the height of the given tree (number of edges on the longest\n    root-to-leaf path). A single node has height 0.\n    Input:\n        tree: a Node object\n    Output:\n        the integer height of the tree\n    '''\n    # TODO: write your recursive solution here\n    pass",
+      "solution": "from tree import Node\n\ndef find_tree_height(tree):\n    # Base case: the empty subtree has height -1, so a lone leaf is 1 + max(-1, -1) = 0.\n    if tree is None:\n        return -1\n    return 1 + max(find_tree_height(tree.get_left_child()),\n                   find_tree_height(tree.get_right_child()))",
+      "pyPackages": [],
+      "dataFiles": [
+        {
+          "name": "tree.py",
+          "text": "'''\n    Provided implementation. Do not modify any of the functions below.\n'''\n\nclass Node:\n    def __init__(self, value, left_child=None, right_child=None):\n        if isinstance(left_child, Node):\n            self.left = left_child\n        elif left_child == None:\n            self.left = None\n        else:\n            raise TypeError(\"Left child not an instance of Node\")\n\n        if isinstance(right_child, Node):\n            self.right = right_child\n        elif right_child == None:\n            self.right = None\n        else:\n            raise TypeError(\"Right child not an instance of Node\")\n\n        self.value = value\n\n    def get_left_child(self):\n        return self.left\n\n    def get_right_child(self):\n        return self.right\n\n    def get_value(self):\n        return self.value\n\n    def __eq__(self, tree):\n        if not isinstance(tree, Node):\n            return False\n        return (self.value == tree.value and\n                self.left == tree.left and\n                self.right == tree.right)\n"
+        }
+      ],
+      "tests": [
+        {
+          "name": "single node -> height 0",
+          "expression": "find_tree_height(Node(5))",
+          "expected": "0"
+        },
+        {
+          "name": "pset tree tr1 -> 5",
+          "expression": "find_tree_height(Node(13, Node(10, Node(5, Node(4), Node(6)), Node(11)), Node(15, right_child=Node(16, Node(3, Node(20, Node(17)))))))",
+          "expected": "5"
+        },
+        {
+          "name": "pset tree tr2 -> 6",
+          "expression": "find_tree_height(Node(37, Node(24, Node(7, Node(2, right_child=Node(5))), Node(32)), Node(42, Node(40), Node(42, right_child=Node(43, Node(2, Node(14, Node(30))))))))",
+          "expected": "6"
+        },
+        {
+          "name": "small tree -> 2",
+          "expression": "find_tree_height(Node(5, Node(1), Node(5, Node(5))))",
+          "expected": "2"
+        },
+        {
+          "name": "left-only chain -> 4",
+          "expression": "find_tree_height(Node(5, Node(7, Node(9, Node(10, Node(11))))))",
+          "expected": "4",
+          "hidden": true
+        },
+        {
+          "name": "right-only deep chain -> 6",
+          "expression": "find_tree_height(Node(5, right_child=Node(7, right_child=Node(9, right_child=Node(10, right_child=Node(11, right_child=Node(90, Node(2))))))))",
+          "expected": "6",
+          "hidden": true
+        }
+      ]
+    },
+    {
+      "id": "ps4-a-heap",
+      "kind": "coding",
+      "source": "pset",
+      "reconstructed": false,
+      "topicSlug": "15-recursion",
+      "unit": 3,
+      "difficulty": "exam-level",
+      "title": "Part A — is_heap",
+      "statement": "Implement `is_heap(tree, compare_func)` recursively. `compare_func(child_value, parent_value)` returns `True` when the child correctly relates to its parent for the kind of heap being checked:\n\n- **Max heap:** `compare_func = lambda child, parent: child < parent` (every child less than its parent).\n- **Min heap:** `compare_func = lambda child, parent: child > parent` (every child greater than its parent).\n\nReturn `True` only if **every** parent/child pair in the whole tree satisfies `compare_func`. A single node with no children is trivially a heap.\n\nFor each existing child: check `compare_func(child.get_value(), tree.get_value())`, then recurse into that child. The first violation makes the whole tree `False`.",
+      "functionSignature": "def is_heap(tree, compare_func):",
+      "starterCode": "from tree import Node\n\ndef is_heap(tree, compare_func):\n    '''\n    Determine whether every parent/child pair in tree satisfies compare_func.\n    Inputs:\n        tree: a Node object\n        compare_func: op(child_value, parent_value) -> bool\n    Output:\n        True if the whole tree satisfies compare_func, else False\n    '''\n    # TODO: write your recursive solution here\n    pass",
+      "solution": "from tree import Node\n\ndef is_heap(tree, compare_func):\n    for child in (tree.get_left_child(), tree.get_right_child()):\n        if child is not None:\n            # This child must relate correctly to its parent...\n            if not compare_func(child.get_value(), tree.get_value()):\n                return False\n            # ...and the whole subtree rooted at the child must also be a heap.\n            if not is_heap(child, compare_func):\n                return False\n    return True",
+      "pyPackages": [],
+      "dataFiles": [
+        {
+          "name": "tree.py",
+          "text": "'''\n    Provided implementation. Do not modify any of the functions below.\n'''\n\nclass Node:\n    def __init__(self, value, left_child=None, right_child=None):\n        if isinstance(left_child, Node):\n            self.left = left_child\n        elif left_child == None:\n            self.left = None\n        else:\n            raise TypeError(\"Left child not an instance of Node\")\n\n        if isinstance(right_child, Node):\n            self.right = right_child\n        elif right_child == None:\n            self.right = None\n        else:\n            raise TypeError(\"Right child not an instance of Node\")\n\n        self.value = value\n\n    def get_left_child(self):\n        return self.left\n\n    def get_right_child(self):\n        return self.right\n\n    def get_value(self):\n        return self.value\n\n    def __eq__(self, tree):\n        if not isinstance(tree, Node):\n            return False\n        return (self.value == tree.value and\n                self.left == tree.left and\n                self.right == tree.right)\n"
+        }
+      ],
+      "tests": [
+        {
+          "name": "min heap: valid",
+          "expression": "is_heap(Node(5, Node(15, None, Node(16, Node(30), Node(17))), Node(6, Node(20, None, Node(45)), Node(11))), lambda x, y: x > y)",
+          "expected": "True"
+        },
+        {
+          "name": "min heap: invalid (1 under 8)",
+          "expression": "is_heap(Node(2, Node(3, Node(4), Node(5, Node(6))), Node(7, None, Node(8, Node(9), Node(1)))), lambda x, y: x > y)",
+          "expected": "False"
+        },
+        {
+          "name": "max heap: valid",
+          "expression": "is_heap(Node(15, Node(4, Node(3, None, Node(2)), Node(1)), Node(11, Node(10), Node(7, Node(5)))), lambda x, y: x < y)",
+          "expected": "True"
+        },
+        {
+          "name": "max heap: invalid (5 under 3)",
+          "expression": "is_heap(Node(10, Node(7, None, Node(4, Node(3, None, Node(5))))), lambda x, y: x < y)",
+          "expected": "False"
+        },
+        {
+          "name": "single node is trivially a heap",
+          "expression": "is_heap(Node(42), lambda x, y: x < y)",
+          "expected": "True",
+          "hidden": true
+        },
+        {
+          "name": "equal child breaks strict max heap",
+          "expression": "is_heap(Node(5, Node(5)), lambda x, y: x < y)",
+          "expected": "False",
+          "hidden": true
+        }
+      ]
+    },
+    {
+      "id": "ps4-b-shift-char",
+      "kind": "coding",
+      "source": "pset",
+      "reconstructed": false,
+      "topicSlug": "17-python-classes",
+      "unit": 3,
+      "difficulty": "exam-level",
+      "title": "Part B — Message.shift_char",
+      "statement": "Start the cipher. A `Message` holds text and can shift a single character. Implement the `Message` class so that:\n\n- `Message(text)` stores the text; `get_text()` returns it.\n- `shift_char(char, shift)` returns `char` shifted by `shift` positions, **wrapping around within the printable ASCII range 32–126** (95 characters total). Shifting `'~'` (126) forward by 1 wraps to `' '` (32); shifting `' '` back by 1 wraps to `'~'`.\n\nThe wrap formula: map the character into `0..94` by subtracting 32, add the shift, take `% 95`, then add 32 back and `chr(...)`. `% 95` handles both positive and negative shifts correctly in Python.\n\n- `shift_char('A', 5)` → `'F'`\n- `shift_char(' ', -1)` → `'~'`\n- `shift_char('}', 99)` → `'\"'`",
+      "functionSignature": "def shift_char(self, char, shift):",
+      "starterCode": "class Message(object):\n    def __init__(self, input_text):\n        # TODO: store the message text\n        pass\n\n    def get_text(self):\n        # TODO: return the message text\n        pass\n\n    def shift_char(self, char, shift):\n        '''\n        Shift char by `shift`, wrapping within ASCII 32..126 (95 chars).\n        Returns the shifted single-character string.\n        '''\n        # TODO\n        pass",
+      "solution": "class Message(object):\n    def __init__(self, input_text):\n        self.message_text = input_text\n\n    def get_text(self):\n        return self.message_text\n\n    def shift_char(self, char, shift):\n        # 95 printable chars: ASCII 32..126. Normalize to 0..94, shift, wrap, restore.\n        return chr((ord(char) - 32 + shift) % 95 + 32)",
+      "pyPackages": [],
+      "dataFiles": [],
+      "tests": [
+        {
+          "name": "'A' + 5 -> 'F'",
+          "expression": "Message('x').shift_char('A', 5)",
+          "expected": "'F'"
+        },
+        {
+          "name": "'a' + 10 -> 'k'",
+          "expression": "Message('x').shift_char('a', 10)",
+          "expected": "'k'"
+        },
+        {
+          "name": "space - 1 wraps to '~'",
+          "expression": "Message('x').shift_char(' ', -1)",
+          "expected": "'~'"
+        },
+        {
+          "name": "'-' + 8 -> '5'",
+          "expression": "Message('x').shift_char('-', 8)",
+          "expected": "'5'"
+        },
+        {
+          "name": "'}' + 99 wraps to double-quote",
+          "expression": "Message('x').shift_char('}', 99)",
+          "expected": "'\"'"
+        },
+        {
+          "name": "'k' - 3 -> 'h'",
+          "expression": "Message('x').shift_char('k', -3)",
+          "expected": "'h'"
+        },
+        {
+          "name": "large negative shift wraps: 'Y' - 107 -> 'M'",
+          "expression": "Message('x').shift_char('Y', -107)",
+          "expected": "'M'",
+          "hidden": true
+        },
+        {
+          "name": "shift of 0 is identity",
+          "expression": "Message('x').shift_char('Q', 0)",
+          "expected": "'Q'",
+          "hidden": true
+        }
+      ]
+    },
+    {
+      "id": "ps4-b-apply-pad",
+      "kind": "coding",
+      "source": "pset",
+      "reconstructed": false,
+      "topicSlug": "17-python-classes",
+      "unit": 3,
+      "difficulty": "exam-level",
+      "title": "Part B — Message.apply_pad",
+      "statement": "Extend `Message` with `apply_pad(pad)`. A **one-time pad** is a list of integers, one per character of the message. Encrypt by shifting the character at index `i` by `pad[i]` (using `shift_char`), and return the resulting ciphertext string. You may assume `len(pad) == len(self.get_text())`.\n\nBuild the result by shifting each character in order and joining. Because `apply_pad` reuses `shift_char`, the wrap-around is already handled.\n\n- Applying `[84, 69, 6, ...]` to `'testing message'` produces `'iKyy~(ho1<7A>[3'`.\n\nThe `Message` class from the previous problem (with `shift_char`) is provided at the top so you can focus on `apply_pad`.",
+      "functionSignature": "def apply_pad(self, pad):",
+      "starterCode": "class Message(object):\n    def __init__(self, input_text):\n        self.message_text = input_text\n\n    def get_text(self):\n        return self.message_text\n\n    def shift_char(self, char, shift):\n        return chr((ord(char) - 32 + shift) % 95 + 32)\n\n    def apply_pad(self, pad):\n        '''\n        Encrypt the message: shift text[i] by pad[i]. Return the ciphertext string.\n        Assume len(pad) == len(self.get_text()).\n        '''\n        # TODO\n        pass",
+      "solution": "class Message(object):\n    def __init__(self, input_text):\n        self.message_text = input_text\n\n    def get_text(self):\n        return self.message_text\n\n    def shift_char(self, char, shift):\n        return chr((ord(char) - 32 + shift) % 95 + 32)\n\n    def apply_pad(self, pad):\n        return ''.join(self.shift_char(c, pad[i])\n                       for i, c in enumerate(self.get_text()))",
+      "pyPackages": [],
+      "dataFiles": [],
+      "tests": [
+        {
+          "name": "'testing message'",
+          "expression": "Message('testing message').apply_pad([84, 69, 6, 5, 21, 25, 1, 79, 35, 54, 35, 45, 60, 83, 45])",
+          "expected": "'iKyy~(ho1<7A>[3'"
+        },
+        {
+          "name": "'zzzzz~~~~....'",
+          "expression": "Message('zzzzz~~~~....').apply_pad([62, 30, 73, 77, 42, 11, 13, 51, 68, 79, 25, 90, 9])",
+          "expected": "'Y9dhE*,Rc}G)7'"
+        },
+        {
+          "name": "message with punctuation",
+          "expression": "Message('he,(llo)').apply_pad([91, 6, 73, 31, 63, 26, 19, 1])",
+          "expected": "\"dkuGL'#*\""
+        },
+        {
+          "name": "all-zero pad is identity",
+          "expression": "Message('hello').apply_pad([0, 0, 0, 0, 0])",
+          "expected": "'hello'",
+          "hidden": true
+        },
+        {
+          "name": "empty message -> empty ciphertext",
+          "expression": "Message('').apply_pad([])",
+          "expected": "''",
+          "hidden": true
+        }
+      ]
+    },
+    {
+      "id": "ps4-b-plaintext-message",
+      "kind": "coding",
+      "source": "pset",
+      "reconstructed": false,
+      "topicSlug": "19-inheritance",
+      "unit": 3,
+      "difficulty": "exam-level",
+      "title": "Part B — PlaintextMessage (inheritance + random pad)",
+      "statement": "Build `PlaintextMessage`, a subclass of `Message` that encrypts itself on construction.\n\n`PlaintextMessage(input_text, pad=None)`:\n- Calls the `Message` constructor (so `get_text()` works via inheritance).\n- If `pad is None`, generate one with `generate_pad()`; otherwise store a **copy** of the given pad (so later mutation of the caller's list can't corrupt this object).\n- Compute and store the ciphertext = `apply_pad(pad)`.\n\nMethods:\n- `generate_pad()` — return a new list with one `random.randint(0, 109)` per character of the text (range `[0, 110)`).\n- `get_pad()` — return a **copy** of the pad.\n- `get_ciphertext()` — return the stored ciphertext.\n- `change_pad(new_pad)` — replace the pad (store a copy) and recompute the ciphertext.\n\nRandomness is deterministic here: the harness runs `random.seed(0)` before each test, so `generate_pad()` on `'he,(llo)'` yields exactly `[108, 49, 97, 53, 5, 33, 65, 62]`.\n\n**Copy discipline matters:** `get_pad()` must not hand out the internal list, and the constructor must not alias the caller's list — otherwise mutating one corrupts the other.",
+      "functionSignature": "class PlaintextMessage(Message):",
+      "starterCode": "import random\n\nclass Message(object):\n    def __init__(self, input_text):\n        self.message_text = input_text\n    def get_text(self):\n        return self.message_text\n    def shift_char(self, char, shift):\n        return chr((ord(char) - 32 + shift) % 95 + 32)\n    def apply_pad(self, pad):\n        return ''.join(self.shift_char(c, pad[i]) for i, c in enumerate(self.get_text()))\n\nclass PlaintextMessage(Message):\n    def __init__(self, input_text, pad=None):\n        # TODO: call super().__init__, set the pad (copy!) or generate one,\n        #       then compute the ciphertext.\n        pass\n\n    def generate_pad(self):\n        # TODO: one random.randint(0, 109) per character\n        pass\n\n    def get_pad(self):\n        # TODO: return a COPY of the pad\n        pass\n\n    def get_ciphertext(self):\n        # TODO\n        pass\n\n    def change_pad(self, new_pad):\n        # TODO: store a copy and recompute the ciphertext\n        pass",
+      "solution": "import random\n\nclass Message(object):\n    def __init__(self, input_text):\n        self.message_text = input_text\n    def get_text(self):\n        return self.message_text\n    def shift_char(self, char, shift):\n        return chr((ord(char) - 32 + shift) % 95 + 32)\n    def apply_pad(self, pad):\n        return ''.join(self.shift_char(c, pad[i]) for i, c in enumerate(self.get_text()))\n\nclass PlaintextMessage(Message):\n    def __init__(self, input_text, pad=None):\n        super().__init__(input_text)\n        if pad is None:\n            self.pad = self.generate_pad()\n        else:\n            self.pad = pad[:]          # copy so the caller can't mutate us\n        self.ciphertext = self.apply_pad(self.pad)\n\n    def generate_pad(self):\n        return [random.randint(0, 109) for _ in range(len(self.get_text()))]\n\n    def get_pad(self):\n        return self.pad[:]             # hand out a copy, not the internal list\n\n    def get_ciphertext(self):\n        return self.ciphertext\n\n    def change_pad(self, new_pad):\n        self.pad = new_pad[:]\n        self.ciphertext = self.apply_pad(self.pad)",
+      "pyPackages": [],
+      "dataFiles": [],
+      "tests": [
+        {
+          "name": "inherits get_text",
+          "expression": "PlaintextMessage('testing message', [71, 12, 44, 87, 81, 30, 61, 5, 66, 19, 73, 91, 19, 8, 83]).get_text()",
+          "expected": "'testing message'"
+        },
+        {
+          "name": "get_pad returns the given pad (copied)",
+          "expression": "PlaintextMessage('he,(llo)', [47, 45, 29, 87, 44, 8, 87, 61]).get_pad()",
+          "expected": "[47, 45, 29, 87, 44, 8, 87, 61]"
+        },
+        {
+          "name": "generate_pad under seed 0 (deterministic)",
+          "expression": "PlaintextMessage('he,(llo)').get_pad()",
+          "expected": "[108, 49, 97, 53, 5, 33, 65, 62]"
+        },
+        {
+          "name": "ciphertext from a random pad under seed 0",
+          "expression": "PlaintextMessage('Testing generating pad!').get_ciphertext()",
+          "expected": "'a7uJn0I^;jy,P/_%OxD\"bpp'"
+        },
+        {
+          "name": "change_pad updates the ciphertext",
+          "expression": "(lambda p: (p.change_pad([63, 34, 46, 81, 31, 88, 60, 42, 10, 68, 40, 28, 86, 71, 10]), p.get_ciphertext())[1])(PlaintextMessage('testing message', [71, 12, 44, 87, 81, 30, 61, 5, 66, 19, 73, 91, 19, 8, 83]))",
+          "expected": "'T(Bf)gDJwJ<0XOo'",
+          "hidden": true
+        },
+        {
+          "name": "constructor copies the pad (caller mutation is isolated)",
+          "expression": "(lambda pad, p: (pad.__setitem__(0, -999), p.get_pad())[1])([47, 45, 29, 87, 44, 8, 87, 61], PlaintextMessage('he,(llo)', [47, 45, 29, 87, 44, 8, 87, 61]))",
+          "expected": "[47, 45, 29, 87, 44, 8, 87, 61]",
+          "hidden": true
+        }
+      ]
+    },
+    {
+      "id": "ps4-b-encrypted-message",
+      "kind": "coding",
+      "source": "pset",
+      "reconstructed": false,
+      "topicSlug": "19-inheritance",
+      "unit": 3,
+      "difficulty": "exam-level",
+      "title": "Part B — EncryptedMessage.decrypt_message",
+      "statement": "Build `EncryptedMessage`, a subclass of `Message` holding ciphertext. Implement `decrypt_message(pad)`: given the pad that was used to encrypt this message, recover the original plaintext and return it as a **`PlaintextMessage`** carrying that pad.\n\nDecryption is just encryption with the **negated** pad: if encrypting shifted each char by `pad[i]`, decrypting shifts by `-pad[i]`. So `apply_pad([-p for p in pad])` on the ciphertext gives the plaintext string; wrap it in `PlaintextMessage(plaintext, pad)` and return that.\n\n- `EncryptedMessage('Monoo#').decrypt_message([5, 10, 2, 3, 0, 2]).get_text()` → `'Hello!'`\n\nThe `Message` and `PlaintextMessage` classes are provided at the top; you only write `EncryptedMessage`.",
+      "functionSignature": "class EncryptedMessage(Message):",
+      "starterCode": "import random\n\nclass Message(object):\n    def __init__(self, input_text):\n        self.message_text = input_text\n    def get_text(self):\n        return self.message_text\n    def shift_char(self, char, shift):\n        return chr((ord(char) - 32 + shift) % 95 + 32)\n    def apply_pad(self, pad):\n        return ''.join(self.shift_char(c, pad[i]) for i, c in enumerate(self.get_text()))\n\nclass PlaintextMessage(Message):\n    def __init__(self, input_text, pad=None):\n        super().__init__(input_text)\n        self.pad = self.generate_pad() if pad is None else pad[:]\n        self.ciphertext = self.apply_pad(self.pad)\n    def generate_pad(self):\n        return [random.randint(0, 109) for _ in range(len(self.get_text()))]\n    def get_pad(self):\n        return self.pad[:]\n    def get_ciphertext(self):\n        return self.ciphertext\n    def change_pad(self, new_pad):\n        self.pad = new_pad[:]\n        self.ciphertext = self.apply_pad(self.pad)\n\nclass EncryptedMessage(Message):\n    def __init__(self, input_text):\n        # TODO: call the super constructor\n        pass\n\n    def decrypt_message(self, pad):\n        '''\n        Decrypt using pad (negate it), and return a PlaintextMessage that\n        carries the recovered text and this pad.\n        '''\n        # TODO\n        pass",
+      "solution": "import random\n\nclass Message(object):\n    def __init__(self, input_text):\n        self.message_text = input_text\n    def get_text(self):\n        return self.message_text\n    def shift_char(self, char, shift):\n        return chr((ord(char) - 32 + shift) % 95 + 32)\n    def apply_pad(self, pad):\n        return ''.join(self.shift_char(c, pad[i]) for i, c in enumerate(self.get_text()))\n\nclass PlaintextMessage(Message):\n    def __init__(self, input_text, pad=None):\n        super().__init__(input_text)\n        self.pad = self.generate_pad() if pad is None else pad[:]\n        self.ciphertext = self.apply_pad(self.pad)\n    def generate_pad(self):\n        return [random.randint(0, 109) for _ in range(len(self.get_text()))]\n    def get_pad(self):\n        return self.pad[:]\n    def get_ciphertext(self):\n        return self.ciphertext\n    def change_pad(self, new_pad):\n        self.pad = new_pad[:]\n        self.ciphertext = self.apply_pad(self.pad)\n\nclass EncryptedMessage(Message):\n    def __init__(self, input_text):\n        super().__init__(input_text)\n\n    def decrypt_message(self, pad):\n        # Decrypting = applying the negated pad, then repackage as a PlaintextMessage.\n        plaintext = self.apply_pad([-p for p in pad])\n        return PlaintextMessage(plaintext, pad)",
+      "pyPackages": [],
+      "dataFiles": [],
+      "tests": [
+        {
+          "name": "'Monoo#' -> 'Hello!'",
+          "expression": "EncryptedMessage('Monoo#').decrypt_message([5, 10, 2, 3, 0, 2]).get_text()",
+          "expected": "'Hello!'"
+        },
+        {
+          "name": "mixed case decrypt",
+          "expression": "EncryptedMessage('05<Nvv`\\\\.8_0qvh?b?').decrypt_message([59, 44, 50, 90, 86, 13, 13, 60, 64, 46, 70, 74, 45, 86, 5, 93, 15, 57]).get_text()",
+          "expected": "'ThiS iS MixED cASe'"
+        },
+        {
+          "name": "longer shifts decrypt",
+          "expression": "EncryptedMessage('m]+h{eF&p.f\\\\eT]?Xb;K!{5').decrypt_message([25, 84, 33, 84, 91, 92, 68, 18, 80, 33, 86, 77, 93, 78, 74, 31, 68, 89, 49, 68, 12, 8, 18]).get_text()",
+          "expected": "'This has longer shifts#'"
+        },
+        {
+          "name": "decrypt returns a PlaintextMessage carrying the pad",
+          "expression": "EncryptedMessage('Monoo#').decrypt_message([5, 10, 2, 3, 0, 2]).get_pad()",
+          "expected": "[5, 10, 2, 3, 0, 2]",
+          "hidden": true
+        }
+      ]
+    },
+    {
+      "id": "ps4-c-try-pads",
+      "kind": "coding",
+      "source": "pset",
+      "reconstructed": false,
+      "topicSlug": "19-inheritance",
+      "unit": 3,
+      "difficulty": "exam-level",
+      "title": "Part C — decrypt_message_try_pads",
+      "statement": "Brute-force the pad. Given an `EncryptedMessage` and a list of candidate pads, find the pad that decrypts it into the most valid English words.\n\nFor each candidate pad: decrypt the ciphertext, split the plaintext on spaces, and count how many tokens are valid words (via the provided `is_word`, which strips punctuation and lowercases). Keep the pad that yields the **most** valid words; on ties, keep the **last** one seen (so iterate in order and use `>=`). Return the winning **`PlaintextMessage`**.\n\nHelpers are provided: `load_words`, `is_word`, and the whole Part B class hierarchy is imported from the provided `ps4b.py` module (so `import ps4b` works and you can use `ps4b.EncryptedMessage`, `ps4b.PlaintextMessage`, etc.). `words.txt` is the dictionary.\n\n- Among six pads for `'Monoo#'`, the pad `[5, 10, 2, 3, 0, 2]` decrypts to `'Hello!'` (1 valid word) and wins.\n- If **no** pad produces any valid word, the tie-on-`>=` rule returns the **last** pad's decryption.",
+      "functionSignature": "def decrypt_message_try_pads(ciphertext, pads):",
+      "starterCode": "import ps4b   # provides Message, PlaintextMessage, EncryptedMessage\n\ndef load_words(file_name):\n    with open(file_name, 'r') as inFile:\n        wordlist = []\n        for line in inFile:\n            wordlist.extend([word.lower() for word in line.split(' ')])\n        return wordlist\n\ndef is_word(word_list, word):\n    word = word.strip(\" !@#$%^&*()-_+={}[]|\\\\:;'<>?,./\\\"\").lower()\n    return word in word_list\n\nWORDLIST_FILENAME = 'words.txt'\n\ndef decrypt_message_try_pads(ciphertext, pads):\n    '''\n    ciphertext: an EncryptedMessage\n    pads: list of candidate pads (each a list of ints)\n    Return the PlaintextMessage from the pad giving the most valid English words\n    (ties -> the LAST such pad).\n    '''\n    # TODO\n    pass",
+      "solution": "import ps4b\n\ndef load_words(file_name):\n    with open(file_name, 'r') as inFile:\n        wordlist = []\n        for line in inFile:\n            wordlist.extend([word.lower() for word in line.split(' ')])\n        return wordlist\n\ndef is_word(word_list, word):\n    word = word.strip(\" !@#$%^&*()-_+={}[]|\\\\:;'<>?,./\\\"\").lower()\n    return word in word_list\n\nWORDLIST_FILENAME = 'words.txt'\n_WORDS = load_words(WORDLIST_FILENAME)\n\ndef decrypt_message_try_pads(ciphertext, pads):\n    best_msg = None\n    best_count = -1\n    for pad in pads:\n        pm = ciphertext.decrypt_message(pad)\n        text = pm.get_text()\n        count = sum(1 for token in text.split(' ') if is_word(_WORDS, token))\n        if count >= best_count:   # >= keeps the LAST pad on a tie\n            best_count = count\n            best_msg = pm\n    return best_msg",
+      "pyPackages": [],
+      "dataFiles": [
+        {
+          "name": "ps4b.py",
+          "text": "import random\n\nclass Message(object):\n    def __init__(self, input_text):\n        self.message_text = input_text\n    def get_text(self):\n        return self.message_text\n    def shift_char(self, char, shift):\n        return chr((ord(char) - 32 + shift) % 95 + 32)\n    def apply_pad(self, pad):\n        return ''.join(self.shift_char(c, pad[i]) for i, c in enumerate(self.get_text()))\n\nclass PlaintextMessage(Message):\n    def __init__(self, input_text, pad=None):\n        super().__init__(input_text)\n        self.pad = self.generate_pad() if pad is None else pad[:]\n        self.ciphertext = self.apply_pad(self.pad)\n    def generate_pad(self):\n        return [random.randint(0, 109) for _ in range(len(self.get_text()))]\n    def get_pad(self):\n        return self.pad[:]\n    def get_ciphertext(self):\n        return self.ciphertext\n    def change_pad(self, new_pad):\n        self.pad = new_pad[:]\n        self.ciphertext = self.apply_pad(self.pad)\n\nclass EncryptedMessage(Message):\n    def __init__(self, input_text):\n        super().__init__(input_text)\n    def decrypt_message(self, pad):\n        plaintext = self.apply_pad([-p for p in pad])\n        return PlaintextMessage(plaintext, pad)\n"
+        },
+        {
+          "name": "words.txt",
+          "url": "/psets/ps4/words.txt"
+        }
+      ],
+      "tests": [
+        {
+          "name": "finds 'Hello!' pad",
+          "expression": "decrypt_message_try_pads(ps4b.EncryptedMessage('Monoo#'), [[22, 3, 32, 36, 41, 66], [31, 3, 92, 42, 49, 56], [58, 56, 75, 15, 1, 93], [5, 10, 2, 3, 0, 2], [21, 92, 39, 23, 89, 2], [87, 69, 69, 11, 76, 62]]).get_pad()",
+          "expected": "[5, 10, 2, 3, 0, 2]"
+        },
+        {
+          "name": "and returns the decoded text",
+          "expression": "decrypt_message_try_pads(ps4b.EncryptedMessage('Monoo#'), [[22, 3, 32, 36, 41, 66], [31, 3, 92, 42, 49, 56], [58, 56, 75, 15, 1, 93], [5, 10, 2, 3, 0, 2], [21, 92, 39, 23, 89, 2], [87, 69, 69, 11, 76, 62]]).get_text()",
+          "expected": "'Hello!'"
+        },
+        {
+          "name": "longer message: finds the right pad",
+          "expression": "decrypt_message_try_pads(ps4b.EncryptedMessage('05<Nvv`\\\\.8_0qvh?b?'), [[42, 27, 38, 56, 8, 70, 7, 45, 17, 54, 51, 53, 69, 50, 40, 86, 67, 73], [59, 44, 50, 90, 86, 13, 13, 60, 64, 46, 70, 74, 45, 86, 5, 93, 15, 57], [43, 94, 13, 15, 33, 72, 27, 94, 28, 20, 54, 74, 67, 54, 7, 86, 70, 57], [25, 28, 94, 37, 58, 10, 52, 63, 30, 92, 72, 43, 34, 4, 3, 56, 73, 22], [72, 54, 52, 43, 47, 36, 67, 93, 16, 8, 25, 23, 22, 28, 59, 10, 2, 54], [89, 81, 94, 89, 23, 26, 53, 44, 31, 78, 50, 45, 71, 82, 79, 76, 22, 8]]).get_text()",
+          "expected": "'ThiS iS MixED cASe'"
+        },
+        {
+          "name": "no pad works -> returns LAST pad's decryption",
+          "expression": "decrypt_message_try_pads(ps4b.EncryptedMessage('bad'), [[2, 3, 4], [1, 2, 3]]).get_text()",
+          "expected": "'a_a'",
+          "hidden": true
+        },
+        {
+          "name": "no pad works -> returns LAST pad",
+          "expression": "decrypt_message_try_pads(ps4b.EncryptedMessage('bad'), [[2, 3, 4], [1, 2, 3]]).get_pad()",
+          "expected": "[1, 2, 3]",
+          "hidden": true
+        }
+      ]
+    },
+    {
+      "id": "ps4-c-decode-story",
+      "kind": "coding",
+      "source": "pset",
+      "reconstructed": false,
+      "topicSlug": "19-inheritance",
+      "unit": 3,
+      "difficulty": "stretch",
+      "title": "Part C — decode_story (study-only)",
+      "statement": "The final checkoff task: decode Bob's hidden story. This reads `story.txt` (the ciphertext) and `pads.txt` (a JSON list of candidate pads), builds an `EncryptedMessage`, and runs `decrypt_message_try_pads` against every candidate pad to recover the plaintext.\n\nThis is **study-only** here (as it is checkoff-only in OCW): the output is a full paragraph judged by reading it, so there's no crisp unit test. Read the reference solution to see how the earlier pieces compose, then run it in the workspace against the bundled `story.txt`/`pads.txt` to see the decoded story.",
+      "functionSignature": "def decode_story():",
+      "studyOnly": true,
+      "starterCode": "import json\nimport ps4b\n\ndef get_story_string():\n    with open('story.txt', 'r') as f:\n        story = str(f.read())\n    return story[:-1]\n\ndef get_story_pads():\n    with open('pads.txt') as json_file:\n        return json.load(json_file)\n\ndef load_words(file_name):\n    with open(file_name, 'r') as inFile:\n        wordlist = []\n        for line in inFile:\n            wordlist.extend([word.lower() for word in line.split(' ')])\n        return wordlist\n\ndef is_word(word_list, word):\n    word = word.strip(\" !@#$%^&*()-_+={}[]|\\\\:;'<>?,./\\\"\").lower()\n    return word in word_list\n\ndef decrypt_message_try_pads(ciphertext, pads):\n    # (your Part C solution)\n    pass\n\ndef decode_story():\n    # TODO: build an EncryptedMessage from get_story_string(), try every pad\n    #       from get_story_pads(), and return the decoded text.\n    pass",
+      "solution": "import json\nimport ps4b\n\ndef get_story_string():\n    with open('story.txt', 'r') as f:\n        story = str(f.read())\n    return story[:-1]\n\ndef get_story_pads():\n    with open('pads.txt') as json_file:\n        return json.load(json_file)\n\ndef load_words(file_name):\n    with open(file_name, 'r') as inFile:\n        wordlist = []\n        for line in inFile:\n            wordlist.extend([word.lower() for word in line.split(' ')])\n        return wordlist\n\ndef is_word(word_list, word):\n    word = word.strip(\" !@#$%^&*()-_+={}[]|\\\\:;'<>?,./\\\"\").lower()\n    return word in word_list\n\n_WORDS = load_words('words.txt')\n\ndef decrypt_message_try_pads(ciphertext, pads):\n    best_msg = None\n    best_count = -1\n    for pad in pads:\n        pm = ciphertext.decrypt_message(pad)\n        count = sum(1 for token in pm.get_text().split(' ') if is_word(_WORDS, token))\n        if count >= best_count:\n            best_count = count\n            best_msg = pm\n    return best_msg\n\ndef decode_story():\n    story = ps4b.EncryptedMessage(get_story_string())\n    pads = get_story_pads()\n    return decrypt_message_try_pads(story, pads).get_text()",
+      "pyPackages": [],
+      "dataFiles": [
+        {
+          "name": "ps4b.py",
+          "text": "import random\n\nclass Message(object):\n    def __init__(self, input_text):\n        self.message_text = input_text\n    def get_text(self):\n        return self.message_text\n    def shift_char(self, char, shift):\n        return chr((ord(char) - 32 + shift) % 95 + 32)\n    def apply_pad(self, pad):\n        return ''.join(self.shift_char(c, pad[i]) for i, c in enumerate(self.get_text()))\n\nclass PlaintextMessage(Message):\n    def __init__(self, input_text, pad=None):\n        super().__init__(input_text)\n        self.pad = self.generate_pad() if pad is None else pad[:]\n        self.ciphertext = self.apply_pad(self.pad)\n    def generate_pad(self):\n        return [random.randint(0, 109) for _ in range(len(self.get_text()))]\n    def get_pad(self):\n        return self.pad[:]\n    def get_ciphertext(self):\n        return self.ciphertext\n    def change_pad(self, new_pad):\n        self.pad = new_pad[:]\n        self.ciphertext = self.apply_pad(self.pad)\n\nclass EncryptedMessage(Message):\n    def __init__(self, input_text):\n        super().__init__(input_text)\n    def decrypt_message(self, pad):\n        plaintext = self.apply_pad([-p for p in pad])\n        return PlaintextMessage(plaintext, pad)\n"
+        },
+        {
+          "name": "words.txt",
+          "url": "/psets/ps4/words.txt"
+        },
+        {
+          "name": "story.txt",
+          "url": "/psets/ps4/story.txt"
+        },
+        {
+          "name": "pads.txt",
+          "url": "/psets/ps4/pads.txt"
+        }
+      ],
+      "tests": []
+    }
+  ]
+}

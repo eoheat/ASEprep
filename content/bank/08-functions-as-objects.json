@@ -1,0 +1,96 @@
+[
+  {
+    "id": "bank-08-a",
+    "kind": "coding",
+    "title": "Pick an Operation",
+    "topicSlug": "08-functions-as-objects",
+    "unit": 2,
+    "source": "bank",
+    "difficulty": "warmup",
+    "statement": "Functions are first-class objects: you can store them in a variable and call them later. Write `apply_op(op, a, b)` where `op` is a two-argument function; return `op(a, b)`.\n\nThe caller passes whatever operation they want (add, multiply, etc.) as an argument.",
+    "functionSignature": "def apply_op(op, a, b):",
+    "starterCode": "def apply_op(op, a, b):\n    \"\"\"Return op(a, b), where op is a two-argument function.\n\n    >>> apply_op(lambda x, y: x + y, 3, 4)\n    7\n    >>> apply_op(lambda x, y: x * y, 3, 4)\n    12\n    >>> apply_op(max, 3, 4)\n    4\n    \"\"\"\n    pass",
+    "solution": "def apply_op(op, a, b):\n    return op(a, b)",
+    "tests": [
+      { "name": "add", "expression": "apply_op(lambda x, y: x + y, 3, 4)", "expected": "7" },
+      { "name": "multiply", "expression": "apply_op(lambda x, y: x * y, 3, 4)", "expected": "12" },
+      { "name": "max builtin", "expression": "apply_op(max, 3, 4)", "expected": "4" },
+      { "name": "subtract with negatives", "expression": "apply_op(lambda x, y: x - y, -2, -5)", "expected": "3", "hidden": true }
+    ]
+  },
+  {
+    "id": "bank-08-b",
+    "kind": "coding",
+    "title": "Compose Two Functions",
+    "topicSlug": "08-functions-as-objects",
+    "unit": 2,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "statement": "Write `compose(f, g)` that RETURNS a new function `h` such that `h(x)` computes `f(g(x))`. Here you both take functions as arguments AND return a function — the essence of treating functions as objects.\n\n- `compose(inc, double)(5)` computes `inc(double(5))` = `inc(10)` = `11`.",
+    "functionSignature": "def compose(f, g):",
+    "starterCode": "def compose(f, g):\n    \"\"\"Return a new function h where h(x) == f(g(x)).\n\n    >>> inc = lambda n: n + 1\n    >>> double = lambda n: n * 2\n    >>> compose(inc, double)(5)\n    11\n    >>> compose(double, inc)(5)\n    12\n    \"\"\"\n    pass",
+    "solution": "def compose(f, g):\n    def h(x):\n        return f(g(x))\n    return h",
+    "tests": [
+      { "name": "inc after double", "expression": "compose(lambda n: n + 1, lambda n: n * 2)(5)", "expected": "11" },
+      { "name": "double after inc", "expression": "compose(lambda n: n * 2, lambda n: n + 1)(5)", "expected": "12" },
+      { "name": "returns a callable", "expression": "callable(compose(len, str))", "expected": "True" },
+      { "name": "len after str", "expression": "compose(len, str)(12345)", "expected": "5", "hidden": true },
+      { "name": "order matters (str after abs)", "expression": "compose(str, abs)(-7)", "expected": "'7'", "hidden": true }
+    ]
+  },
+  {
+    "id": "bank-08-c",
+    "kind": "coding",
+    "title": "Make a Multiplier (closure)",
+    "topicSlug": "08-functions-as-objects",
+    "unit": 2,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "statement": "Write `make_multiplier(factor)` that returns a function of one argument which multiplies its input by `factor`. The returned function *remembers* `factor` (a closure).\n\n- `triple = make_multiplier(3)`; `triple(10)` → `30`.",
+    "functionSignature": "def make_multiplier(factor):",
+    "starterCode": "def make_multiplier(factor):\n    \"\"\"Return a function that multiplies its argument by factor.\n\n    >>> triple = make_multiplier(3)\n    >>> triple(10)\n    30\n    >>> make_multiplier(0)(99)\n    0\n    \"\"\"\n    pass",
+    "solution": "def make_multiplier(factor):\n    def multiplier(x):\n        return x * factor\n    return multiplier",
+    "tests": [
+      { "name": "triple", "expression": "make_multiplier(3)(10)", "expected": "30" },
+      { "name": "zero factor", "expression": "make_multiplier(0)(99)", "expected": "0" },
+      { "name": "negative factor", "expression": "make_multiplier(-2)(5)", "expected": "-10" },
+      { "name": "two independent closures do not interfere", "expression": "(lambda d, t: (d(4), t(4)))(make_multiplier(2), make_multiplier(3))", "expected": "(8, 12)", "hidden": true },
+      { "name": "on a string (repeats)", "expression": "make_multiplier(3)('ab')", "expected": "'ababab'", "hidden": true }
+    ]
+  },
+  {
+    "id": "bank-08-d",
+    "kind": "coding",
+    "title": "Dispatch Table",
+    "topicSlug": "08-functions-as-objects",
+    "unit": 2,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "statement": "Because functions are objects, you can store them as dictionary VALUES and look one up by name. Write `calculate(op_name, a, b)` that supports `'add'`, `'sub'`, `'mul'`, and `'div'` (float division) by dispatching through a dict of functions. If `op_name` is not one of those four, return `None`.\n\nBuild the dict inside the function; do not use a chain of `if/elif`.",
+    "functionSignature": "def calculate(op_name, a, b):",
+    "starterCode": "def calculate(op_name, a, b):\n    \"\"\"Dispatch 'add'/'sub'/'mul'/'div' through a dict of functions.\n    Return None for an unknown op_name.\n\n    >>> calculate('add', 2, 3)\n    5\n    >>> calculate('div', 7, 2)\n    3.5\n    >>> calculate('pow', 2, 3) is None\n    True\n    \"\"\"\n    pass",
+    "solution": "def calculate(op_name, a, b):\n    ops = {\n        'add': lambda x, y: x + y,\n        'sub': lambda x, y: x - y,\n        'mul': lambda x, y: x * y,\n        'div': lambda x, y: x / y,\n    }\n    if op_name not in ops:\n        return None\n    return ops[op_name](a, b)",
+    "tests": [
+      { "name": "add", "expression": "calculate('add', 2, 3)", "expected": "5" },
+      { "name": "sub with negatives", "expression": "calculate('sub', -1, -4)", "expected": "3" },
+      { "name": "mul", "expression": "calculate('mul', 6, 7)", "expected": "42" },
+      { "name": "div is float", "expression": "calculate('div', 7, 2)", "expected": "3.5", "compare": "float", "tolerance": 1e-9 },
+      { "name": "unknown op -> None", "expression": "calculate('pow', 2, 3)", "expected": "None" },
+      { "name": "empty op name -> None", "expression": "calculate('', 1, 1)", "expected": "None", "hidden": true }
+    ]
+  },
+  {
+    "id": "bank-08-e",
+    "kind": "code-reading",
+    "title": "Function in a list",
+    "topicSlug": "08-functions-as-objects",
+    "unit": 2,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "statement": "Functions stored in a list, then called in a loop. What does this print?",
+    "prompt": "def a(x):\n    return x + 1\n\ndef b(x):\n    return x * 2\n\ndef c(x):\n    return x ** 2\n\nfuncs = [a, b, c]\nval = 3\nfor fn in funcs:\n    val = fn(val)\nprint(val)",
+    "answer": "64",
+    "acceptedAnswers": ["64"],
+    "explanation": "The list holds the function objects themselves (no `()` yet). The loop applies them in order to `val`: start 3 → a(3)=4 → b(4)=8 → c(8)=8**2=64. Each iteration feeds the previous result into the next function."
+  }
+]

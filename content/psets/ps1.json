@@ -1,0 +1,163 @@
+{
+  "id": "ps1",
+  "number": 1,
+  "title": "Saving for a House (Compound Interest)",
+  "ocwUrl": "https://ocw.mit.edu/courses/6-100l-introduction-to-cs-and-programming-using-python-fall-2022/pages/problem-sets/",
+  "overview": "**Problem Set 1 — Saving for a Down Payment.** Three `input()`-driven console programs about compound interest. In each part you save a portion of your salary every month, your savings earn an annual return of **r = 5% (0.05)** compounded monthly, and you count how many months it takes to save a **25% down payment** on your dream home.\n\n- **Part A** — fixed salary. Store the month count in `months`.\n- **Part B** — you get a **semi-annual raise** (a raise every 6 months). Store the month count in `months`.\n- **Part C** — given an `initial_deposit`, use **bisection search** to find the lowest annual return `r` that reaches a 25% down payment on an $800,000 house in exactly 36 months. Store the found rate in `r` and the number of bisection steps in `steps`.\n\nEach part reads its inputs with `input()` in a fixed order and stores the answer in a module-level variable (so the tests feed stdin and then read that variable). **Loop convention:** each month, apply the monthly return to the *current* balance, then add that month's savings, then increment the month counter. Published answers: A → 97 / 79 / 189, B → 92 / 131.\n\nSource: MIT OCW 6.100L Fall 2022, Problem Set 1. Statements paraphrased from the OCW handout; reference solutions and tests written and validated for this study tool. These files are shared by 6.100A and 6.100L, so they are directly ASE-relevant.",
+  "problems": [
+    {
+      "topicSlug": "03-iteration",
+      "unit": 1,
+      "source": "pset",
+      "reconstructed": false,
+      "id": "ps1-a",
+      "kind": "coding",
+      "difficulty": "warmup",
+      "title": "Part A — Months to a Down Payment (fixed salary)",
+      "statement": "Read three inputs **in this order** with `input()`:\n\n1. `yearly_salary` (an int, e.g. `112000`)\n2. `portion_saved` (a float in [0, 1], e.g. `.17`)\n3. `cost_of_dream_home` (an int, e.g. `750000`)\n\nYou want a down payment equal to **25%** of `cost_of_dream_home`. You save `portion_saved * yearly_salary / 12` every month. Your savings earn an annual return of **r = 0.05**, applied monthly. Count how many months until your savings reach the down payment and store that count in the variable **`months`**.\n\n**Per-month order (this determines the exact count):** first add this month's investment return to the current balance, then add the monthly savings, then count the month. Start from a balance of 0.\n\nExamples (published answers):\n- `112000, .17, 750000` → `97`\n- `65000, .20, 400000` → `79`\n- `350000, .3, 10000000` → `189`",
+      "functionSignature": "# read yearly_salary, portion_saved, cost_of_dream_home; store answer in `months`",
+      "starterCode": "# Part A: how many months to save a 25% down payment?\n# Annual return r = 0.05, applied monthly.\n\nyearly_salary = int(input('Enter your annual salary: '))\nportion_saved = float(input('Enter the percent of your salary to save, as a decimal: '))\ncost_of_dream_home = int(input('Enter the cost of your dream home: '))\n\nr = 0.05\n# TODO: compute the number of months and store it in `months`.\nmonths = 0\n\nprint('Number of months:', months)",
+      "solution": "yearly_salary = int(input('Enter your annual salary: '))\nportion_saved = float(input('Enter the percent of your salary to save, as a decimal: '))\ncost_of_dream_home = int(input('Enter the cost of your dream home: '))\n\nr = 0.05\ndown_payment = 0.25 * cost_of_dream_home\nmonthly_savings = portion_saved * yearly_salary / 12\n\ncurrent_savings = 0.0\nmonths = 0\nwhile current_savings < down_payment:\n    current_savings += current_savings * r / 12\n    current_savings += monthly_savings\n    months += 1\n\nprint('Number of months:', months)",
+      "pyPackages": [],
+      "dataFiles": [],
+      "tests": [
+        {
+          "name": "112000 / .17 / 750000 -> 97",
+          "expression": "months",
+          "expected": "97",
+          "stdin": "112000\n.17\n750000\n"
+        },
+        {
+          "name": "65000 / .20 / 400000 -> 79",
+          "expression": "months",
+          "expected": "79",
+          "stdin": "65000\n.20\n400000\n"
+        },
+        {
+          "name": "350000 / .3 / 10000000 -> 189",
+          "expression": "months",
+          "expected": "189",
+          "stdin": "350000\n.3\n10000000\n"
+        },
+        {
+          "name": "save whole salary reaches it faster",
+          "expression": "months",
+          "expected": "15",
+          "stdin": "100000\n1.0\n500000\n",
+          "hidden": true
+        }
+      ]
+    },
+    {
+      "topicSlug": "03-iteration",
+      "unit": 1,
+      "source": "pset",
+      "reconstructed": false,
+      "id": "ps1-b",
+      "kind": "coding",
+      "difficulty": "exam-level",
+      "title": "Part B — Months with a Semi-Annual Raise",
+      "statement": "Same setup as Part A, but now you get a **semi-annual raise**: every 6 months your salary is multiplied by `(1 + semi_annual_raise)`.\n\nRead four inputs **in this order** with `input()`:\n\n1. `yearly_salary` (int)\n2. `portion_saved` (float in [0, 1])\n3. `cost_of_dream_home` (int)\n4. `semi_annual_raise` (float, e.g. `.03`)\n\nStore the number of months in **`months`**.\n\n**Timing convention (this determines the exact count):** each month, add the investment return, then add that month's savings computed from the *current* salary, then increment the month counter — and **after** a month whose number is a multiple of 6 (i.e. months 6, 12, 18, ...), apply the raise to the salary. Published answers:\n- `110000, .15, 750000, .03` → `92`\n- `350000, .3, 10000000, .05` → `131`",
+      "functionSignature": "# read salary, portion, cost, semi_annual_raise; store answer in `months`",
+      "starterCode": "# Part B: like Part A, but you get a raise every 6 months.\n\nyearly_salary = int(input('Enter your starting annual salary: '))\nportion_saved = float(input('Enter the percent of your salary to save, as a decimal: '))\ncost_of_dream_home = int(input('Enter the cost of your dream home: '))\nsemi_annual_raise = float(input('Enter the semiannual raise, as a decimal: '))\n\nr = 0.05\n# TODO: compute the number of months and store it in `months`.\nmonths = 0\n\nprint('Number of months:', months)",
+      "solution": "yearly_salary = int(input('Enter your starting annual salary: '))\nportion_saved = float(input('Enter the percent of your salary to save, as a decimal: '))\ncost_of_dream_home = int(input('Enter the cost of your dream home: '))\nsemi_annual_raise = float(input('Enter the semiannual raise, as a decimal: '))\n\nr = 0.05\ndown_payment = 0.25 * cost_of_dream_home\nsalary = yearly_salary\n\ncurrent_savings = 0.0\nmonths = 0\nwhile current_savings < down_payment:\n    monthly_savings = portion_saved * salary / 12\n    current_savings += current_savings * r / 12\n    current_savings += monthly_savings\n    months += 1\n    if months % 6 == 0:\n        salary += salary * semi_annual_raise\n\nprint('Number of months:', months)",
+      "pyPackages": [],
+      "dataFiles": [],
+      "tests": [
+        {
+          "name": "110000 / .15 / 750000 / .03 -> 92",
+          "expression": "months",
+          "expected": "92",
+          "stdin": "110000\n.15\n750000\n.03\n"
+        },
+        {
+          "name": "350000 / .3 / 10000000 / .05 -> 131",
+          "expression": "months",
+          "expected": "131",
+          "stdin": "350000\n.3\n10000000\n.05\n"
+        },
+        {
+          "name": "zero raise matches Part A (97)",
+          "expression": "months",
+          "expected": "97",
+          "stdin": "112000\n.17\n750000\n0.0\n",
+          "hidden": true
+        }
+      ]
+    },
+    {
+      "topicSlug": "06-bisection-search",
+      "unit": 1,
+      "source": "pset",
+      "reconstructed": false,
+      "id": "ps1-c",
+      "kind": "coding",
+      "difficulty": "exam-level",
+      "title": "Part C — Bisection Search for the Best Rate of Return",
+      "statement": "Now the house costs **$800,000**, the down payment is **25%** (so `$200,000`), and you have exactly **36 months**. You start with an `initial_deposit` (read with `input()`), and it earns an annual return `r` compounded monthly. After 36 months your savings are `initial_deposit * (1 + r/12)**36`.\n\nUse **bisection search** over `r` in the range `[0.0, 1.0]` to find the lowest `r` that lands within **$100** of the $200,000 down payment. Store the found rate in **`r`** and the number of bisection steps taken in **`steps`**.\n\n- Search bounds: `low = 0.0`, `high = 1.0`. Take the midpoint as your first guess and count it as step 1; each time you narrow the interval and recompute the midpoint, add another step.\n- **If it's impossible** — even `r = 1.0` doesn't reach $200,000 in 36 months — set `r = None` (and `steps` may be 0).\n\nPublished checks: `initial_deposit = 65000` → `r ≈ 0.3806` in `12` steps; `187401` → `r ≈ 0.0217` in `12` steps; `1000` → `None` (unreachable). Grading tolerates the savings landing within $100 of the target and the step count being within a couple of the reference.",
+      "functionSignature": "# read initial_deposit; store the rate in `r` and step count in `steps`",
+      "starterCode": "# Part C: bisection search for the lowest annual return r.\n# House $800,000, 25% down payment ($200,000), 36 months.\n\ninitial_deposit = int(input('Enter the initial deposit: '))\n\ntarget = 0.25 * 800000\nmonths = 36\nepsilon = 100\n\n# TODO: bisection-search for r in [0.0, 1.0]. Store the rate in `r` and the\n# number of steps in `steps`. If even r = 1.0 can't reach the target, set r = None.\nr = None\nsteps = 0\n\nprint('Best rate of return:', r)\nprint('Steps in bisection search:', steps)",
+      "solution": "initial_deposit = int(input('Enter the initial deposit: '))\n\ntarget = 0.25 * 800000\nmonths = 36\nepsilon = 100\n\ndef savings_at(rate):\n    return initial_deposit * (1 + rate / 12) ** months\n\nif savings_at(1.0) < target:\n    r = None\n    steps = 0\nelse:\n    low = 0.0\n    high = 1.0\n    r = (low + high) / 2\n    steps = 1\n    while abs(savings_at(r) - target) >= epsilon:\n        if savings_at(r) < target:\n            low = r\n        else:\n            high = r\n        r = (low + high) / 2\n        steps += 1\n\nprint('Best rate of return:', r)\nprint('Steps in bisection search:', steps)",
+      "pyPackages": [],
+      "dataFiles": [],
+      "tests": [
+        {
+          "name": "deposit 65000 -> r ~= 0.3806",
+          "expression": "r",
+          "expected": "0.380615234375",
+          "compare": "float",
+          "tolerance": 0.01,
+          "stdin": "65000\n"
+        },
+        {
+          "name": "deposit 65000 -> savings within $100 of $200,000",
+          "expression": "65000 * (1 + r/12)**36",
+          "expected": "200000.0",
+          "compare": "float",
+          "tolerance": 100,
+          "stdin": "65000\n"
+        },
+        {
+          "name": "deposit 65000 -> 12 steps (+/- a few)",
+          "expression": "steps",
+          "expected": "12",
+          "compare": "float",
+          "tolerance": 2,
+          "stdin": "65000\n"
+        },
+        {
+          "name": "deposit 187401 -> r ~= 0.0217",
+          "expression": "r",
+          "expected": "0.021728515625",
+          "compare": "float",
+          "tolerance": 0.01,
+          "stdin": "187401\n"
+        },
+        {
+          "name": "deposit 187401 -> 12 steps",
+          "expression": "steps",
+          "expected": "12",
+          "compare": "float",
+          "tolerance": 2,
+          "stdin": "187401\n"
+        },
+        {
+          "name": "deposit 1000 -> unreachable, r is None",
+          "expression": "r",
+          "expected": "None",
+          "stdin": "1000\n"
+        },
+        {
+          "name": "already-rich deposit lands within $100 with a tiny rate",
+          "expression": "200000 * (1 + r/12)**36",
+          "expected": "200000.0",
+          "compare": "float",
+          "tolerance": 100,
+          "stdin": "200000\n",
+          "hidden": true
+        }
+      ]
+    }
+  ],
+  "reconstructed": false
+}

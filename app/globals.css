@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Dense study-tool base. Light theme; system UI for prose, monospace for code.
+   Kept minimal on purpose — Tailwind utilities carry the rest of the styling. */
+@layer base {
+  html {
+    font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial,
+      sans-serif;
+  }
+  code,
+  pre,
+  kbd,
+  samp {
+    font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono',
+      monospace;
+  }
+  /* A visible focus ring for keyboard users everywhere. */
+  :focus-visible {
+    outline: 2px solid theme('colors.blue.500');
+    outline-offset: 1px;
+  }
+}

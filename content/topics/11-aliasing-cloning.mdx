@@ -1,0 +1,225 @@
+## Intuition
+
+In Python, a variable is a *name tag* stuck onto an object, not a box that holds a
+value. For immutable things (ints, strings, tuples) you never notice the
+difference. But lists, dicts, and sets are **mutable**, and `b = a` sticks a
+second name tag onto the *same* list — it does not make a copy. Change the list
+through either name and both names see the change. **Aliasing** is when two names
+share one object; **cloning** is deliberately making a separate copy so they
+don't. Getting this wrong is the single most common source of "why did my other
+variable change?!" bugs on the exam.
+
+## The mechanics
+
+Assignment binds a name to an object. It never copies a mutable object:
+
+```python
+a = [1, 2, 3]
+b = a            # alias: b and a are the SAME list
+b.append(4)
+print(a)         # [1, 2, 3, 4]   <- a changed too
+print(a is b)    # True           <- same object in memory
+```
+
+To get an independent list, **clone** it. Four common shallow clones:
+
+```python
+b = a[:]          # slice the whole thing
+b = list(a)       # rebuild a list from a
+b = a.copy()      # explicit copy method
+import copy
+b = copy.copy(a)  # copy module, shallow
+```
+
+Two operators you must not confuse:
+
+- `a == b` asks *"same value?"* (compares contents)
+- `a is b` asks *"same object?"* (compares identity — the memory address)
+
+<Callout type="tip">
+Rule of thumb: if a function should not disturb its caller's list, **clone the
+argument on the first line** and work on the clone. If a function is *meant* to
+modify in place (like `list.sort()`), it returns `None` — the mutation *is* the
+result.
+</Callout>
+
+## Worked example
+
+A function that mutates its argument versus one that clones first. Trace it line
+by line.
+
+```python
+def add_grade(grades, score):
+    grades.append(score)   # mutates the SAME list the caller passed in
+    return grades
+
+fall = [90, 85]
+spring = add_grade(fall, 100)
+```
+
+- `fall` names the list `[90, 85]`.
+- `add_grade(fall, 100)` binds the parameter `grades` to that *same* list (alias).
+- `grades.append(100)` mutates it in place → the one shared list is now `[90, 85, 100]`.
+- `return grades` hands back that same object; `spring` becomes a third name for it.
+
+```python
+print(fall)         # [90, 85, 100]   <- caller's list was changed!
+print(spring)       # [90, 85, 100]
+print(fall is spring)   # True         <- one object, three names
+```
+
+Now the safe version — clone before mutating:
+
+```python
+def add_grade_safe(grades, score):
+    result = grades[:]     # clone; result is a NEW list
+    result.append(score)
+    return result
+
+fall = [90, 85]
+spring = add_grade_safe(fall, 100)
+print(fall)             # [90, 85]        <- untouched
+print(spring)           # [90, 85, 100]
+print(fall is spring)   # False
+```
+
+## Traps
+
+<Callout type="trap">
+**Shallow clone ≠ deep clone.** `a[:]`, `list(a)`, and `.copy()` copy only the
+*outer* list. Nested lists inside are still shared aliases.
+</Callout>
+
+```python
+board = [[0, 0], [0, 0]]
+snapshot = board[:]      # shallow copy
+snapshot[0][0] = 9
+print(board)             # [[9, 0], [0, 0]]  <- inner list was shared!
+```
+
+Fix with `copy.deepcopy(board)`, which recursively clones every level.
+
+**Mutating a list while iterating over it.** Removing elements shifts every later
+index down, so the loop skips items:
+
+```python
+nums = [1, 2, 4, 3]
+for n in nums:
+    if n % 2 == 0:
+        nums.remove(n)   # BUG
+print(nums)              # [1, 4, 3]  <- the even 4 survived!
+```
+
+Iterate over a clone (`for n in nums[:]`) or build a new list with a
+comprehension (`nums = [n for n in nums if n % 2]`).
+
+**Mutable default arguments.** A default value is created *once*, when the
+function is defined — not on each call — so a default list is shared across calls:
+
+```python
+def collect(x, acc=[]):   # acc is created ONCE
+    acc.append(x)
+    return acc
+
+print(collect(1))   # [1]
+print(collect(2))   # [1, 2]   <- surprise: same list reused
+```
+
+The fix is the standard idiom `def collect(x, acc=None): if acc is None: acc = []`.
+
+**`+=` mutates a list in place, `+` builds a new one.** This matters the moment an
+alias exists:
+
+```python
+a = [1]
+b = a
+a += [2]        # in-place extend -> b sees it
+print(b)        # [1, 2]
+a = a + [3]     # rebinds a to a NEW list -> b unaffected
+print(b)        # [1, 2]
+```
+
+**`==` vs `is`.** Use `==` for values, `is` only for `None` (and other
+singletons). Two equal lists are not the same object:
+
+```python
+a = [1]; b = [1]
+print(a == b, a is b)   # True False
+```
+
+## Memorize vs understand
+
+| Just know it cold | Be able to derive |
+|---|---|
+| `b = a` aliases; `a[:]`, `list(a)`, `a.copy()` shallow-clone | Whether a given function mutates its argument or returns a fresh object |
+| `is` = identity, `==` = value; use `is` only for `None` | Whether a shallow copy is enough, or nesting forces `deepcopy` |
+| `list.sort()`, `.append()`, `.remove()` mutate and return `None` | How a shared reference propagates a change to every alias |
+| A mutable default arg is created once and reused | Tracing an aliasing bug step by step to find who mutated what |
+| `copy.deepcopy` clones every nested level | Rewriting a mutate-while-iterating loop safely |
+
+## ASE check
+
+```python
+a = [1, 2, 3]
+b = a
+b.append(4)
+print(a)
+```
+
+<ASECheck q="What does this print, and why?">
+
+`[1, 2, 3, 4]`. `b = a` makes `b` an alias of `a` — one list, two names — so
+`b.append(4)` changes the list that `a` also names.
+
+</ASECheck>
+
+```python
+def f(lst=[]):
+    lst.append(1)
+    return lst
+print(f())
+print(f())
+```
+
+<ASECheck q="What are the two printed lines?">
+
+`[1]` then `[1, 1]`. The default `[]` is created once at definition time and
+reused on every call that omits the argument, so it accumulates.
+
+</ASECheck>
+
+```python
+m = [[1], [2]]
+n = m[:]
+n[0].append(9)
+print(m)
+```
+
+<ASECheck q="What does m become?">
+
+`[[1, 9], [2]]`. The slice `m[:]` is a *shallow* copy: the outer list is new, but
+`n[0]` and `m[0]` are the same inner list, so appending to it shows up in `m`.
+
+</ASECheck>
+
+```python
+a = [1]
+b = a
+a += [2]
+print(b)
+```
+
+<ASECheck q="What does b print?">
+
+`[1, 2]`. `+=` on a list is an in-place extend, so it mutates the shared object
+that `b` also names. (Had you written `a = a + [2]`, `b` would still be `[1]`.)
+
+</ASECheck>
+
+<ASECheck q="You pass a list to a function and don't want it modified. What's the one-line habit that prevents surprises?">
+
+Clone on the first line and work on the clone: `data = data[:]` (or
+`copy.deepcopy(data)` if it's nested). Then nothing you do can reach back and
+mutate the caller's list.
+
+</ASECheck>

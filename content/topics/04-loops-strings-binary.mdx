@@ -1,0 +1,215 @@
+## Intuition
+
+Three threads come together here. First, loops aren't limited to numbers — a
+`for` loop can walk straight over the **characters of a string**, which is the
+cleanest way to inspect text. Second, **guess-and-check** (a.k.a. exhaustive
+enumeration): if you can *generate* candidate answers systematically and *check*
+each one, you can solve a surprising range of problems — find a square root, a
+cube root, or the answer to a word problem — just by trying values until one
+works. Third, **binary**: everything in the machine is bits, and understanding
+how integers (and, next lecture, floats) become 0s and 1s explains why some
+number code behaves strangely. The `break` statement ties in: it's the escape
+hatch that stops a loop the instant you've found what you want.
+
+## The mechanics
+
+**Looping over a string** — three equivalent ways to scan for a character, from
+most verbose to most Pythonic:
+
+```python
+s = "fruit loops"
+for i in range(len(s)):        # index-based
+    if s[i] == 'i' or s[i] == 'u':
+        print("found")
+
+for char in s:                 # iterate characters directly
+    if char == 'i' or char == 'u':
+        print("found")
+
+for char in s:                 # 'in' as membership test — cleanest
+    if char in 'iu':
+        print("found")
+```
+
+**`break`** immediately exits the innermost loop, skipping the rest of the body
+and any remaining iterations:
+
+```python
+for guess in range(cube + 1):
+    if guess ** 3 >= abs(cube):
+        break                  # stop the moment we've reached/passed the target
+```
+
+**Guess-and-check square root** — enumerate integers, stop when `guess**2`
+reaches or passes `x`:
+
+```python
+x = int(input("Enter an integer: "))
+guess = 0
+while guess ** 2 < x:
+    guess = guess + 1
+if guess ** 2 == x:
+    print("Square root of", x, "is", guess)
+else:
+    print(x, "is not a perfect square")
+```
+
+**Decimal-to-binary** for a positive integer, by repeated `% 2` and `// 2`:
+
+```python
+result = ''
+if num == 0:
+    result = '0'
+while num > 0:
+    result = str(num % 2) + result   # remainder is the next bit (prepend!)
+    num = num // 2                   # shift right
+```
+
+## Worked example
+
+**Ops-complexity reference** — how the operations you use in these loops actually
+cost. Keep this table in your head; it explains why some loops are slow.
+
+| Operation | Cost |
+|---|---|
+| list index `lst[i]` | O(1) |
+| list membership `x in lst` | O(n) |
+| dict / set membership `x in d` | O(1) average |
+| `str[i]` (index a character) | O(1) |
+| `x in some_string` (substring/char search) | O(n) |
+| sorting `sorted(lst)` / `lst.sort()` | O(n log n) |
+| `len(x)` | O(1) |
+
+Now trace a guess-and-check with `break`. What does this print?
+
+```python
+mysum = 0
+for i in range(5, 11, 2):     # i takes 5, 7, 9
+    mysum += i
+    if mysum == 5:
+        break
+    mysum += 1
+print(mysum)
+```
+
+- `i = 5`: `mysum` becomes `5`. The test `mysum == 5` is `True` → `break`. The
+  `mysum += 1` line is *skipped*, and the loop ends immediately.
+- `print(mysum)` → `5`.
+
+The `break` fires on the very first pass, so `i` never reaches `7` or `9`, and the
+second `mysum += 1` never runs.
+
+## Traps
+
+<Callout type="trap">
+**`break` only exits the innermost loop.** In nested loops, one `break` escapes
+just the inner one; the outer loop keeps going. To leave both, you need a flag or
+to restructure the code.
+</Callout>
+
+**Guess-and-check needs a stopping condition or it runs forever.** For a
+non-perfect square, `guess ** 2 == x` never becomes true, so the loop must stop
+on `guess ** 2 >= x` (you've passed the answer), then report failure.
+
+**Negative inputs break naive square-root loops.** `while guess**2 < x` with a
+negative `x` never enters (0 is already ≥ a negative), so guard with a check like
+`if x < 0` and handle it separately.
+
+**Building the binary string in the wrong order.** The remainder `num % 2` is the
+*next* bit, and it goes on the *front*: `result = str(num % 2) + result`. Append
+it to the end and you get the bits reversed.
+
+**Membership `in` behaves differently by type.** `'i' in 'iu'` scans the string
+(O(n)); later you'll see `x in some_list` is also O(n), but `x in some_set` is
+O(1). Same keyword, very different cost.
+
+**Off-by-one in the guess range.** For cube roots, `range(abs(cube) + 1)` — the
+`+ 1` matters so that `cube == 1` (root 1) is actually reached, since `range`
+excludes its stop.
+
+## Memorize vs understand
+
+| Just know it cold | Be able to derive |
+|---|---|
+| `for char in s:` iterates characters; `x in s` tests membership | The output of a guess-and-check loop for a given `x` |
+| `break` exits only the innermost loop | Whether a guess-and-check loop terminates (perfect vs non-perfect) |
+| Int→binary: repeat `%2` (prepend bit) and `//2` (shift) | The binary string for a given positive integer by hand |
+| The ops-complexity table (list `in` O(n), dict/set `in` O(1), sort O(n log n)) | Why one loop is O(n) and another is O(n²) |
+| `range(k + 1)` to include `k` | How to add a stopping/failure condition to an enumeration |
+
+## ASE check
+
+```python
+count = 0
+for i in range(2, 9, 3):
+    if i % 2 == 0:
+        count += 1
+print(count)
+```
+
+<ASECheck q="How many even numbers, and what prints?">
+
+`2`. `range(2, 9, 3)` yields `2, 5, 8`. Of those, `2` and `8` are even, so `count`
+ends at `2`.
+
+</ASECheck>
+
+```python
+num = 19
+result = ''
+while num > 0:
+    result = str(num % 2) + result
+    num = num // 2
+print(result)
+```
+
+<ASECheck q="What binary string does this produce?">
+
+`10011`. Successive `% 2` gives bits `1,1,0,0,1` (from the divisions
+19→9→4→2→1→0), each prepended, building `10011`. Check: `16 + 2 + 1 = 19`.
+
+</ASECheck>
+
+```python
+for x in range(3):
+    for y in range(3):
+        if x + y == 2:
+            print(x, y)
+            break
+```
+
+<ASECheck q="Which pairs print, and why doesn't break stop the outer loop?">
+
+`(0, 2)`, `(1, 1)`, `(2, 0)`. For each `x`, the inner loop finds the first `y`
+with `x + y == 2`, prints it, and `break`s — but `break` only exits the *inner*
+loop, so the outer `x` loop continues to the next value.
+
+</ASECheck>
+
+```python
+guess = 0
+x = 10
+while guess ** 2 < x:
+    guess = guess + 1
+print(guess, guess ** 2)
+```
+
+<ASECheck q="What prints, and is 10 a perfect square?">
+
+`4 16`. The loop stops when `guess ** 2` is no longer `< 10`: at `guess = 3`,
+`9 < 10` is true, so it goes to `4`, and `16 < 10` is false. Since `16 != 10`,
+`10` is not a perfect square — the loop *overshot* it.
+
+</ASECheck>
+
+<ASECheck q="Why must a guess-and-check square-root loop stop when guess squared reaches or passes x, rather than only on exact equality?">
+
+If `x` isn't a perfect square, `guess ** 2 == x` is never true, so a loop that
+waits for exact equality runs forever. Stopping when `guess ** 2 >= x` guarantees
+termination: once you've reached or passed `x`, you check whether it was an exact
+hit and report failure otherwise.
+
+</ASECheck>
+
+*Content reconstructed from MIT OCW 6.100L Fall 2022, Lecture 4 (Ana Bell),
+CC BY-NC-SA.*

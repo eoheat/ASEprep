@@ -1,0 +1,236 @@
+## Intuition
+
+Sorting matters because a *sorted* list unlocks binary search (`Theta(log n)`)
+instead of linear search (`Theta(n)`). But sorting isn't free, so the real question
+is "when is it worth sorting first?" The answer is **amortization**: if you sort
+once and then search many times, the one-time sort cost gets spread across all the
+searches and becomes irrelevant. `SORT + K * Theta(log n) < K * Theta(n)` for large
+`K`.
+
+This lecture walks through four sorts of increasing cleverness — bogo, bubble,
+selection, merge — and lands on the headline fact: **`Theta(n log n)` is the fastest
+a comparison sort can be.** Merge sort achieves it by divide-and-conquer; the
+`Theta(n^2)` sorts don't. Knowing which sort is which class, and *why*, is the
+core exam skill here.
+
+## The mechanics
+
+**Bogo sort** (a joke, but instructive): shuffle randomly, check if sorted, repeat.
+
+```python
+def bogo_sort(L):
+    while not is_sorted(L):
+        random.shuffle(L)
+```
+
+Best case `Theta(n)` (one lucky shuffle, then the check). Worst case is *unbounded*
+— you might never get lucky. Don't use it; do remember it as the baseline for "how
+bad can it get."
+
+**Bubble sort:** compare adjacent pairs, swap if out of order, repeat passes until
+no swaps happen.
+
+```python
+def bubble_sort(L):
+    did_swap = True
+    while did_swap:                       # outer: up to n passes
+        did_swap = False
+        for j in range(1, len(L)):        # inner: n-1 comparisons
+            if L[j-1] > L[j]:
+                did_swap = True
+                L[j], L[j-1] = L[j-1], L[j]
+```
+
+Inner loop does the comparisons; outer loop repeats until a clean pass.
+`Theta(n^2)` — up to `n` passes of `n` comparisons.
+
+**Selection sort:** repeatedly find the minimum of the unsorted remainder and place
+it at the front. After the i-th step, the first `i` elements are sorted and are all
+smaller than everything after them.
+
+```python
+def selection_sort(L):
+    for i in range(len(L)):               # Theta(n)
+        for j in range(i, len(L)):        #   Theta(n-i)
+            if L[j] < L[i]:
+                L[i], L[j] = L[j], L[i]
+```
+
+The comparison count is `n + (n-1) + ... + 1 = n(n+1)/2`, so `Theta(n^2)`. Its
+distinguishing property: after step `i`, the first `i` elements are *guaranteed*
+finalized and sorted.
+
+**Merge sort:** divide-and-conquer. Split in half until sublists have length 0 or 1
+(trivially sorted), then merge sorted sublists back together.
+
+```python
+def merge_sort(L):
+    if len(L) < 2:                        # base case: length 0 or 1 is sorted
+        return L[:]
+    middle = len(L) // 2
+    left = merge_sort(L[:middle])         # sort each half
+    right = merge_sort(L[middle:])
+    return merge(left, right)             # combine
+```
+
+<Callout type="note">
+Merge sort is the payoff of divide-and-conquer: splitting gives `Theta(log n)`
+levels (like bisection: `n / 2^k = 1`), and each level does `Theta(n)` total work
+merging. `log n` levels times `n` work per level = `Theta(n log n)`.
+</Callout>
+
+## Worked example
+
+The heart of merge sort is the **merge** step: combine two already-sorted lists into
+one sorted list by repeatedly taking the smaller front element.
+
+```python
+def merge(left, right):
+    result = []
+    i, j = 0, 0
+    while i < len(left) and j < len(right):
+        if left[i] < right[j]:
+            result.append(left[i])
+            i += 1
+        else:
+            result.append(right[j])
+            j += 1
+    while i < len(left):        # left had leftovers
+        result.append(left[i])
+        i += 1
+    while j < len(right):       # right had leftovers
+        result.append(right[j])
+        j += 1
+    return result
+```
+
+Trace `merge([1, 5, 12, 18, 19, 20], [2, 3, 4, 17])`:
+
+| left remaining | right remaining | compare | result |
+|---|---|---|---|
+| `[1,5,12,18,19,20]` | `[2,3,4,17]` | 1 vs 2 | `[]` |
+| `[5,12,18,19,20]` | `[2,3,4,17]` | 5 vs 2 | `[1]` |
+| `[5,12,18,19,20]` | `[3,4,17]` | 5 vs 3 | `[1,2]` |
+| `[5,12,18,19,20]` | `[4,17]` | 5 vs 4 | `[1,2,3]` |
+| `[5,12,18,19,20]` | `[17]` | 5 vs 17 | `[1,2,3,4]` |
+| `[12,18,19,20]` | `[17]` | 12 vs 17 | `[1,2,3,4,5]` |
+| `[18,19,20]` | `[17]` | 18 vs 17 | `[1,2,3,4,5,12]` |
+| `[18,19,20]` | `[]` | — | `[1,2,3,4,5,12,17]` |
+
+Then dump the leftover `[18,19,20]`. Final: `[1,2,3,4,5,12,17,18,19,20]`. One pass
+through both lists — `Theta(len(left) + len(right))`, linear in the combined length.
+
+Now the full recursion on `[8, 4, 1, 6, 5, 9, 2, 0]`: split down to singletons,
+then merge pairs upward — `[8],[4]` → `[4,8]`; `[1],[6]` → `[1,6]`; then
+`[4,8],[1,6]` → `[1,4,6,8]`; and so on, until the two halves `[1,4,6,8]` and
+`[0,2,5,9]` merge to `[0,1,2,4,5,6,8,9]`. There are `log n = 3` levels of merging on
+8 elements, each doing `Theta(n)` work → `Theta(n log n)`.
+
+## Traps
+
+<Callout type="trap">
+**`Theta(n log n)` is the floor for comparison sorts.** Bubble and selection are
+`Theta(n^2)` — genuinely worse. Merge sort's split-and-merge is what buys the `log`.
+Don't call a nested-loop sort `n log n`; if you see two loops over the input, it's
+`n^2`.
+</Callout>
+
+**Selection sort's guarantee is specific.** It's what makes it memorable: after `i`
+steps the first `i` elements are sorted *and finalized*. Bubble sort makes progress
+too, but doesn't finalize a prefix the same way. Don't attribute selection's
+property to bubble.
+
+**Merge sort uses extra space.** Each `merge` builds a new `result` list — it is not
+in-place. Bubble and selection sort mutate the list in place. That space cost is the
+price of the better time complexity.
+
+**Base case is length &lt; 2, not length == 0.** `merge_sort` stops recursing when
+the list has 0 *or* 1 element (`len(L) < 2`), because both are already sorted.
+Writing `if len(L) == 0` would recurse forever on a 1-element list.
+
+**Sorting first only pays off with many searches.** For a *single* search, sort +
+binary search costs more than one linear search (`SORT + Theta(log n) > Theta(n)`,
+since `SORT >= Theta(n)`). Sorting wins only when you amortize it over `K` searches
+with `K` large.
+
+**Bogo's best case is `Theta(n)`, not `Theta(1)`.** Even a lucky first shuffle still
+costs a full `is_sorted` check, which is linear.
+
+## Memorize vs understand
+
+| Just know it cold | Be able to derive |
+|---|---|
+| bubble `Theta(n^2)`, selection `Theta(n^2)`, merge `Theta(n log n)` | Why merge sort is `n log n`: `log n` levels times `n` work per level |
+| `Theta(n log n)` is the best a comparison sort can do | Why the merge step is `Theta(len(left)+len(right))` |
+| Merge sort = divide-and-conquer: split to length 0/1, then merge | When sorting-first beats repeated linear search (amortization) |
+| Selection guarantees the first i elements are sorted after step i | Tracing the merge step on two sorted lists |
+| Merge sort needs extra space; bubble/selection are in-place | Why bogo's worst case is unbounded but best case is `Theta(n)` |
+
+Unit 4 operations-cost table:
+
+| Operation | Cost |
+|---|---|
+| list index `L[i]` | O(1) |
+| list append `L.append(x)` | O(1) amortized |
+| list `in` / `insert` / `delete` / `copy` | O(n) |
+| dict / set lookup, insert, `in` | O(1) average |
+| sort (`sorted`, `.sort`) | O(n log n) |
+| linear search | O(n) |
+| bisection (binary) search | O(log n) |
+| bubble sort | O(n^2) |
+| merge sort | O(n log n) |
+
+Python's built-in `sorted`/`.sort` runs in `O(n log n)` — it's essentially an
+optimized merge sort (Timsort). That's why `sorted` is the right tool: you can't
+beat `n log n` for a general comparison sort anyway.
+
+## ASE check
+
+<ASECheck q="What are the Theta complexities of bubble sort, selection sort, and merge sort?">
+
+Bubble sort `Theta(n^2)`, selection sort `Theta(n^2)`, merge sort `Theta(n log n)`,
+where `n = len(L)`. Merge sort is asymptotically the fastest of the three.
+
+</ASECheck>
+
+<ASECheck q="Why is merge sort Theta(n log n) instead of Theta(n^2)?">
+
+Splitting the list in half repeatedly creates `Theta(log n)` levels of recursion
+(`n / 2^k = 1` gives `k = log n`). At each level, merging all the sublists back
+together does `Theta(n)` total work. `log n` levels times `n` work per level =
+`Theta(n log n)`. The nested-loop sorts, by contrast, do `n` work `n` times.
+
+</ASECheck>
+
+```python
+# merge two sorted lists
+merge([1, 3, 5], [2, 4, 6])
+```
+
+<ASECheck q="What does this return, and how many total elements does merge copy?">
+
+`[1, 2, 3, 4, 5, 6]`. It copies all 6 elements — `len(left) + len(right)` — in one
+pass, comparing the fronts of each list and taking the smaller. Merge is linear in
+the combined length.
+
+</ASECheck>
+
+<ASECheck q="You will search a fixed list 10,000 times. Is it worth sorting it first, given sort is Theta(n log n)?">
+
+Yes. Sorting once costs `Theta(n log n)`, then each of the 10,000 searches is
+`Theta(log n)` via binary search instead of `Theta(n)` linear. The one-time sort
+amortizes across the many searches: `SORT + 10000*Theta(log n)` is far less than
+`10000*Theta(n)` for any reasonably large `n`.
+
+</ASECheck>
+
+<ASECheck q="Which sort guarantees that after the i-th pass, the first i elements are already in their final sorted positions?">
+
+Selection sort. It repeatedly extracts the minimum of the unsorted remainder and
+places it at index `i`, so after step `i` the first `i` elements are both sorted and
+finalized. Bubble sort makes progress but doesn't finalize a prefix this way.
+
+</ASECheck>
+
+Source: MIT OCW 6.100L Fall 2022, Lecture 24 (Ana Bell), CC BY-NC-SA. Reconstructed
+as original prose.

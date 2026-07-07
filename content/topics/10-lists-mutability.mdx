@@ -1,0 +1,215 @@
+## Intuition
+
+Lists are **mutable**: you can change their contents in place, without making a
+new object. That's the whole point — update one element of a huge list without
+copying the rest. But mutability has a sharp edge: some list methods *mutate*
+the list and return `None` (you use them for their **side effect**), while other
+operations *build a new list* and return it. Mixing these up is the number one
+list bug. And mutating a list *while looping over it* produces genuinely
+surprising results the exam loves to test.
+
+Rule to internalize: **if a method mutates in place, it returns `None`.** Never
+write `L = L.sort()`.
+
+## The mechanics
+
+Assigning to an index changes the list in place — same object, new contents:
+
+```python
+L = [2, 4, 3]
+L[1] = 5          # L is now [2, 5, 3], same object
+```
+
+Methods that mutate and return `None` (use them for the side effect):
+
+```python
+L = [2, 1, 3]
+L.append(5)       # L is now [2, 1, 3, 5]; append returns None
+L.sort()          # L is now [1, 2, 3, 5]; sort returns None
+L.reverse()       # L is now [5, 3, 2, 1]; reverse returns None
+L.extend([0, 6])  # L grows in place; extend returns None
+```
+
+Operations that build and return a *new* object (don't mutate the original):
+
+```python
+a = sorted([9, 6, 3])   # a is [3, 6, 9]; the argument is untouched
+b = [1, 2] + [3, 4]     # b is [1, 2, 3, 4]; a new list via +
+```
+
+Converting between strings and lists:
+
+```python
+list("cat")             # ['c', 'a', 't']
+"hi there".split()      # ['hi', 'there']  -- splits on whitespace
+"a,b,c".split(',')      # ['a', 'b', 'c']
+''.join(['a', 'b'])     # 'ab'
+'_'.join(['a', 'b'])    # 'a_b'
+```
+
+To mutate every element, loop over *indices* (you need the index to assign
+back), and note there's no `return` — the caller sees the change through the
+shared list:
+
+```python
+def square_list(L):
+    for i in range(len(L)):
+        L[i] = L[i] ** 2   # assign back into the list
+
+nums = [2, 3, 4]
+square_list(nums)
+print(nums)                # [4, 9, 16] -- caller's list mutated
+```
+
+<Callout type="tip">
+`L.append(5)` mutates and returns `None`. So `L = L.append(5)` rebinds `L` to
+`None` — you lose your list entirely. Just write `L.append(5)` on its own line.
+</Callout>
+
+## Worked example
+
+The classic mutate-while-iterating trap. Trace exactly what the loop iterates
+over.
+
+**Example A — looping over `range(len(L))` while appending: terminates.**
+
+```python
+L = [1, 2, 3, 4]
+for i in range(len(L)):
+    L.append(i)
+print(L)     # [1, 2, 3, 4, 0, 1, 2, 3]
+```
+
+`range(len(L))` is evaluated *once* at the start, when `len(L)` is 4. So the
+loop runs exactly 4 times (`i` = 0, 1, 2, 3), appending 0, 1, 2, 3. Later
+appends don't extend the range.
+
+**Example B — looping over the list itself while appending: never stops.**
+
+```python
+L = [1, 2, 3, 4]
+i = 0
+for e in L:
+    L.append(i)
+    i += 1
+# INFINITE LOOP -- do not run
+```
+
+Here the `for` walks the list directly. Every iteration adds a new element, so
+there's always a "next" element to visit — the loop never ends.
+
+**Example C — reassigning `L` to a new object inside the loop: 4 iterations.**
+
+```python
+L = [1, 2, 3, 4]
+for e in L:
+    L = L + L      # rebinds L to a brand-new list
+print(len(L))      # 64
+```
+
+The `for` locked onto the *original* `[1, 2, 3, 4]` object at the start, so it
+still iterates 4 times. But `L = L + L` rebinds the name `L` to a new list each
+time, doubling its length: 8, 16, 32, 64. `e` keeps indexing into the original.
+
+## Traps
+
+<Callout type="trap">
+**`L = L.sort()` sets `L` to `None`.** In-place methods (`sort`, `reverse`,
+`append`, `extend`, `clear`) return `None`. Call them for the side effect and
+keep using the same `L`. Use `sorted(L)` (returns a new list) when you want to
+assign.
+</Callout>
+
+**Mutating a list while iterating over it directly.** Appending while looping
+over the list itself loops forever (Example B); removing while looping skips
+elements. Iterate over a copy (`for e in L[:]`) or build a new list instead.
+
+**`+` vs `extend`.** `L1 + L2` builds a new list and doesn't touch `L1`.
+`L1.extend(L2)` mutates `L1` in place and returns `None`.
+
+**`clear()` vs `L = []`.** `L.clear()` empties the *same* object (any aliases
+see it emptied). `L = []` rebinds `L` to a brand-new empty list, leaving the old
+object (and its aliases) alone. Check with `id(L)`.
+
+**Passing a list to a function mutates the caller's list.** Since the function
+shares the same object, `L[i] = ...` or `L.append(...)` inside the function is
+visible to the caller. That's a feature, but it surprises people who expect a
+private copy.
+
+## Memorize vs understand
+
+| Just know it cold | Be able to derive |
+|---|---|
+| `append`, `sort`, `reverse`, `extend`, `clear` mutate and return `None` | Whether a given loop that mutates will terminate |
+| `sorted(L)` and `L1 + L2` return new lists; originals untouched | How many times a `for` loop runs when the list is mutated |
+| `L = L.sort()` is a bug (sets `L` to `None`) | Whether a function call will change the caller's list |
+| `range(len(L))` is fixed at loop start | Why `L = L + L` in a loop still iterates the original length |
+| `split()` splits a string to a list; `join()` joins a list to a string | When to iterate over a clone to avoid mutate-while-iterate bugs |
+
+## ASE check
+
+```python
+L = [3, 1, 2]
+x = L.sort()
+print(L, x)
+```
+
+<ASECheck q="What does this print?">
+
+`[1, 2, 3] None`. `sort()` mutates `L` in place (now sorted) and returns
+`None`, so `x` is `None`.
+
+</ASECheck>
+
+```python
+L = [1, 2, 3, 4]
+for i in range(len(L)):
+    L.append(i)
+print(len(L))
+```
+
+<ASECheck q="What is the length at the end?">
+
+`8`. `range(len(L))` is computed once when `len(L)` is 4, so the loop runs 4
+times and appends 4 elements. Final length: 4 + 4 = 8.
+
+</ASECheck>
+
+```python
+a = [1, 2]
+b = a + [3]
+a.append(9)
+print(b)
+```
+
+<ASECheck q="What does b print?">
+
+`[1, 2, 3]`. `a + [3]` built a new list bound to `b`. Later appending to `a`
+mutates `a`'s object, not `b`'s, so `b` is unchanged.
+
+</ASECheck>
+
+```python
+def add_one(L):
+    for i in range(len(L)):
+        L[i] += 1
+nums = [10, 20]
+add_one(nums)
+print(nums)
+```
+
+<ASECheck q="What does the final print show, and why?">
+
+`[11, 21]`. The function shares the same list object as `nums`, so mutating
+`L[i]` inside is visible to the caller. No `return` is needed.
+
+</ASECheck>
+
+<ASECheck q="You want a sorted version of a list but must keep the original order intact. Which do you use, sort() or sorted()?">
+
+`sorted(L)`. It returns a new sorted list and leaves `L` untouched. `L.sort()`
+would mutate `L` in place and destroy the original order.
+
+</ASECheck>
+
+*Content reconstructed from MIT OCW 6.100L Fall 2022, Lecture 10 (Ana Bell), CC BY-NC-SA.*

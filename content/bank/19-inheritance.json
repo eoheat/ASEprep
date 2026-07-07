@@ -1,0 +1,65 @@
+[
+  {
+    "id": "bank-19-a",
+    "kind": "coding",
+    "source": "bank",
+    "topicSlug": "19-inheritance",
+    "unit": 3,
+    "difficulty": "warmup",
+    "reconstructed": false,
+    "title": "Subclass that adds and overrides a method",
+    "statement": "Start from this parent class (paste it into your solution):\n\n```python\nclass Animal:\n    def __init__(self, name):\n        self.name = name\n    def speak(self):\n        return 'some sound'\n```\n\nDefine a subclass `Dog(Animal)` that:\n\n- **overrides** `speak(self)` to return `'woof'`, and\n- **adds** a new method `fetch(self)` that returns `'<name> fetches'`, e.g. a Dog named `'Rex'` returns `'Rex fetches'`.\n\nDo not redefine `__init__` — inherit it.\n\n```\n>>> d = Dog('Rex')\n>>> d.speak()\n'woof'\n>>> d.fetch()\n'Rex fetches'\n```",
+    "functionSignature": "class Dog(Animal):",
+    "starterCode": "class Animal:\n    def __init__(self, name):\n        self.name = name\n    def speak(self):\n        return 'some sound'\n\nclass Dog(Animal):\n    # override speak, add fetch; do not redefine __init__\n    pass",
+    "solution": "class Animal:\n    def __init__(self, name):\n        self.name = name\n    def speak(self):\n        return 'some sound'\n\nclass Dog(Animal):\n    def speak(self):\n        return 'woof'\n    def fetch(self):\n        return self.name + ' fetches'",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      { "name": "override speak", "expression": "Dog('Rex').speak()", "expected": "'woof'" },
+      { "name": "new method fetch", "expression": "Dog('Rex').fetch()", "expected": "'Rex fetches'" },
+      { "name": "inherited __init__ set name", "expression": "Dog('Fido').name", "expected": "'Fido'" },
+      { "name": "Dog is an Animal", "expression": "isinstance(Dog('Rex'), Animal)", "expected": "True", "hidden": true },
+      { "name": "parent still returns generic sound", "expression": "Animal('x').speak()", "expected": "'some sound'", "hidden": true }
+    ]
+  },
+  {
+    "id": "bank-19-b",
+    "kind": "coding",
+    "source": "bank",
+    "topicSlug": "19-inheritance",
+    "unit": 3,
+    "difficulty": "exam-level",
+    "reconstructed": false,
+    "title": "Subclass that extends __init__ via the parent",
+    "statement": "Start from this parent class (paste it into your solution):\n\n```python\nclass Employee:\n    def __init__(self, name, base_salary):\n        self.name = name\n        self.base_salary = base_salary\n    def pay(self):\n        return self.base_salary\n```\n\nDefine a subclass `Manager(Employee)` that adds a `bonus` attribute.\n\n- `__init__(self, name, base_salary, bonus)` must **call the parent's `__init__`** to set `name` and `base_salary` (do not re-assign them by hand), then store `self.bonus`.\n- Override `pay(self)` to return `base_salary + bonus`.\n- Add `describe(self)` returning `'<name>: $<pay>'`, e.g. `'Kim: $130'`.\n\n```\n>>> m = Manager('Kim', 100, 30)\n>>> m.pay()\n130\n>>> m.describe()\n'Kim: $130'\n```\n\nHint: call `Employee.__init__(self, name, base_salary)` (or `super().__init__(...)`).",
+    "functionSignature": "class Manager(Employee):",
+    "starterCode": "class Employee:\n    def __init__(self, name, base_salary):\n        self.name = name\n        self.base_salary = base_salary\n    def pay(self):\n        return self.base_salary\n\nclass Manager(Employee):\n    def __init__(self, name, base_salary, bonus):\n        # call the parent __init__, then store bonus\n        pass\n\n    def pay(self):\n        pass\n\n    def describe(self):\n        pass",
+    "solution": "class Employee:\n    def __init__(self, name, base_salary):\n        self.name = name\n        self.base_salary = base_salary\n    def pay(self):\n        return self.base_salary\n\nclass Manager(Employee):\n    def __init__(self, name, base_salary, bonus):\n        Employee.__init__(self, name, base_salary)\n        self.bonus = bonus\n\n    def pay(self):\n        return self.base_salary + self.bonus\n\n    def describe(self):\n        return self.name + ': $' + str(self.pay())",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      { "name": "overridden pay", "expression": "Manager('Kim', 100, 30).pay()", "expected": "130" },
+      { "name": "parent init set name", "expression": "Manager('Kim', 100, 30).name", "expected": "'Kim'" },
+      { "name": "parent init set base_salary", "expression": "Manager('Kim', 100, 30).base_salary", "expected": "100" },
+      { "name": "bonus stored", "expression": "Manager('Kim', 100, 30).bonus", "expected": "30" },
+      { "name": "describe calls own pay", "expression": "Manager('Kim', 100, 30).describe()", "expected": "'Kim: $130'" },
+      { "name": "Manager is an Employee", "expression": "isinstance(Manager('a', 1, 1), Employee)", "expected": "True", "hidden": true },
+      { "name": "zero bonus", "expression": "Manager('Lee', 50, 0).pay()", "expected": "50", "hidden": true }
+    ]
+  },
+  {
+    "id": "bank-19-c",
+    "kind": "code-reading",
+    "source": "bank",
+    "topicSlug": "19-inheritance",
+    "unit": 3,
+    "difficulty": "exam-level",
+    "reconstructed": false,
+    "title": "Which method runs? (method resolution)",
+    "statement": "Python looks for a method in the object's own class first, then walks up the hierarchy. Trace this and give exactly what the program prints (three lines).",
+    "prompt": "```python\nclass A:\n    def who(self):\n        return 'A'\n    def greet(self):\n        return 'hi from ' + self.who()\n\nclass B(A):\n    def who(self):\n        return 'B'\n\nclass C(B):\n    pass\n\nprint(A().greet())\nprint(B().greet())\nprint(C().greet())\n```",
+    "answer": "hi from A\nhi from B\nhi from B",
+    "acceptedAnswers": ["hi from A\nhi from B\nhi from B"],
+    "explanation": "greet is only defined on A, but it calls self.who(), which resolves against the actual object's class. A().who() -> 'A'. B overrides who -> 'B'. C inherits from B (and doesn't override who), so C().who() finds B's version -> 'B'. So the three lines are 'hi from A', 'hi from B', 'hi from B'."
+  }
+]

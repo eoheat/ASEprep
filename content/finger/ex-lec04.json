@@ -1,0 +1,52 @@
+[
+  {
+    "id": "finger-lec04-q1",
+    "kind": "coding",
+    "source": "finger",
+    "reconstructed": true,
+    "topicSlug": "04-loops-strings-binary",
+    "unit": 1,
+    "difficulty": "warmup",
+    "title": "Perfect Cube Root (Guess-and-Check)",
+    "statement": "**OCW Lecture 4 finger exercise (reconstructed).** The original OCW prompt assumes a positive integer `N` and asks you to `print` the cube root of `N` if `N` is a perfect cube, otherwise `print` `error`, using a counter loop.\n\nTo make it testable here, implement `cube_root(N)` that **returns** the integer cube root when `N` is a perfect cube, and the string `'error'` when it is not.\n\n- `cube_root(27)` → `3`\n- `cube_root(1)` → `1`\n- `cube_root(26)` → `'error'`\n\nThis is guess-and-check: increment a counter `i` from 1 while `i**3 < N`, then check whether you landed exactly on `N`.\n\n*Source: MIT OCW 6.100L Fall 2022, Finger Exercise Lecture 4 (reconstructed as a function for this study tool).*",
+    "functionSignature": "def cube_root(N):",
+    "starterCode": "def cube_root(N):\n    \"\"\"Return the integer cube root of N if N is a perfect cube, else 'error'.\n\n    >>> cube_root(27)\n    3\n    >>> cube_root(26)\n    'error'\n    \"\"\"\n    pass",
+    "solution": "def cube_root(N):\n    i = 1\n    while i**3 < N:\n        i += 1\n    if i**3 == N:\n        return i\n    else:\n        return 'error'",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      {
+        "name": "27 -> 3",
+        "expression": "cube_root(27)",
+        "expected": "3"
+      },
+      {
+        "name": "1 -> 1",
+        "expression": "cube_root(1)",
+        "expected": "1"
+      },
+      {
+        "name": "8 -> 2",
+        "expression": "cube_root(8)",
+        "expected": "2"
+      },
+      {
+        "name": "large perfect cube 1000000 -> 100",
+        "expression": "cube_root(1000000)",
+        "expected": "100",
+        "hidden": true
+      },
+      {
+        "name": "26 is not a perfect cube -> 'error'",
+        "expression": "cube_root(26)",
+        "expected": "'error'"
+      },
+      {
+        "name": "2 is not a perfect cube -> 'error'",
+        "expression": "cube_root(2)",
+        "expected": "'error'",
+        "hidden": true
+      }
+    ]
+  }
+]

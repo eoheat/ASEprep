@@ -1,0 +1,75 @@
+[
+  {
+    "id": "bank-18-a",
+    "kind": "coding",
+    "source": "bank",
+    "topicSlug": "18-more-class-methods",
+    "unit": 3,
+    "difficulty": "warmup",
+    "reconstructed": false,
+    "title": "A Fraction with __add__",
+    "statement": "Define a class `Fraction` for a fraction `num/den`.\n\n- `__init__(self, num, den)` stores the numerator and denominator (assume `den != 0`).\n- `__add__(self, other)` returns a **new** `Fraction` equal to the sum, using the cross-multiplication rule `a/b + c/d = (a*d + c*b) / (b*d)`. Do **not** reduce the fraction.\n- `value(self)` returns the fraction as a float (`num / den`).\n\n```\n>>> f = Fraction(1, 2) + Fraction(1, 3)\n>>> f.value()\n0.8333333333333334\n```",
+    "functionSignature": "class Fraction:",
+    "starterCode": "class Fraction:\n    def __init__(self, num, den):\n        pass\n\n    def __add__(self, other):\n        pass\n\n    def value(self):\n        pass",
+    "solution": "class Fraction:\n    def __init__(self, num, den):\n        self.num = num\n        self.den = den\n\n    def __add__(self, other):\n        new_num = self.num * other.den + other.num * self.den\n        new_den = self.den * other.den\n        return Fraction(new_num, new_den)\n\n    def value(self):\n        return self.num / self.den",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      { "name": "1/2 + 1/3 value", "expression": "(Fraction(1, 2) + Fraction(1, 3)).value()", "expected": "0.8333333333333334", "compare": "float", "tolerance": 1e-9 },
+      { "name": "result is a Fraction", "expression": "isinstance(Fraction(1, 2) + Fraction(1, 3), Fraction)", "expected": "True" },
+      { "name": "unreduced numerator/denominator", "expression": "(lambda f: (f.num, f.den))(Fraction(1, 2) + Fraction(1, 3))", "expected": "(5, 6)" },
+      { "name": "adding zero fraction", "expression": "(Fraction(3, 4) + Fraction(0, 1)).value()", "expected": "0.75", "compare": "float", "tolerance": 1e-9, "hidden": true },
+      { "name": "operands unchanged (new object)", "expression": "(lambda a, b: (a + b, (a.num, a.den, b.num, b.den))[1])(Fraction(1, 2), Fraction(1, 3))", "expected": "(1, 2, 1, 3)", "hidden": true }
+    ]
+  },
+  {
+    "id": "bank-18-b",
+    "kind": "coding",
+    "source": "bank",
+    "topicSlug": "18-more-class-methods",
+    "unit": 3,
+    "difficulty": "exam-level",
+    "reconstructed": false,
+    "title": "A Money class with __eq__, __lt__, and a class counter",
+    "statement": "Define a class `Money` holding an integer number of `cents`.\n\n- `__init__(self, cents)` stores `cents`. It must also increment a **class variable** `count` that tracks how many `Money` objects have ever been created. Start `count` at 0 (define it at class level, not in `__init__`).\n- `__eq__(self, other)` returns whether two `Money` objects have equal cents.\n- `__lt__(self, other)` compares by cents, so a list of `Money` can be `sorted()`.\n- `__str__(self)` returns dollars with two decimals, e.g. `Money(150)` -> `'$1.50'`, `Money(5)` -> `'$0.05'`.\n\n```\n>>> Money(150) == Money(150)\nTrue\n>>> str(Money(5))\n'$0.05'\n>>> sorted([Money(300), Money(50), Money(150)])[0].cents\n50\n```\n\nHint for `__str__`: `cents // 100` is the dollars and `cents % 100` is the remaining cents; zero-pad the cents to two digits.",
+    "functionSignature": "class Money:",
+    "starterCode": "class Money:\n    count = 0\n\n    def __init__(self, cents):\n        pass\n\n    def __eq__(self, other):\n        pass\n\n    def __lt__(self, other):\n        pass\n\n    def __str__(self):\n        pass",
+    "solution": "class Money:\n    count = 0\n\n    def __init__(self, cents):\n        self.cents = cents\n        Money.count += 1\n\n    def __eq__(self, other):\n        return self.cents == other.cents\n\n    def __lt__(self, other):\n        return self.cents < other.cents\n\n    def __str__(self):\n        return '$' + str(self.cents // 100) + '.' + str(self.cents % 100).zfill(2)",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      { "name": "equality true", "expression": "Money(150) == Money(150)", "expected": "True" },
+      { "name": "equality false", "expression": "Money(150) == Money(151)", "expected": "False" },
+      { "name": "less-than", "expression": "Money(50) < Money(150)", "expected": "True" },
+      { "name": "str dollars and cents", "expression": "str(Money(150))", "expected": "'$1.50'" },
+      { "name": "str zero-pads cents", "expression": "str(Money(5))", "expected": "'$0.05'" },
+      { "name": "sorting uses __lt__", "expression": "[m.cents for m in sorted([Money(300), Money(50), Money(150)])]", "expected": "[50, 150, 300]" },
+      { "name": "class counter increments", "expression": "(lambda: (Money(1), Money(2), Money(3), Money.count)[-1])()", "expected": "3", "hidden": true },
+      { "name": "whole dollars", "expression": "str(Money(1000))", "expected": "'$10.00'", "hidden": true }
+    ]
+  },
+  {
+    "id": "bank-18-c",
+    "kind": "coding",
+    "source": "bank",
+    "topicSlug": "18-more-class-methods",
+    "unit": 3,
+    "difficulty": "exam-level",
+    "reconstructed": false,
+    "title": "Compose classes: a Polyline built from Points",
+    "statement": "Build one class on top of another.\n\nFirst define `Point` with `__init__(self, x, y)` and a method `dist(self, other)` returning the Euclidean distance to another `Point`.\n\nThen define `Polyline` whose `__init__(self, points)` takes a list of `Point` objects (in order). Give `Polyline` a method `length(self)` that returns the total path length: the sum of distances between consecutive points. A polyline with fewer than two points has length `0.0`.\n\n```\n>>> square = Polyline([Point(0, 0), Point(0, 3), Point(4, 3)])\n>>> square.length()\n7.0\n```\n\nYour `Polyline.length` **must** call `Point.dist` — do not re-derive the distance formula inside `Polyline`.",
+    "functionSignature": "class Point:",
+    "starterCode": "class Point:\n    def __init__(self, x, y):\n        pass\n\n    def dist(self, other):\n        pass\n\nclass Polyline:\n    def __init__(self, points):\n        pass\n\n    def length(self):\n        pass",
+    "solution": "class Point:\n    def __init__(self, x, y):\n        self.x = x\n        self.y = y\n\n    def dist(self, other):\n        return ((self.x - other.x) ** 2 + (self.y - other.y) ** 2) ** 0.5\n\nclass Polyline:\n    def __init__(self, points):\n        self.points = points\n\n    def length(self):\n        total = 0.0\n        for i in range(len(self.points) - 1):\n            total += self.points[i].dist(self.points[i + 1])\n        return total",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      { "name": "empty polyline", "expression": "Polyline([]).length()", "expected": "0.0", "compare": "float", "tolerance": 1e-9 },
+      { "name": "single point", "expression": "Polyline([Point(1, 1)]).length()", "expected": "0.0", "compare": "float", "tolerance": 1e-9 },
+      { "name": "one segment (3-4-5)", "expression": "Polyline([Point(0, 0), Point(3, 4)]).length()", "expected": "5.0", "compare": "float", "tolerance": 1e-9 },
+      { "name": "two segments", "expression": "Polyline([Point(0, 0), Point(0, 3), Point(4, 3)]).length()", "expected": "7.0", "compare": "float", "tolerance": 1e-9 },
+      { "name": "Point.dist direct", "expression": "Point(0, 0).dist(Point(6, 8))", "expected": "10.0", "compare": "float", "tolerance": 1e-9, "hidden": true },
+      { "name": "repeated point adds zero", "expression": "Polyline([Point(2, 2), Point(2, 2), Point(2, 5)]).length()", "expected": "3.0", "compare": "float", "tolerance": 1e-9, "hidden": true }
+    ]
+  }
+]

@@ -1,0 +1,89 @@
+[
+  {
+    "id": "bank-11-a",
+    "kind": "coding",
+    "title": "Append Without Side Effects",
+    "topicSlug": "11-aliasing-cloning",
+    "unit": 2,
+    "source": "bank",
+    "difficulty": "warmup",
+    "statement": "Write `with_item(items, x)` that returns a NEW list equal to `items` with `x` appended at the end — WITHOUT modifying the caller's list. Clone first, then append.\n\n- `with_item([1, 2], 3)` → `[1, 2, 3]`, and the original `[1, 2]` is untouched.",
+    "functionSignature": "def with_item(items, x):",
+    "starterCode": "def with_item(items, x):\n    \"\"\"Return a new list = items + [x], without mutating items.\n\n    >>> original = [1, 2]\n    >>> with_item(original, 3)\n    [1, 2, 3]\n    >>> original\n    [1, 2]\n    \"\"\"\n    pass",
+    "solution": "def with_item(items, x):\n    result = items[:]\n    result.append(x)\n    return result",
+    "tests": [
+      { "name": "returns extended list", "expression": "with_item([1, 2], 3)", "expected": "[1, 2, 3]" },
+      { "name": "original untouched", "expression": "(lambda o: (with_item(o, 3), o)[1])([1, 2])", "expected": "[1, 2]" },
+      { "name": "append to empty", "expression": "with_item([], 'a')", "expected": "['a']" },
+      { "name": "result is a different object", "expression": "(lambda o: with_item(o, 3) is o)([1, 2])", "expected": "False", "hidden": true }
+    ]
+  },
+  {
+    "id": "bank-11-b",
+    "kind": "coding",
+    "title": "Deep Copy a Grid",
+    "topicSlug": "11-aliasing-cloning",
+    "unit": 2,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "statement": "A shallow copy of a list of lists still shares the inner lists. Write `deep_copy_grid(grid)` that returns a fully independent copy of a 2-D list (a list of lists), so that mutating any inner list of the copy does NOT affect the original.\n\nBuild it yourself (a new outer list of cloned inner lists); do not `import copy`.",
+    "functionSignature": "def deep_copy_grid(grid):",
+    "starterCode": "def deep_copy_grid(grid):\n    \"\"\"Return a fully independent copy of a list of lists.\n\n    >>> g = [[1, 2], [3, 4]]\n    >>> c = deep_copy_grid(g)\n    >>> c[0][0] = 99\n    >>> g\n    [[1, 2], [3, 4]]\n    >>> c\n    [[99, 2], [3, 4]]\n    \"\"\"\n    pass",
+    "solution": "def deep_copy_grid(grid):\n    return [row[:] for row in grid]",
+    "tests": [
+      { "name": "equal to original", "expression": "deep_copy_grid([[1, 2], [3, 4]])", "expected": "[[1, 2], [3, 4]]" },
+      { "name": "mutating copy leaves original intact", "expression": "(lambda g: (deep_copy_grid(g)[0].append(9), g)[1])([[1, 2], [3, 4]])", "expected": "[[1, 2], [3, 4]]" },
+      { "name": "inner lists are distinct objects", "expression": "(lambda g: deep_copy_grid(g)[0] is g[0])([[1, 2]])", "expected": "False" },
+      { "name": "empty grid", "expression": "deep_copy_grid([])", "expected": "[]", "hidden": true },
+      { "name": "empty rows", "expression": "deep_copy_grid([[], []])", "expected": "[[], []]", "hidden": true }
+    ]
+  },
+  {
+    "id": "bank-11-c",
+    "kind": "code-reading",
+    "title": "Shallow copy shares inner list",
+    "topicSlug": "11-aliasing-cloning",
+    "unit": 2,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "statement": "A slice copy of a nested list. What does this print?",
+    "prompt": "m = [[1], [2], [3]]\nn = m[:]\nn[0].append(99)\nn.append([4])\nprint(m)\nprint(n)",
+    "answer": "[[1, 99], [2], [3]]\n[[1, 99], [2], [3], [4]]",
+    "acceptedAnswers": ["[[1, 99], [2], [3]]\n[[1, 99], [2], [3], [4]]\n"],
+    "explanation": "`n = m[:]` is a SHALLOW copy: `n` is a new outer list, but `n[0]` and `m[0]` are the SAME inner list. So `n[0].append(99)` shows up in both. However `n.append([4])` mutates only the new outer list `n`, so `m` does not gain the `[4]` — the outer lists are independent, the inner ones are shared."
+  },
+  {
+    "id": "bank-11-d",
+    "kind": "coding",
+    "title": "Merge Without Mutating",
+    "topicSlug": "11-aliasing-cloning",
+    "unit": 2,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "statement": "Write `merge_dicts(d1, d2)` that returns a NEW dict combining `d1` and `d2`. On a key present in both, `d2`'s value wins. Neither input dict may be modified.\n\n- `merge_dicts({'a': 1, 'b': 2}, {'b': 9, 'c': 3})` → `{'a': 1, 'b': 9, 'c': 3}`",
+    "functionSignature": "def merge_dicts(d1, d2):",
+    "starterCode": "def merge_dicts(d1, d2):\n    \"\"\"Return a new dict = d1 updated with d2 (d2 wins on shared keys).\n    Neither input is mutated.\n\n    >>> merge_dicts({'a': 1, 'b': 2}, {'b': 9, 'c': 3})\n    {'a': 1, 'b': 9, 'c': 3}\n    >>> merge_dicts({}, {})\n    {}\n    \"\"\"\n    pass",
+    "solution": "def merge_dicts(d1, d2):\n    result = d1.copy()\n    result.update(d2)\n    return result",
+    "tests": [
+      { "name": "d2 wins on overlap", "expression": "merge_dicts({'a': 1, 'b': 2}, {'b': 9, 'c': 3})", "expected": "{'a': 1, 'b': 9, 'c': 3}" },
+      { "name": "both empty", "expression": "merge_dicts({}, {})", "expected": "{}" },
+      { "name": "disjoint keys", "expression": "merge_dicts({'x': 1}, {'y': 2})", "expected": "{'x': 1, 'y': 2}" },
+      { "name": "d1 not mutated", "expression": "(lambda a: (merge_dicts(a, {'b': 9}), a)[1])({'a': 1})", "expected": "{'a': 1}" },
+      { "name": "d2 not mutated", "expression": "(lambda b: (merge_dicts({'a': 1}, b), b)[1])({'b': 9})", "expected": "{'b': 9}", "hidden": true }
+    ]
+  },
+  {
+    "id": "bank-11-e",
+    "kind": "code-reading",
+    "title": "Aliasing through a function argument",
+    "topicSlug": "11-aliasing-cloning",
+    "unit": 2,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "statement": "One helper mutates its argument, the other rebinds a local name. What does this print?",
+    "prompt": "def grow(lst):\n    lst.append(0)\n\ndef replace(lst):\n    lst = [0]\n\na = [1, 2]\ngrow(a)\nreplace(a)\nprint(a)",
+    "answer": "[1, 2, 0]",
+    "acceptedAnswers": ["[1, 2, 0]"],
+    "explanation": "`grow` receives an alias of `a` and calls `.append(0)`, mutating the shared list → `a` becomes `[1, 2, 0]`. `replace` does `lst = [0]`, which only REBINDS the local parameter `lst` to a new list; it does not touch the object `a` names. So after both calls `a` is `[1, 2, 0]`. Mutation propagates through aliases; reassignment does not."
+  }
+]

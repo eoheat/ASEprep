@@ -1,0 +1,73 @@
+[
+  {
+    "id": "finger-22-a",
+    "kind": "complexity",
+    "title": "Finger Exercise 22 (Q1) — simplify to Theta",
+    "topicSlug": "22-big-o-theta",
+    "unit": 4,
+    "source": "finger",
+    "reconstructed": true,
+    "difficulty": "warmup",
+    "statement": "Simplify an expression to its dominant term and give the order of growth in terms of n.",
+    "prompt": "Simplify `n*n + log(n) + 2**a` to determine θ in terms of `n`.\n\n(Treat `a` as a constant; the answer is in terms of `n`.)",
+    "answer": "O(n**2)",
+    "acceptedAnswers": [
+      "O(n^2)",
+      "O(n²)",
+      "O(n*n)",
+      "theta(n**2)",
+      "theta(n^2)",
+      "Θ(n**2)",
+      "Θ(n^2)",
+      "n**2",
+      "n^2",
+      "quadratic"
+    ],
+    "explanation": "Keep the fastest-growing term and drop constant factors and lower-order terms. With the answer in terms of n, `2**a` is a constant and `log(n)` is dominated by `n*n = n**2`, so the growth is θ(n**2)."
+  },
+  {
+    "id": "finger-22-b",
+    "kind": "complexity",
+    "title": "Finger Exercise 22 (Q2) — simplify to Theta",
+    "topicSlug": "22-big-o-theta",
+    "unit": 4,
+    "source": "finger",
+    "reconstructed": true,
+    "difficulty": "warmup",
+    "statement": "Simplify an expression to its dominant term and give the order of growth in terms of n.",
+    "prompt": "Simplify `2**n + n*log(n) + n**2` to determine θ in terms of `n`.",
+    "answer": "O(2**n)",
+    "acceptedAnswers": [
+      "O(2^n)",
+      "theta(2**n)",
+      "theta(2^n)",
+      "Θ(2**n)",
+      "Θ(2^n)",
+      "2**n",
+      "2^n",
+      "exponential"
+    ],
+    "explanation": "Exponential growth `2**n` dominates the polynomial `n**2` and the log-linear `n*log(n)`. So the growth is θ(2**n)."
+  },
+  {
+    "id": "finger-22-c",
+    "kind": "complexity",
+    "title": "Finger Exercise 22 (Q3) — simplify to Theta",
+    "topicSlug": "22-big-o-theta",
+    "unit": 4,
+    "source": "finger",
+    "reconstructed": true,
+    "difficulty": "warmup",
+    "statement": "Simplify an expression to its dominant term and give the order of growth in terms of n.",
+    "prompt": "Simplify `f*log(f) + 100000 + 300*a + x*y*z` to determine θ in terms of `n`.\n\n(None of the variables here is `n`.)",
+    "answer": "O(1)",
+    "acceptedAnswers": [
+      "theta(1)",
+      "Θ(1)",
+      "1",
+      "constant",
+      "O(constant)"
+    ],
+    "explanation": "The question asks for growth in terms of `n`, but no term depends on `n` — `f`, `a`, `x`, `y`, `z` and the literal 100000 are all constants with respect to `n`. So the order of growth in `n` is θ(1) (constant)."
+  }
+]

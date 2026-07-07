@@ -1,0 +1,248 @@
+## Intuition
+
+Timing and counting both left us with a mess of constants — `3x + 4` here, `500x`
+there, a different machine gives different seconds. **Order of growth** notation
+cleans this up by asking a single question: *as the input gets arbitrarily large,
+what term dominates?* Everything else — additive constants, multiplicative
+factors, slower-growing terms — is noise you throw away.
+
+`Big-O` gives an **upper bound**: "grows *no faster than* this." `Big-Θ` (Theta)
+gives a **tight bound**: "grows *exactly like* this, both above and below." In this
+class we almost always want Θ, because it's the honest, precise description. Saying
+an algorithm is `O(n^2)` when it's actually linear is *technically true* but
+useless — like saying "I'll be there in under a year." Θ pins it down.
+
+The whole point is machine-independence and a-priori analysis: you can classify an
+algorithm's efficiency by reading the code, before you ever run it.
+
+## The mechanics
+
+Given the operation-count formula, produce the order of growth in two steps:
+
+1. **Drop additive constants and slower terms** — keep only the fastest-growing.
+2. **Drop multiplicative constants.**
+
+```python
+# ops formula          order of growth
+# n**2 + 2*n + 2   ->  Theta(n**2)
+# 3*x**2 + 100000*x + 3   ->  Theta(x**2)
+# log(a) + a + 4   ->  Theta(a)
+```
+
+You don't need the exact formula. A faster shortcut: **look for loops and anything
+that repeats as a function of the input.** Everything else is constant.
+
+```python
+def sum_of(L):
+    total = 0                 # constant
+    for elt in L:             # runs len(L) times  <- this is the input dependence
+        total += elt          # constant per pass
+    return total              # constant
+```
+
+The only thing that scales with the input is the loop over `L`, so `sum_of` is
+`Theta(len(L))` — linear in the length of the list.
+
+**Big-O, formally.** `f(x) = O(g(x))` means there exist constants `c0` and `x0` such
+that `c0 * g(x) >= f(x)` for all `x > x0`. In words: past some threshold, `g`
+scaled by a constant always sits above `f`. Example: `3x^2 + 20x + 1 = O(x^2)`,
+because `4x^2 > 3x^2 + 20x + 1` for all `x` beyond the crossover point — and they
+never cross again.
+
+**Big-Θ, formally.** `f(x) = Theta(g(x))` means `g` bounds `f` from *both* sides:
+some `c0*g(x)` sits above and some `c1*g(x)` sits below, past a threshold. So Θ is
+the tight bound.
+
+<Callout type="note">
+`3x^2 - 20x - 1` is `O(x^2)`, `O(x^3)`, `O(2^x)`, and anything higher — they all
+upper-bound it. But it is `Theta(x^2)` *only* — `x^3` and `2^x` upper-bound it
+without lower-bounding it, so they're not tight.
+</Callout>
+
+Two rules for combining pieces of a program:
+
+- **Law of Addition (sequential code):** `Theta(f(n)) + Theta(g(n)) = Theta(f(n) + g(n))`, which collapses to the dominant term. Two loops one after another, `Theta(n)` then `Theta(n^2)`, give `Theta(n^2)`.
+- **Law of Multiplication (nested code):** `Theta(f(n)) * Theta(g(n)) = Theta(f(n)*g(n))`. A loop of `n` inside a loop of `n` gives `Theta(n^2)`.
+
+## Worked example
+
+Two ways to find whether `x` is in a sorted list. Classify each.
+
+Linear search — walk the list:
+
+```python
+def is_in(L, x):
+    for elt in L:          # loop runs up to len(L) times
+        if elt == x:
+            return True
+    return False
+```
+
+The loop is the only input-dependent part, and worst case (x not present) it runs
+all `len(L)` times. So `is_in` is `Theta(len(L))` — **linear**. Confirmed by
+counting: 1 element → 9 ops, 10 → 37, 100 → 307, 1000 → 3007. Each 10x in size is
+~10x in ops.
+
+Binary search — halve the range each step:
+
+```python
+def binary_search(L, x):   # L must be sorted
+    lo = 0
+    hi = len(L)
+    while hi - lo > 1:
+        mid = (hi + lo) // 2
+        if L[mid] <= x:
+            lo = mid
+        else:
+            hi = mid
+    return L[lo] == x
+```
+
+Each iteration throws away half the remaining range. Starting from `n`, you reach a
+range of size 1 after `k` halvings where `n / 2^k = 1`, i.e. `k = log n`. So
+`binary_search` is `Theta(log n)` — **logarithmic**. Confirmed by counting: 1
+element → 15 ops, 10 → 85, 100 → 148, 1000 → 211, 1_000_000 → 421. Multiplying the
+size by 10 adds a roughly *constant* chunk of ops, not multiplies them — the
+signature of `log`.
+
+Now apply the two laws. This function:
+
+```python
+def f(x):
+    answer = 1                    # Theta(1)
+    for i in range(x):            # outer: Theta(x)
+        for j in range(i, x):     # inner: Theta(x)
+            answer += 2           # Theta(1)
+    return answer
+```
+
+is `Theta(1) + Theta(x)*Theta(x)*Theta(1) + Theta(1) = Theta(x^2)` by the laws of
+addition and multiplication. (The inner loop runs fewer times as `i` grows, but on
+average `x/2` — still `Theta(x)`.)
+
+## Traps
+
+<Callout type="trap">
+**Big-O is an upper bound, not a description.** `f(x) = 3x - 1` is genuinely
+`O(x^2)` — but nobody should say that. When the exam asks "the complexity," give the
+*tight* bound (Θ). Reserve loose O for when you truly can only bound from above.
+</Callout>
+
+**Express Θ in terms of the actual input, not always "n".** For `is_in(L, x)` the
+relevant input is `len(L)`. For `mysum(x)` it's the integer `x`. For a function of
+several parameters, say which one — `Theta(len(L1))` vs `Theta(len(L2))` can differ.
+"Don't just use n all the time."
+
+**Multiple inputs can each have their own complexity.** In `mul(x, y)` that loops
+`y` times, the complexity is `Theta(y)` in terms of `y` but `Theta(1)` in terms of
+`x`. You have to decide *which* input you're measuring against.
+
+**Sequential vs nested confusion.** Two loops side by side *add* (dominant term
+wins → still the bigger one). Two loops nested *multiply*. Reading `for ... for ...`
+as sequential when it's nested (or vice versa) flips `Theta(n)` into `Theta(n^2)`.
+
+**Ignoring the cost of built-in operations.** `if e in L:` inside a loop is not
+free — `in` on a list is itself `Theta(len(L))`, so a loop containing it is
+`Theta(n^2)`, not `Theta(n)`. (More on this in the operations table below.)
+
+## Memorize vs understand
+
+| Just know it cold | Be able to derive |
+|---|---|
+| Drop additive constants, drop multiplicative constants, keep the dominant term | The Θ of a given function by finding what repeats with the input |
+| O = upper bound, Θ = tight (upper and lower) bound | Whether a loop nest gives `Theta(n)`, `Theta(n^2)`, or `Theta(log n)` |
+| Law of Addition (sequential), Law of Multiplication (nested) | Why halving each step gives `log n` (`n / 2^k = 1`) |
+| `is_in`/linear search is `Theta(len(L))`; binary search is `Theta(log n)` | The complexity in terms of the *right* input parameter |
+| `f(x)=Theta(x^2)` means `x^2` bounds it above AND below | How to combine sub-parts of a program into one overall Θ |
+
+This is Unit 4, so keep this operations-cost table in your head — every complexity
+derivation leans on it:
+
+| Operation | Cost |
+|---|---|
+| list index `L[i]` | O(1) |
+| list append `L.append(x)` | O(1) amortized |
+| list `in`, `insert`, `delete`, `copy` | O(n) |
+| dict / set lookup, insert, `in` | O(1) average |
+| sort (`sorted`, `.sort`) | O(n log n) |
+| linear search | O(n) |
+| bisection (binary) search | O(log n) |
+| bubble sort | O(n^2) |
+| merge sort | O(n log n) |
+
+Why these hold: a list stores elements in consecutive memory, so indexing is direct
+arithmetic (constant); but `in` and `copy` must touch every element (linear). A
+dict/set uses a hash table, so lookup jumps straight to a slot (constant average).
+Sorting can't beat `n log n` because you need `log n` levels of `n`-work merging.
+`in` on a list is linear, but `in` on a set is constant — the single biggest
+"free" speedup on the exam.
+
+## ASE check
+
+```python
+def f(L):
+    total = 0
+    for x in L:
+        total += x
+    return total
+```
+
+<ASECheck q="What is the Theta complexity of f in terms of its input?">
+
+`Theta(len(L))` — linear. The single loop over `L` is the only part that scales with
+the input; everything else is constant work.
+
+</ASECheck>
+
+```python
+def f(n):
+    x = 0
+    for i in range(n):
+        for j in range(n):
+            x += 1
+    return x
+```
+
+<ASECheck q="Theta complexity?">
+
+`Theta(n^2)` — quadratic. By the Law of Multiplication, an inner loop of `Theta(n)`
+nested inside an outer loop of `Theta(n)` gives `Theta(n) * Theta(n) = Theta(n^2)`.
+
+</ASECheck>
+
+```python
+def digit_add(n):
+    answer = 0
+    s = str(n)
+    for c in s:
+        answer += int(c)
+    return answer
+```
+
+<ASECheck q="The loop runs once per digit of n. What is the Theta complexity in terms of n?">
+
+`Theta(log n)`. The number of digits of `n` is proportional to `log n` (each digit
+multiplies the value by ~10, so `n / 10^(digits) = 1` gives `digits = log n`). The
+loop iterates over the *length of the string*, not the *magnitude* of `n`.
+
+</ASECheck>
+
+<ASECheck q="Someone says a function is O(n^3). Can you conclude it is Theta(n^3)?">
+
+No. `O(n^3)` is only an upper bound — the function could actually be `Theta(n)` or
+`Theta(n^2)` and still be `O(n^3)`, since any of those grows no faster than `n^3`.
+To claim `Theta(n^3)` you need `n^3` to bound it from *both* sides.
+
+</ASECheck>
+
+<ASECheck q="You have a loop over L that calls `if e in L2` on each pass, where L2 is a list. What is the overall complexity, and how would you improve it?">
+
+The loop is `Theta(len(L))` and each `e in L2` is `Theta(len(L2))`, so overall
+`Theta(len(L) * len(L2))` — quadratic when the lists are the same size. Converting
+`L2` to a set makes `e in L2` `Theta(1)` average, dropping the whole thing to
+`Theta(len(L))`.
+
+</ASECheck>
+
+Source: MIT OCW 6.100L Fall 2022, Lecture 22 (Ana Bell), CC BY-NC-SA. Reconstructed
+as original prose.

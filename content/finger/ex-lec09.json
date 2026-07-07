@@ -1,0 +1,47 @@
+[
+  {
+    "id": "finger-lec09-q1",
+    "kind": "coding",
+    "source": "finger",
+    "reconstructed": true,
+    "topicSlug": "09-lambda-tuples-lists",
+    "unit": 2,
+    "difficulty": "exam-level",
+    "title": "Dot Product of Two Tuples",
+    "statement": "**OCW Lecture 9 finger exercise (reconstructed).** Implement `dot_product(tA, tB)`.\n\n`tA` and `tB` are tuples of numbers of the same length. Return a **tuple** where:\n- the first element is the length of one of the tuples, and\n- the second element is the sum of the pairwise products `tA[i] * tB[i]`.\n\n- `dot_product((1, 2, 3), (4, 5, 6))` → `(3, 32)`  (1·4 + 2·5 + 3·6 = 32)\n\nThe result is a `tuple`, not a list — the tests check the type. Empty tuples give `(0, 0)`.\n\n*Source: MIT OCW 6.100L Fall 2022, Finger Exercise Lecture 9 (reconstructed for this study tool).*",
+    "functionSignature": "def dot_product(tA, tB):",
+    "starterCode": "def dot_product(tA, tB):\n    \"\"\"Return (len(tA), sum of pairwise products of tA and tB).\n\n    >>> dot_product((1, 2, 3), (4, 5, 6))\n    (3, 32)\n    \"\"\"\n    pass",
+    "solution": "def dot_product(tA, tB):\n    tot = 0\n    for i in range(len(tA)):\n        tot += tA[i] * tB[i]\n    return (len(tA), tot)",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      {
+        "name": "example (1,2,3)·(4,5,6)",
+        "expression": "dot_product((1, 2, 3), (4, 5, 6))",
+        "expected": "(3, 32)"
+      },
+      {
+        "name": "empty tuples -> (0, 0)",
+        "expression": "dot_product((), ())",
+        "expected": "(0, 0)",
+        "hidden": true
+      },
+      {
+        "name": "single element",
+        "expression": "dot_product((5,), (3,))",
+        "expected": "(1, 15)"
+      },
+      {
+        "name": "negatives",
+        "expression": "dot_product((-1, 2), (3, -4))",
+        "expected": "(2, -11)"
+      },
+      {
+        "name": "returns a tuple, not a list",
+        "expression": "type(dot_product((1, 2), (3, 4))) is tuple",
+        "expected": "True",
+        "hidden": true
+      }
+    ]
+  }
+]

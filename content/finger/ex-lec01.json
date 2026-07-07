@@ -1,0 +1,48 @@
+[
+  {
+    "id": "finger-lec01-q1",
+    "kind": "coding",
+    "source": "finger",
+    "reconstructed": true,
+    "topicSlug": "01-introduction",
+    "unit": 1,
+    "difficulty": "warmup",
+    "title": "Combine Three Variables",
+    "statement": "**OCW Lecture 1 finger exercise (reconstructed).** The original OCW prompt assumes three variables `a`, `b`, and `c` are already defined and asks you to build `total = (a + b) * c` and `print(total)`.\n\nTo make it runnable and testable here, wrap it in a function: implement `combine(a, b, c)` that adds `a` and `b`, multiplies the result by `c`, and **returns** that value.\n\n- `combine(1, 2, 3)` → `9`  (because `(1 + 2) * 3`)\n\nMind the order of operations: it's `(a + b) * c`, not `a + b * c`.\n\n*Source: MIT OCW 6.100L Fall 2022, Finger Exercise Lecture 1 (reconstructed as a function for this study tool).*",
+    "functionSignature": "def combine(a, b, c):",
+    "starterCode": "def combine(a, b, c):\n    \"\"\"Return (a + b) * c.\n\n    >>> combine(1, 2, 3)\n    9\n    \"\"\"\n    pass",
+    "solution": "def combine(a, b, c):\n    total = (a + b) * c\n    return total",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      {
+        "name": "example (1, 2, 3) -> 9",
+        "expression": "combine(1, 2, 3)",
+        "expected": "9"
+      },
+      {
+        "name": "zeros -> 0",
+        "expression": "combine(0, 0, 5)",
+        "expected": "0"
+      },
+      {
+        "name": "sum is zero -> 0 (a + b = 0)",
+        "expression": "combine(-2, 2, 10)",
+        "expected": "0",
+        "hidden": true
+      },
+      {
+        "name": "negative multiplier",
+        "expression": "combine(5, 5, -1)",
+        "expected": "-10"
+      },
+      {
+        "name": "order of operations, not a + (b*c)",
+        "expression": "combine(1, 2, 3)",
+        "expected": "9",
+        "strictType": true,
+        "hidden": true
+      }
+    ]
+  }
+]

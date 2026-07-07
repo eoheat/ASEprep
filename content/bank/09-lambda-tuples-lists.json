@@ -1,0 +1,95 @@
+[
+  {
+    "id": "bank-09-a",
+    "kind": "coding",
+    "title": "Swap a Pair",
+    "topicSlug": "09-lambda-tuples-lists",
+    "unit": 2,
+    "source": "bank",
+    "difficulty": "warmup",
+    "statement": "Tuples are immutable ordered pairs, great for returning multiple values. Write `swap(pair)` that takes a 2-tuple `(a, b)` and returns `(b, a)`.\n\n- `swap((1, 2))` → `(2, 1)`",
+    "functionSignature": "def swap(pair):",
+    "starterCode": "def swap(pair):\n    \"\"\"Return the 2-tuple pair with its two elements swapped.\n\n    >>> swap((1, 2))\n    (2, 1)\n    >>> swap(('a', 'b'))\n    ('b', 'a')\n    \"\"\"\n    pass",
+    "solution": "def swap(pair):\n    a, b = pair\n    return (b, a)",
+    "tests": [
+      { "name": "ints", "expression": "swap((1, 2))", "expected": "(2, 1)" },
+      { "name": "strings", "expression": "swap(('a', 'b'))", "expected": "('b', 'a')" },
+      { "name": "equal elements", "expression": "swap((5, 5))", "expected": "(5, 5)" },
+      { "name": "mixed types", "expression": "swap((1, 'x'))", "expected": "('x', 1)", "hidden": true }
+    ]
+  },
+  {
+    "id": "bank-09-b",
+    "kind": "coding",
+    "title": "Min and Max Together",
+    "topicSlug": "09-lambda-tuples-lists",
+    "unit": 2,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "statement": "Write `min_max(nums)` that returns a tuple `(smallest, largest)` of a non-empty list of numbers, in a SINGLE pass without using the built-in `min`/`max`.\n\n- `min_max([3, 1, 4, 1, 5])` → `(1, 5)`\n\nA one-element list returns that element twice: `min_max([7])` → `(7, 7)`.",
+    "functionSignature": "def min_max(nums):",
+    "starterCode": "def min_max(nums):\n    \"\"\"Return (smallest, largest) of the non-empty list nums, in one pass.\n\n    >>> min_max([3, 1, 4, 1, 5])\n    (1, 5)\n    >>> min_max([7])\n    (7, 7)\n    >>> min_max([-2, -9, -1])\n    (-9, -1)\n    \"\"\"\n    pass",
+    "solution": "def min_max(nums):\n    lo = hi = nums[0]\n    for n in nums[1:]:\n        if n < lo:\n            lo = n\n        if n > hi:\n            hi = n\n    return (lo, hi)",
+    "tests": [
+      { "name": "typical", "expression": "min_max([3, 1, 4, 1, 5])", "expected": "(1, 5)" },
+      { "name": "single element", "expression": "min_max([7])", "expected": "(7, 7)" },
+      { "name": "all negative", "expression": "min_max([-2, -9, -1])", "expected": "(-9, -1)" },
+      { "name": "duplicates and ties", "expression": "min_max([2, 2, 2])", "expected": "(2, 2)" },
+      { "name": "descending", "expression": "min_max([5, 4, 3, 2, 1])", "expected": "(1, 5)", "hidden": true },
+      { "name": "floats", "expression": "min_max([1.5, 0.5, 2.5])", "expected": "(0.5, 2.5)", "hidden": true }
+    ]
+  },
+  {
+    "id": "bank-09-c",
+    "kind": "coding",
+    "title": "Sort by Last Element",
+    "topicSlug": "09-lambda-tuples-lists",
+    "unit": 2,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "statement": "Use a `lambda` as a sort key. Write `sort_by_score(records)` where `records` is a list of `(name, score)` tuples. Return a NEW list of the same tuples sorted by `score` in DESCENDING order. Ties keep their original relative order (Python's sort is stable).\n\n- `sort_by_score([('a', 2), ('b', 5), ('c', 2)])` → `[('b', 5), ('a', 2), ('c', 2)]`\n\nDo not mutate the input list.",
+    "functionSignature": "def sort_by_score(records):",
+    "starterCode": "def sort_by_score(records):\n    \"\"\"Return a NEW list of (name, score) tuples sorted by score, high to low.\n    Stable on ties; input is not mutated.\n\n    >>> sort_by_score([('a', 2), ('b', 5), ('c', 2)])\n    [('b', 5), ('a', 2), ('c', 2)]\n    >>> sort_by_score([])\n    []\n    \"\"\"\n    pass",
+    "solution": "def sort_by_score(records):\n    return sorted(records, key=lambda rec: rec[1], reverse=True)",
+    "tests": [
+      { "name": "descending with stable tie", "expression": "sort_by_score([('a', 2), ('b', 5), ('c', 2)])", "expected": "[('b', 5), ('a', 2), ('c', 2)]" },
+      { "name": "empty list", "expression": "sort_by_score([])", "expected": "[]" },
+      { "name": "single record", "expression": "sort_by_score([('solo', 9)])", "expected": "[('solo', 9)]" },
+      { "name": "does not mutate input", "expression": "(lambda r: (sort_by_score(r), r)[1])([('a', 1), ('b', 3)])", "expected": "[('a', 1), ('b', 3)]" },
+      { "name": "negative scores", "expression": "sort_by_score([('x', -1), ('y', -5), ('z', 0)])", "expected": "[('z', 0), ('x', -1), ('y', -5)]", "hidden": true }
+    ]
+  },
+  {
+    "id": "bank-09-d",
+    "kind": "coding",
+    "title": "Unzip Pairs",
+    "topicSlug": "09-lambda-tuples-lists",
+    "unit": 2,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "statement": "Write `unzip(pairs)` that takes a list of 2-tuples and returns a 2-tuple of two lists: the first elements and the second elements, in order.\n\n- `unzip([(1, 'a'), (2, 'b'), (3, 'c')])` → `([1, 2, 3], ['a', 'b', 'c'])`\n\nThe empty list returns `([], [])`.",
+    "functionSignature": "def unzip(pairs):",
+    "starterCode": "def unzip(pairs):\n    \"\"\"Return (list_of_firsts, list_of_seconds) from a list of 2-tuples.\n\n    >>> unzip([(1, 'a'), (2, 'b'), (3, 'c')])\n    ([1, 2, 3], ['a', 'b', 'c'])\n    >>> unzip([])\n    ([], [])\n    \"\"\"\n    pass",
+    "solution": "def unzip(pairs):\n    firsts = []\n    seconds = []\n    for a, b in pairs:\n        firsts.append(a)\n        seconds.append(b)\n    return (firsts, seconds)",
+    "tests": [
+      { "name": "typical", "expression": "unzip([(1, 'a'), (2, 'b'), (3, 'c')])", "expected": "([1, 2, 3], ['a', 'b', 'c'])" },
+      { "name": "empty", "expression": "unzip([])", "expected": "([], [])" },
+      { "name": "single pair", "expression": "unzip([(9, 'z')])", "expected": "([9], ['z'])" },
+      { "name": "returns lists not tuples inside", "expression": "[type(x).__name__ for x in unzip([(1, 2)])]", "expected": "['list', 'list']", "hidden": true }
+    ]
+  },
+  {
+    "id": "bank-09-e",
+    "kind": "code-reading",
+    "title": "Tuple immutability vs list",
+    "topicSlug": "09-lambda-tuples-lists",
+    "unit": 2,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "statement": "One of these operations mutates, the other builds new. What does this print?",
+    "prompt": "t = (1, 2, 3)\nt2 = t + (4,)\n\nlst = [1, 2, 3]\nlst2 = lst\nlst2.append(4)\n\nprint(t)\nprint(t2)\nprint(lst)",
+    "answer": "(1, 2, 3)\n(1, 2, 3, 4)\n[1, 2, 3, 4]",
+    "acceptedAnswers": ["(1, 2, 3)\n(1, 2, 3, 4)\n[1, 2, 3, 4]\n"],
+    "explanation": "Tuples are immutable: `t + (4,)` builds a brand-new tuple and binds it to `t2`, leaving `t` as `(1, 2, 3)`. Lists are mutable and `lst2 = lst` is an alias (not a copy), so `lst2.append(4)` mutates the one shared list — `lst` becomes `[1, 2, 3, 4]` too."
+  }
+]

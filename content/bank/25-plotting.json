@@ -1,0 +1,91 @@
+[
+  {
+    "id": "bank-25-a",
+    "title": "Read a pyplot call",
+    "topicSlug": "25-plotting",
+    "unit": 4,
+    "source": "bank",
+    "difficulty": "warmup",
+    "kind": "code-reading",
+    "reconstructed": false,
+    "statement": "Warmup: `plt.plot(x, y)` pairs the i-th x with the i-th y. The two sequences must line up positionally.",
+    "prompt": "In matplotlib, a line plot is drawn with `plt.plot(xs, ys)`, pairing `xs[i]` with `ys[i]`. Given\n\n```python\nxs = [0, 1, 2, 3]\nys = [0, 1, 4, 9]\nplt.plot(xs, ys)\n```\n\nwhat is the (x, y) coordinate of the THIRD plotted point? Answer as a tuple like `(x, y)`.",
+    "answer": "(2, 4)",
+    "acceptedAnswers": ["(2, 4)", "(2,4)", "2, 4", "2 4", "x=2, y=4"],
+    "explanation": "Points are paired by index. The third point is index 2: xs[2] = 2 and ys[2] = 4, so (2, 4). (These ys are the squares of the xs — a parabola.)"
+  },
+  {
+    "id": "bank-25-b",
+    "title": "Build the y-values for a plot",
+    "topicSlug": "25-plotting",
+    "unit": 4,
+    "source": "bank",
+    "difficulty": "warmup",
+    "kind": "coding",
+    "reconstructed": false,
+    "statement": "Before you can call `plt.plot(xs, ys)`, you build the parallel lists. This is the data-prep half of every plotting example in lecture 25.\n\nImplement `make_points(f, xs)` that returns the list of y-values `[f(x) for x in xs]`, so `plt.plot(xs, make_points(f, xs))` would plot `f`. Handle an empty `xs`.",
+    "functionSignature": "def make_points(f, xs):",
+    "starterCode": "def make_points(f, xs):\n    \"\"\"Return [f(x) for x in xs], the y-values parallel to xs for plotting.\n\n    >>> make_points(lambda x: x**2, [0, 1, 2, 3])\n    [0, 1, 4, 9]\n    >>> make_points(lambda x: x, [])\n    []\n    \"\"\"\n    pass",
+    "solution": "def make_points(f, xs):\n    return [f(x) for x in xs]",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      { "name": "squares", "expression": "make_points(lambda x: x**2, [0, 1, 2, 3])", "expected": "[0, 1, 4, 9]" },
+      { "name": "empty xs", "expression": "make_points(lambda x: x, [])", "expected": "[]" },
+      { "name": "single point", "expression": "make_points(lambda x: 2*x + 1, [5])", "expected": "[11]" },
+      { "name": "negatives", "expression": "make_points(abs, [-3, -1, 2])", "expected": "[3, 1, 2]", "hidden": true }
+    ]
+  },
+  {
+    "id": "bank-25-c",
+    "title": "Complexity of building plot data",
+    "topicSlug": "25-plotting",
+    "unit": 4,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "kind": "complexity",
+    "reconstructed": false,
+    "statement": "The lecture-25 simulations build a big list of sample points in a loop, then plot it. That data-prep loop dominates the complexity.",
+    "prompt": "In terms of `Npoints`, give the tight Big-Theta complexity of building the two data lists in this fill-pool simulation (ignore the plotting call itself, which is proportional to the number of points).\n\n```python\ndef fill_pool(size, Npoints):\n    flow_rate = []\n    fill_time = []\n    for i in range(Npoints):\n        r = 1 + 2 * random.random()\n        flow_rate.append(r)\n        fill_time.append(size / r)\n    return flow_rate, fill_time\n```\n\nAnswer in the form `Theta(...)`.",
+    "answer": "Theta(Npoints)",
+    "acceptedAnswers": ["theta(npoints)", "theta(n)", "Θ(npoints)", "Θ(n)", "npoints", "n", "linear", "theta(n points)"],
+    "explanation": "The loop runs Npoints times, doing constant work each iteration (`random.random`, arithmetic, two Theta(1) appends). So building the data is Theta(Npoints) — linear in the number of sample points."
+  },
+  {
+    "id": "bank-25-d",
+    "title": "Sorting values for a clean curve",
+    "topicSlug": "25-plotting",
+    "unit": 4,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "kind": "coding",
+    "reconstructed": false,
+    "statement": "In lecture 25 the random fill-rate scatter becomes a smooth curve once the values are SORTED before plotting (the 'sorted' panels). This problem does that transform, plus computes the average line.\n\nImplement `sorted_curve(values)` that returns a tuple `(sorted_values, average)` where `sorted_values` is a new ascending-sorted list and `average` is the mean of the values as a float. For an empty input, return `([], 0.0)` (avoid dividing by zero).",
+    "functionSignature": "def sorted_curve(values):",
+    "starterCode": "def sorted_curve(values):\n    \"\"\"Return (ascending-sorted copy of values, mean as float).\n    Empty input -> ([], 0.0).\n\n    >>> sorted_curve([3.0, 1.0, 2.0])\n    ([1.0, 2.0, 3.0], 2.0)\n    >>> sorted_curve([])\n    ([], 0.0)\n    \"\"\"\n    pass",
+    "solution": "def sorted_curve(values):\n    if not values:\n        return ([], 0.0)\n    ordered = sorted(values)\n    average = sum(values) / len(values)\n    return (ordered, average)",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      { "name": "basic", "expression": "sorted_curve([3.0, 1.0, 2.0])", "expected": "([1.0, 2.0, 3.0], 2.0)", "compare": "float" },
+      { "name": "empty -> no ZeroDivision", "expression": "sorted_curve([])", "expected": "([], 0.0)", "compare": "float" },
+      { "name": "single value", "expression": "sorted_curve([5.0])", "expected": "([5.0], 5.0)", "compare": "float" },
+      { "name": "fill-rate range 1..3 averages ~2", "expression": "sorted_curve([1.0, 3.0, 2.0, 2.0])", "expected": "([1.0, 2.0, 2.0, 3.0], 2.0)", "compare": "float", "hidden": true }
+    ]
+  },
+  {
+    "id": "bank-25-e",
+    "title": "Which curve is which growth class?",
+    "topicSlug": "25-plotting",
+    "unit": 4,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "kind": "code-reading",
+    "reconstructed": false,
+    "statement": "Lecture 22 plots input-size vs. run-time for is_in (linear), binary_search (logarithmic), and diameter (quadratic). You should recognize the shapes.",
+    "prompt": "On a plot of input size (x-axis) vs. run time (y-axis), one curve rises steeply and bends UPWARD (concave up, growing ever faster), one is a straight line, and one rises fast at first then FLATTENS (concave down, nearly horizontal for large input).\n\nWhich growth class matches the curve that flattens out? Answer with one of: `logarithmic`, `linear`, `quadratic`.",
+    "answer": "logarithmic",
+    "acceptedAnswers": ["logarithmic", "log", "log n", "logn", "theta(log n)", "o(log n)", "logarithmic (binary search)"],
+    "explanation": "A logarithmic curve (like binary_search) grows fast for small n then almost flattens — doubling n adds only a constant amount of work. The straight line is linear (is_in), and the upward-bending curve is quadratic (diameter)."
+  }
+]

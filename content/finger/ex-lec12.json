@@ -1,0 +1,52 @@
+[
+  {
+    "id": "finger-12",
+    "kind": "coding",
+    "title": "Finger Exercise 12 — count_sqrts",
+    "topicSlug": "12-comprehensions-testing-debugging",
+    "unit": 2,
+    "source": "finger",
+    "reconstructed": true,
+    "difficulty": "warmup",
+    "statement": "Implement `count_sqrts(nums_list)`.\n\n- `nums_list`: a list. Assume it contains only positive numbers and has no duplicates.\n- Return **how many elements** in `nums_list` are exact squares of elements in the same list (an element may be its own square, e.g. `1`).\n\n```\ncount_sqrts([3, 4, 2, 1, 9, 25]) -> 3\n```\nHere `4 == 2*2`, `9 == 3*3`, and `1 == 1*1`, so three elements are squares of list members.\n\nSource: MIT OCW 6.100L Fall 2022, Finger Exercise Lecture 12 (reconstructed as a runnable problem for this study tool).",
+    "functionSignature": "def count_sqrts(nums_list):",
+    "starterCode": "def count_sqrts(nums_list):\n    \"\"\"\n    nums_list: a list of positive numbers, no duplicates.\n    Returns how many elements in nums_list are exact squares of\n    elements in the same list (including an element that is its own square).\n    \"\"\"\n    # Your code here\n    pass\n",
+    "solution": "def count_sqrts(nums_list):\n    cnt = 0\n    for i in nums_list:\n        if i * i in nums_list:\n            cnt += 1\n    return cnt\n",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      {
+        "name": "OCW example -> 3",
+        "expression": "count_sqrts([3, 4, 2, 1, 9, 25])",
+        "expected": "3"
+      },
+      {
+        "name": "no squares present",
+        "expression": "count_sqrts([3, 5, 7])",
+        "expected": "0"
+      },
+      {
+        "name": "single element 1 is its own square",
+        "expression": "count_sqrts([1])",
+        "expected": "1"
+      },
+      {
+        "name": "single element (not a square of anything in list)",
+        "expression": "count_sqrts([5])",
+        "expected": "0"
+      },
+      {
+        "name": "empty list -> 0",
+        "expression": "count_sqrts([])",
+        "expected": "0",
+        "hidden": true
+      },
+      {
+        "name": "chain 2->4->16",
+        "expression": "count_sqrts([2, 4, 16])",
+        "expected": "2",
+        "hidden": true
+      }
+    ]
+  }
+]

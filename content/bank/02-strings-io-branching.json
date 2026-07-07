@@ -1,0 +1,68 @@
+[
+  {
+    "id": "bank-02-a",
+    "kind": "coding",
+    "title": "Count Vowels",
+    "topicSlug": "02-strings-io-branching",
+    "unit": 1,
+    "source": "bank",
+    "difficulty": "warmup",
+    "reconstructed": false,
+    "statement": "Warmup on iterating a string and branching. Implement `count_vowels(s)` returning how many characters of `s` are vowels (`a e i o u`), counting both cases.\n\nOnly `a`, `e`, `i`, `o`, `u` count — `y` does not.",
+    "functionSignature": "def count_vowels(s):",
+    "starterCode": "def count_vowels(s):\n    \"\"\"Return the number of vowels (a e i o u, either case) in s.\n\n    >>> count_vowels('hello')\n    2\n    >>> count_vowels('SKY')\n    0\n    >>> count_vowels('')\n    0\n    \"\"\"\n    pass",
+    "solution": "def count_vowels(s):\n    count = 0\n    for ch in s.lower():\n        if ch in 'aeiou':\n            count += 1\n    return count",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      { "name": "hello", "expression": "count_vowels('hello')", "expected": "2" },
+      { "name": "uppercase, no vowels", "expression": "count_vowels('SKY')", "expected": "0" },
+      { "name": "empty string", "expression": "count_vowels('')", "expected": "0" },
+      { "name": "mixed case", "expression": "count_vowels('AeIoU')", "expected": "5" },
+      { "name": "y is not a vowel", "expression": "count_vowels('rhythm')", "expected": "0" },
+      { "name": "repeated vowels", "expression": "count_vowels('bookkeeper')", "expected": "5" }
+    ]
+  },
+  {
+    "id": "bank-02-b",
+    "kind": "coding",
+    "title": "Is Palindrome",
+    "topicSlug": "02-strings-io-branching",
+    "unit": 1,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "reconstructed": false,
+    "statement": "Combines string cleaning, iteration, and a comparison. Implement `is_palindrome(s)` that returns `True` if `s` reads the same forwards and backwards, **ignoring case and any non-letter characters** (spaces, punctuation, digits).\n\nAn empty string, or a string with no letters, counts as a palindrome (`True`). Do not use `s[::-1]` slicing on the raw string — clean it first (though the well-known slice trick on the cleaned string is fine).",
+    "functionSignature": "def is_palindrome(s):",
+    "starterCode": "def is_palindrome(s):\n    \"\"\"Return True if s is a palindrome ignoring case and non-letters.\n\n    >>> is_palindrome('Racecar')\n    True\n    >>> is_palindrome('A man, a plan, a canal: Panama')\n    True\n    >>> is_palindrome('hello')\n    False\n    \"\"\"\n    pass",
+    "solution": "def is_palindrome(s):\n    letters = ''\n    for ch in s.lower():\n        if ch.isalpha():\n            letters += ch\n    return letters == letters[::-1]",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      { "name": "single word", "expression": "is_palindrome('Racecar')", "expected": "True" },
+      { "name": "phrase with punctuation", "expression": "is_palindrome('A man, a plan, a canal: Panama')", "expected": "True" },
+      { "name": "not a palindrome", "expression": "is_palindrome('hello')", "expected": "False" },
+      { "name": "empty string is a palindrome", "expression": "is_palindrome('')", "expected": "True" },
+      { "name": "single character", "expression": "is_palindrome('x')", "expected": "True" },
+      { "name": "only punctuation counts as empty -> True", "expression": "is_palindrome('!!! 123 ...')", "expected": "True" },
+      { "name": "case is ignored", "expression": "is_palindrome('AbBa')", "expected": "True" }
+    ]
+  },
+  {
+    "id": "bank-02-c",
+    "kind": "code-reading",
+    "title": "Slicing and Branching",
+    "topicSlug": "02-strings-io-branching",
+    "unit": 1,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "reconstructed": false,
+    "statement": "Trace the output. This tests string slicing (including negative indices and the step), concatenation, and how an if/elif/else chain picks exactly one branch.",
+    "prompt": "s = 'programming'\nprint(s[0:4])\nprint(s[-3:])\nprint(s[::2])\nprint(s[::-1][:3])\n\nx = len(s)\nif x < 5:\n    print('short')\nelif x < 11:\n    print('medium')\nelif x == 11:\n    print('exactly eleven')\nelse:\n    print('long')",
+    "answer": "prog\ning\npormig\ngni\nexactly eleven",
+    "acceptedAnswers": [
+      "prog, ing, pormig, gni, exactly eleven"
+    ],
+    "explanation": "`s[0:4]` takes indices 0..3 -> 'prog'. `s[-3:]` is the last three characters -> 'ing'. `s[::2]` steps by two from the start: p,o,r,m,i,g -> 'pormig'. `s[::-1]` reverses to 'gnimmargorp', and `[:3]` takes its first three -> 'gni'. `len('programming')` is 11, so the first true branch is `elif x == 11` -> 'exactly eleven'. Note that once an if/elif branch matches, the rest are skipped."
+  }
+]

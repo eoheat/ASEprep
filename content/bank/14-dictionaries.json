@@ -1,0 +1,95 @@
+[
+  {
+    "id": "bank-14-a",
+    "kind": "coding",
+    "title": "Count Words",
+    "topicSlug": "14-dictionaries",
+    "unit": 2,
+    "source": "bank",
+    "difficulty": "warmup",
+    "statement": "Write `count_words(words)` that returns a dict mapping each word to how many times it appears in the list.\n\n- `count_words(['a', 'b', 'a'])` → `{'a': 2, 'b': 1}`\n\nUse `dict.get(key, 0)` to handle the first time you see a word.",
+    "functionSignature": "def count_words(words):",
+    "starterCode": "def count_words(words):\n    \"\"\"Map each word to its number of occurrences.\n\n    >>> count_words(['a', 'b', 'a'])\n    {'a': 2, 'b': 1}\n    >>> count_words([])\n    {}\n    \"\"\"\n    pass",
+    "solution": "def count_words(words):\n    counts = {}\n    for w in words:\n        counts[w] = counts.get(w, 0) + 1\n    return counts",
+    "tests": [
+      { "name": "typical", "expression": "count_words(['a', 'b', 'a'])", "expected": "{'a': 2, 'b': 1}" },
+      { "name": "empty", "expression": "count_words([])", "expected": "{}" },
+      { "name": "single", "expression": "count_words(['x'])", "expected": "{'x': 1}" },
+      { "name": "all same", "expression": "count_words(['z', 'z', 'z'])", "expected": "{'z': 3}", "hidden": true }
+    ]
+  },
+  {
+    "id": "bank-14-b",
+    "kind": "coding",
+    "title": "Invert a Dictionary",
+    "topicSlug": "14-dictionaries",
+    "unit": 2,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "statement": "Write `invert(d)` that returns a new dict with keys and values swapped: each value of `d` becomes a key mapping to its original key. Assume the original VALUES are unique and hashable.\n\n- `invert({'a': 1, 'b': 2})` → `{1: 'a', 2: 'b'}`\n\nThe empty dict inverts to `{}`.",
+    "functionSignature": "def invert(d):",
+    "starterCode": "def invert(d):\n    \"\"\"Return a new dict with keys and values swapped (values assumed unique).\n\n    >>> invert({'a': 1, 'b': 2})\n    {1: 'a', 2: 'b'}\n    >>> invert({})\n    {}\n    \"\"\"\n    pass",
+    "solution": "def invert(d):\n    return {value: key for key, value in d.items()}",
+    "tests": [
+      { "name": "typical", "expression": "invert({'a': 1, 'b': 2})", "expected": "{1: 'a', 2: 'b'}" },
+      { "name": "empty", "expression": "invert({})", "expected": "{}" },
+      { "name": "single", "expression": "invert({'only': 42})", "expected": "{42: 'only'}" },
+      { "name": "does not mutate input", "expression": "(lambda x: (invert(x), x)[1])({'a': 1})", "expected": "{'a': 1}", "hidden": true }
+    ]
+  },
+  {
+    "id": "bank-14-c",
+    "kind": "coding",
+    "title": "Group by First Letter",
+    "topicSlug": "14-dictionaries",
+    "unit": 2,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "statement": "Write `group_by_first(words)` that returns a dict mapping each first letter to the LIST of words (in original order) starting with that letter. Ignore empty strings entirely.\n\n- `group_by_first(['apple', 'banana', 'avocado'])` → `{'a': ['apple', 'avocado'], 'b': ['banana']}`",
+    "functionSignature": "def group_by_first(words):",
+    "starterCode": "def group_by_first(words):\n    \"\"\"Map each first letter to the list of words starting with it.\n    Skip empty strings.\n\n    >>> group_by_first(['apple', 'banana', 'avocado'])\n    {'a': ['apple', 'avocado'], 'b': ['banana']}\n    >>> group_by_first([])\n    {}\n    \"\"\"\n    pass",
+    "solution": "def group_by_first(words):\n    groups = {}\n    for w in words:\n        if w == '':\n            continue\n        first = w[0]\n        if first not in groups:\n            groups[first] = []\n        groups[first].append(w)\n    return groups",
+    "tests": [
+      { "name": "typical", "expression": "group_by_first(['apple', 'banana', 'avocado'])", "expected": "{'a': ['apple', 'avocado'], 'b': ['banana']}" },
+      { "name": "empty list", "expression": "group_by_first([])", "expected": "{}" },
+      { "name": "skips empty strings", "expression": "group_by_first(['', 'ant', ''])", "expected": "{'a': ['ant']}" },
+      { "name": "preserves order within group", "expression": "group_by_first(['cat', 'car', 'cab'])", "expected": "{'c': ['cat', 'car', 'cab']}", "hidden": true },
+      { "name": "single letters", "expression": "group_by_first(['a', 'b', 'a'])", "expected": "{'a': ['a', 'a'], 'b': ['b']}", "hidden": true }
+    ]
+  },
+  {
+    "id": "bank-14-d",
+    "kind": "coding",
+    "title": "Key With Max Value",
+    "topicSlug": "14-dictionaries",
+    "unit": 2,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "statement": "Write `max_key(d)` that returns the key with the largest value in dict `d`. If several keys tie for the largest value, return the one that is smallest when the keys are sorted. On an EMPTY dict, return `None`.\n\n- `max_key({'a': 3, 'b': 5, 'c': 5})` → `'b'` (both 'b' and 'c' have 5; 'b' sorts first)",
+    "functionSignature": "def max_key(d):",
+    "starterCode": "def max_key(d):\n    \"\"\"Return the key with the largest value; ties broken by smallest key.\n    Return None if d is empty.\n\n    >>> max_key({'a': 3, 'b': 5, 'c': 5})\n    'b'\n    >>> max_key({}) is None\n    True\n    \"\"\"\n    pass",
+    "solution": "def max_key(d):\n    if not d:\n        return None\n    best_val = max(d.values())\n    return min(k for k in d if d[k] == best_val)",
+    "tests": [
+      { "name": "tie broken by smallest key", "expression": "max_key({'a': 3, 'b': 5, 'c': 5})", "expected": "'b'" },
+      { "name": "clear winner", "expression": "max_key({'x': 1, 'y': 9, 'z': 4})", "expected": "'y'" },
+      { "name": "empty -> None", "expression": "max_key({})", "expected": "None" },
+      { "name": "single entry", "expression": "max_key({'solo': 0})", "expected": "'solo'" },
+      { "name": "negative values", "expression": "max_key({'a': -5, 'b': -2, 'c': -2})", "expected": "'b'", "hidden": true },
+      { "name": "integer keys tie", "expression": "max_key({3: 1, 1: 1, 2: 0})", "expected": "1", "hidden": true }
+    ]
+  },
+  {
+    "id": "bank-14-e",
+    "kind": "code-reading",
+    "title": "Dict aliasing and get default",
+    "topicSlug": "14-dictionaries",
+    "unit": 2,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "statement": "Dicts are mutable and assigned by reference. What does this print?",
+    "prompt": "d = {'a': 1}\ne = d\ne['b'] = 2\nprint(d)\nprint(d.get('c', 0))\nprint('c' in d)",
+    "answer": "{'a': 1, 'b': 2}\n0\nFalse",
+    "acceptedAnswers": ["{'a': 1, 'b': 2}\n0\nFalse\n"],
+    "explanation": "`e = d` is an alias, not a copy, so `e['b'] = 2` mutates the one shared dict — `d` is now `{'a': 1, 'b': 2}`. `d.get('c', 0)` returns the default `0` because 'c' is absent, and crucially `.get` does NOT insert the key, so `'c' in d` is still `False`."
+  }
+]

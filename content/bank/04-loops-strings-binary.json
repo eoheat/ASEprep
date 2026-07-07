@@ -1,0 +1,76 @@
+[
+  {
+    "id": "bank-04-a",
+    "kind": "coding",
+    "title": "Guess-and-Check Cube Root",
+    "topicSlug": "04-loops-strings-binary",
+    "unit": 1,
+    "source": "bank",
+    "difficulty": "warmup",
+    "reconstructed": false,
+    "statement": "The classic guess-and-check (exhaustive enumeration) pattern from lecture. Implement `perfect_cube_root(n)` for a non-negative integer `n`. If `n` is a perfect cube, return its integer cube root; otherwise return `None`.\n\nEnumerate candidate roots `0, 1, 2, ...` and check `guess ** 3` against `n`. Do NOT use `**(1/3)` (float error makes it unreliable).",
+    "functionSignature": "def perfect_cube_root(n):",
+    "starterCode": "def perfect_cube_root(n):\n    \"\"\"Return the integer cube root of n if n is a perfect cube, else None.\n\n    >>> perfect_cube_root(27)\n    3\n    >>> perfect_cube_root(0)\n    0\n    >>> perfect_cube_root(26) is None\n    True\n    \"\"\"\n    pass",
+    "solution": "def perfect_cube_root(n):\n    guess = 0\n    while guess ** 3 < n:\n        guess += 1\n    if guess ** 3 == n:\n        return guess\n    return None",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      { "name": "27 -> 3", "expression": "perfect_cube_root(27)", "expected": "3" },
+      { "name": "0 -> 0", "expression": "perfect_cube_root(0)", "expected": "0" },
+      { "name": "1 -> 1", "expression": "perfect_cube_root(1)", "expected": "1" },
+      { "name": "not a cube -> None", "expression": "perfect_cube_root(26)", "expected": "None" },
+      { "name": "just above a cube -> None", "expression": "perfect_cube_root(28)", "expected": "None" },
+      { "name": "large perfect cube", "expression": "perfect_cube_root(1000)", "expected": "10" }
+    ]
+  },
+  {
+    "id": "bank-04-b",
+    "kind": "coding",
+    "title": "Decimal to Binary String",
+    "topicSlug": "04-loops-strings-binary",
+    "unit": 1,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "reconstructed": false,
+    "statement": "Reconstruct the binary-representation algorithm from lecture (repeated division by 2, reading remainders bottom-up). Implement `to_binary(n)` returning the base-2 representation of a non-negative integer `n` as a **string**, without using `bin()` or format specifiers.\n\n- `to_binary(0)` is `'0'`\n- `to_binary(5)` is `'101'`\n\nBuild the string by taking `n % 2` for each bit and dividing `n // 2`, then reversing.",
+    "functionSignature": "def to_binary(n):",
+    "starterCode": "def to_binary(n):\n    \"\"\"Return the binary representation of n (n >= 0) as a string.\n    Do not use bin() or format().\n\n    >>> to_binary(0)\n    '0'\n    >>> to_binary(5)\n    '101'\n    >>> to_binary(8)\n    '1000'\n    \"\"\"\n    pass",
+    "solution": "def to_binary(n):\n    if n == 0:\n        return '0'\n    bits = ''\n    while n > 0:\n        bits = str(n % 2) + bits\n        n = n // 2\n    return bits",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      { "name": "zero edge case", "expression": "to_binary(0)", "expected": "'0'" },
+      { "name": "one", "expression": "to_binary(1)", "expected": "'1'" },
+      { "name": "five", "expression": "to_binary(5)", "expected": "'101'" },
+      { "name": "power of two", "expression": "to_binary(8)", "expected": "'1000'" },
+      { "name": "all ones", "expression": "to_binary(7)", "expected": "'111'" },
+      { "name": "larger number", "expression": "to_binary(156)", "expected": "'10011100'" },
+      { "name": "result is a str", "expression": "type(to_binary(3)).__name__", "expected": "'str'" }
+    ]
+  },
+  {
+    "id": "bank-04-c",
+    "kind": "coding",
+    "title": "Longest Vowel Run",
+    "topicSlug": "04-loops-strings-binary",
+    "unit": 1,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "reconstructed": false,
+    "statement": "Loop over a string tracking a running streak against the best-so-far — a core Unit 1 pattern. Implement `longest_vowel_run(s)` returning the length of the longest **consecutive** run of vowels (`a e i o u`, either case) in `s`.\n\n- `longest_vowel_run('beautiful')` is `3` (the 'eau').\n- No vowels, or an empty string, returns `0`.",
+    "functionSignature": "def longest_vowel_run(s):",
+    "starterCode": "def longest_vowel_run(s):\n    \"\"\"Length of the longest run of consecutive vowels in s.\n\n    >>> longest_vowel_run('beautiful')\n    3\n    >>> longest_vowel_run('xyz')\n    0\n    >>> longest_vowel_run('')\n    0\n    \"\"\"\n    pass",
+    "solution": "def longest_vowel_run(s):\n    best = 0\n    current = 0\n    for ch in s.lower():\n        if ch in 'aeiou':\n            current += 1\n            if current > best:\n                best = current\n        else:\n            current = 0\n    return best",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      { "name": "beautiful", "expression": "longest_vowel_run('beautiful')", "expected": "3" },
+      { "name": "no vowels", "expression": "longest_vowel_run('xyz')", "expected": "0" },
+      { "name": "empty", "expression": "longest_vowel_run('')", "expected": "0" },
+      { "name": "all vowels", "expression": "longest_vowel_run('AEIOU')", "expected": "5" },
+      { "name": "run at the very end", "expression": "longest_vowel_run('cat sea')", "expected": "2" },
+      { "name": "ties keep the max, not reset", "expression": "longest_vowel_run('aa b aa')", "expected": "2" },
+      { "name": "single vowel", "expression": "longest_vowel_run('sky high')", "expected": "1" }
+    ]
+  }
+]

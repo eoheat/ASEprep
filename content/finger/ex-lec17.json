@@ -1,0 +1,66 @@
+[
+  {
+    "id": "finger-17",
+    "kind": "coding",
+    "title": "Finger Exercise 17 — Circle class",
+    "topicSlug": "17-python-classes",
+    "unit": 3,
+    "source": "finger",
+    "reconstructed": true,
+    "difficulty": "exam-level",
+    "statement": "Write a `Circle` class with these methods:\n\n- `__init__(self, radius)` — store the radius.\n- `get_radius(self)` — return the radius.\n- `set_radius(self, radius)` — change the radius.\n- `get_area(self)` — return the area using `pi = 3.14` (i.e. `3.14 * r * r`).\n- `equal(self, c)` — `c` is a `Circle`; return `True` iff `self` and `c` have the same radius.\n- `bigger(self, c)` — `c` is a `Circle`; return the `Circle` (either `self` or `c`) with the larger radius.\n\n```\nCircle(2).get_area() -> 12.56\nCircle(3).bigger(Circle(5)).get_radius() -> 5\n```\n\nSource: MIT OCW 6.100L Fall 2022, Finger Exercise Lecture 17 (reconstructed as a runnable problem for this study tool).",
+    "functionSignature": "class Circle():",
+    "starterCode": "class Circle():\n    def __init__(self, radius):\n        \"\"\" Initializes self with radius \"\"\"\n        # your code here\n        pass\n\n    def get_radius(self):\n        \"\"\" Returns the radius of self \"\"\"\n        # your code here\n        pass\n\n    def set_radius(self, radius):\n        \"\"\" radius is a number. Changes the radius of self to radius \"\"\"\n        # your code here\n        pass\n\n    def get_area(self):\n        \"\"\" Returns the area of self using pi = 3.14 \"\"\"\n        # your code here\n        pass\n\n    def equal(self, c):\n        \"\"\" c is a Circle object.\n        Returns True if self and c have the same radius value \"\"\"\n        # your code here\n        pass\n\n    def bigger(self, c):\n        \"\"\" c is a Circle object.\n        Returns self or c, the Circle object with the bigger radius \"\"\"\n        # your code here\n        pass\n",
+    "solution": "class Circle():\n    def __init__(self, radius):\n        self.r = radius\n\n    def get_radius(self):\n        return self.r\n\n    def set_radius(self, radius):\n        self.r = radius\n\n    def get_area(self):\n        return 3.14 * self.r * self.r\n\n    def equal(self, c):\n        return c.r == self.r\n\n    def bigger(self, c):\n        if c.r > self.r:\n            return c\n        elif c.r < self.r:\n            return self\n",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      {
+        "name": "get_radius after init",
+        "expression": "Circle(4).get_radius()",
+        "expected": "4"
+      },
+      {
+        "name": "set_radius updates radius",
+        "expression": "(lambda c: (c.set_radius(10), c.get_radius())[1])(Circle(3))",
+        "expected": "10"
+      },
+      {
+        "name": "get_area uses pi = 3.14",
+        "expression": "Circle(2).get_area()",
+        "expected": "12.56",
+        "compare": "float",
+        "tolerance": 1e-9
+      },
+      {
+        "name": "equal True for same radius",
+        "expression": "Circle(5).equal(Circle(5))",
+        "expected": "True"
+      },
+      {
+        "name": "equal False for different radius",
+        "expression": "Circle(5).equal(Circle(6))",
+        "expected": "False"
+      },
+      {
+        "name": "bigger returns the larger Circle (c bigger)",
+        "expression": "Circle(3).bigger(Circle(5)).get_radius()",
+        "expected": "5"
+      },
+      {
+        "name": "bigger returns the larger Circle (self bigger)",
+        "expression": "Circle(9).bigger(Circle(2)).get_radius()",
+        "expected": "9",
+        "hidden": true
+      },
+      {
+        "name": "get_area of radius 0 is 0.0",
+        "expression": "Circle(0).get_area()",
+        "expected": "0.0",
+        "compare": "float",
+        "tolerance": 1e-9,
+        "hidden": true
+      }
+    ]
+  }
+]

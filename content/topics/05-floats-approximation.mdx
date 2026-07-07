@@ -1,0 +1,198 @@
+## Intuition
+
+Integers convert to binary cleanly, but **fractions usually don't**. A `float`
+like `0.1` has no exact finite binary representation — it's stored as an
+*approximation*, the way `1/3` has no exact finite decimal (`0.3333...`). That
+tiny rounding error is invisible most of the time, but it accumulates when you do
+many operations, and it means you must **never test floats with `==`**. Building
+on that, this lecture introduces **approximation methods**: when the exact answer
+(like the square root of a non-perfect square) isn't reachable, you settle for
+"close enough" — within a small tolerance `epsilon` — by incrementing a guess by a
+tiny step until `guess**2` lands near the target.
+
+## The mechanics
+
+**Why floats are inexact.** A float is stored as significant digits times a power
+of 2. Fractions whose denominator is a power of 2 are exact; others aren't:
+
+```python
+0.375 * (2**3)    # 3.0  -> 3/8 IS exact in binary (0.011)
+# but 0.1 = 1/10 has NO exact power-of-2 form: 0.0001100110011...  (infinite)
+```
+
+The famous demonstration:
+
+```python
+x = 0
+for i in range(10):
+    x += 0.1
+print(x == 1)      # False!
+print(x)           # 0.9999999999999999
+```
+
+Adding `0.1` ten times does *not* give exactly `1.0`, because each `0.1` is
+slightly off and the errors compound. By contrast `0.125` (which is `1/8`, exact)
+sums cleanly:
+
+```python
+x = 0
+for i in range(10):
+    x += 0.125
+print(x == 1.25)   # True — 0.125 is exact in binary
+```
+
+**Never compare floats with `==`.** Test closeness instead:
+
+```python
+abs(a - b) < epsilon      # "a and b are close enough"
+```
+
+**Approximation for square root** — two knobs: `epsilon` (how close counts) and
+`increment` (step size):
+
+```python
+x = 36
+epsilon = 0.01
+guess = 0.0
+increment = 0.0001
+while abs(guess**2 - x) >= epsilon and guess**2 <= x:
+    guess += increment
+if abs(guess**2 - x) >= epsilon:
+    print("Failed on square root of", x)
+else:
+    print(guess, "is close to square root of", x)
+```
+
+## Worked example
+
+Trace the *danger* the second loop condition guards against. Without
+`and guess**2 <= x`, the loop can **overshoot**: it jumps from a guess that's too
+small to one that's too large, skipping right over the epsilon window and looping
+forever (or reporting failure).
+
+With `increment = 0.0001` and `x = 36`:
+
+- The guess climbs `0.0001, 0.0002, ...` toward `6.0`.
+- Because `6.0` isn't landed on exactly (float steps), `guess**2` approaches `36`
+  but may skip from `35.99...` to `36.001...` — both outside epsilon `0.01`.
+- The extra condition `guess**2 <= x` stops the loop the moment we pass the
+  target, so we exit and can *report* whether we got close enough, instead of
+  spinning forever.
+
+The tradeoff to internalize:
+
+| Change | Effect on speed | Effect on accuracy |
+|---|---|---|
+| smaller `increment` | slower (more steps) | more likely to land within epsilon |
+| larger `increment` | faster | more likely to overshoot / fail |
+| smaller `epsilon` | slower / may fail | tighter, more accurate answer |
+| larger `epsilon` | faster | looser, less accurate answer |
+
+So approximation is guess-and-check with two differences: you step by a *float*
+increment, and you stop when *close enough* rather than exact.
+
+## Traps
+
+<Callout type="trap">
+**Never use `==` to compare floats.** `0.1 + 0.1 + 0.1 == 0.3` is `False`. Test
+`abs(a - b) < epsilon` instead. This is the single most common float bug on the
+exam.
+</Callout>
+
+**Errors compound over many operations.** One `0.1` is off by a hair; ten of them
+add up to a visible `0.9999999999999999`. The more float operations, the larger
+the drift — critical inside loops.
+
+**An increment loop can overshoot the epsilon window.** If `increment` is too big
+relative to `epsilon`, the guess jumps from below to above the target without ever
+being *within* epsilon, so a naive loop never exits. Always add a second stopping
+condition (like `guess**2 <= x`) that catches passing the target.
+
+**What prints is not always what's stored.** Python may display `0.1` cleanly but
+store the inexact binary value. Trust the *comparison*, not the printed digits.
+
+**Smaller increment isn't free.** Halving `increment` roughly *doubles* the number
+of loop iterations. Approximation trades accuracy for speed — you pick the
+balance by setting the two parameters.
+
+**Powers-of-two fractions are the exception, not the rule.** `0.5`, `0.25`,
+`0.125`, `0.375` are exact; almost everything else (`0.1`, `0.2`, `0.3`) is
+approximate. Don't assume a "nice-looking" decimal is exact.
+
+## Memorize vs understand
+
+| Just know it cold | Be able to derive |
+|---|---|
+| Never test floats with `==`; use `abs(a-b) < epsilon` | Whether a given decimal is exact in binary (denominator a power of 2?) |
+| `0.1` is inexact; `0.125`, `0.25`, `0.5` are exact | Whether an increment loop will terminate or overshoot |
+| Approximation = float increment + "close enough" stop | The speed/accuracy tradeoff of changing `epsilon` or `increment` |
+| A float is significant digits × a power of 2 | Why summing `0.1` ten times isn't exactly `1.0` |
+| Need a second stop condition to catch overshoot | Setting `epsilon`/`increment` to hit a target speed or accuracy |
+
+## ASE check
+
+```python
+x = 0
+for i in range(10):
+    x += 0.1
+print(x == 1)
+```
+
+<ASECheck q="Does this print True or False, and why?">
+
+`False`. `0.1` has no exact binary representation, so each addition carries a tiny
+error; summed ten times, `x` is `0.9999999999999999`, not exactly `1.0`. This is
+why you must compare floats with a tolerance, not `==`.
+
+</ASECheck>
+
+```python
+x = 0
+for i in range(10):
+    x += 0.125
+print(x == 1.25)
+```
+
+<ASECheck q="Why is this one True when the 0.1 version was False?">
+
+`True`. `0.125` is `1/8`, and 8 is a power of 2, so `0.125` is stored *exactly* in
+binary. Adding an exact value ten times gives an exact `1.25`, so `==` succeeds
+here. The difference is entirely about whether the fraction is a power-of-two
+denominator.
+
+</ASECheck>
+
+```python
+a = 0.1 + 0.2
+print(a == 0.3)
+print(abs(a - 0.3) < 0.0001)
+```
+
+<ASECheck q="What are the two printed values?">
+
+`False` then `True`. `0.1 + 0.2` is `0.30000000000000004` (accumulated float
+error), so `== 0.3` fails. But it's *close enough*, so the tolerance test
+`abs(a - 0.3) < 0.0001` is `True`. Always use the second form for floats.
+
+</ASECheck>
+
+<ASECheck q="Why does an approximation square-root loop need a stopping condition besides the within-epsilon check?">
+
+Because with a float increment, the guess can jump straight from too-small to
+too-large without ever landing *within* epsilon of the target. If the only exit
+is "within epsilon," the loop never satisfies it and runs forever. A second
+condition like `guess**2 <= x` stops the loop once it passes the target so you can
+report whether the closest guess was good enough.
+
+</ASECheck>
+
+<ASECheck q="You halve the increment to get a more accurate answer. What's the cost?">
+
+Roughly double the number of iterations, so the program runs about twice as slow.
+Approximation always trades accuracy against speed: a finer increment is more
+likely to land inside epsilon but takes proportionally more steps to get there.
+
+</ASECheck>
+
+*Content reconstructed from MIT OCW 6.100L Fall 2022, Lecture 5 (Ana Bell),
+CC BY-NC-SA.*

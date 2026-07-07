@@ -1,0 +1,57 @@
+[
+  {
+    "id": "finger-13",
+    "kind": "coding",
+    "title": "Finger Exercise 13 — sum_str_lengths",
+    "topicSlug": "13-exceptions-assertions",
+    "unit": 2,
+    "source": "finger",
+    "reconstructed": true,
+    "difficulty": "exam-level",
+    "statement": "Implement `sum_str_lengths(L)`.\n\n- `L` is a non-empty list whose elements are each either a **string** or a **non-empty sublist of strings**.\n- Return the sum of the lengths of all strings in `L` plus the lengths of all strings in `L`'s sublists.\n- If `L` contains an element that is **not** a string or a list, OR one of `L`'s sublists contains an element that is not a string, **raise a `ValueError`**.\n\n```\nsum_str_lengths([\"abcd\", [\"e\", \"fg\"]]) -> 7\nsum_str_lengths([12, [\"e\", \"fg\"]])     -> raises ValueError\nsum_str_lengths([\"abcd\", [3, \"fg\"]])    -> raises ValueError\n```\n\nSource: MIT OCW 6.100L Fall 2022, Finger Exercise Lecture 13 (reconstructed as a runnable problem for this study tool). The `ValueError` cases are checked by wrapping the call in a try/except that reports whether it raised.",
+    "functionSignature": "def sum_str_lengths(L):",
+    "starterCode": "### Provided test helper — DO NOT MODIFY.\ndef _raises_value_error(thunk):\n    \"\"\"Return True iff calling thunk() raises ValueError.\"\"\"\n    try:\n        thunk()\n        return False\n    except ValueError:\n        return True\n\ndef sum_str_lengths(L):\n    \"\"\"\n    L is a non-empty list containing either:\n    * string elements, or\n    * a non-empty sublist of string elements\n    Returns the sum of the length of all strings in L and lengths of\n    strings in the sublists of L. If L contains an element that is not\n    a string or a list, or L's sublists contain an element that is not\n    a string, raise a ValueError.\n    \"\"\"\n    # Your code here\n    pass\n",
+    "solution": "### Provided test helper — DO NOT MODIFY.\ndef _raises_value_error(thunk):\n    try:\n        thunk()\n        return False\n    except ValueError:\n        return True\n\ndef sum_str_lengths(L):\n    total = 0\n    for i in L:\n        if type(i) == str:\n            total += len(i)\n        elif type(i) == list:\n            for e in i:\n                if type(e) == str:\n                    total += len(e)\n                else:\n                    raise ValueError\n        else:\n            raise ValueError\n    return total\n",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      {
+        "name": "OCW example -> 7",
+        "expression": "sum_str_lengths([\"abcd\", [\"e\", \"fg\"]])",
+        "expected": "7"
+      },
+      {
+        "name": "flat list of strings",
+        "expression": "sum_str_lengths([\"a\", \"bb\", \"ccc\"])",
+        "expected": "6"
+      },
+      {
+        "name": "single string element",
+        "expression": "sum_str_lengths([\"hello\"])",
+        "expected": "5"
+      },
+      {
+        "name": "nested + flat mix",
+        "expression": "sum_str_lengths([\"ab\", [\"cde\"], \"f\"])",
+        "expected": "6",
+        "hidden": true
+      },
+      {
+        "name": "int at top level raises ValueError",
+        "expression": "_raises_value_error(lambda: sum_str_lengths([12, [\"e\", \"fg\"]]))",
+        "expected": "True"
+      },
+      {
+        "name": "int inside a sublist raises ValueError",
+        "expression": "_raises_value_error(lambda: sum_str_lengths([\"abcd\", [3, \"fg\"]]))",
+        "expected": "True"
+      },
+      {
+        "name": "valid input does NOT raise",
+        "expression": "_raises_value_error(lambda: sum_str_lengths([\"abcd\", [\"e\", \"fg\"]]))",
+        "expected": "False",
+        "hidden": true
+      }
+    ]
+  }
+]

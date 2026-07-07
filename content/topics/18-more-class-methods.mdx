@@ -1,0 +1,248 @@
+## Intuition
+
+Now that you can define a class, this unit adds the tools that make your own types
+behave like Python's built-in ones. Two big ideas: **build classes out of other
+classes** (a `Circle` whose center is a `Coordinate`), and **dunder methods** —
+specially named methods with double underscores that let `+`, `*`, `==`, `<`,
+`print`, `len`, and friends work on *your* objects. When you write `a * b`, Python
+secretly calls `a.__mul__(b)`. Nothing is magic: every operator you've been using
+is just a method call underneath. Defining `__str__`, `__add__`, `__eq__`, etc.
+lets you write natural code (`print(f)`, `a + b`) instead of ugly method calls,
+and hides the internal details behind a clean interface. This is abstraction at
+work.
+
+## The mechanics
+
+**Classes using classes.** A data attribute can be an instance of another class:
+
+```python
+class Circle(object):
+    def __init__(self, center, radius):
+        self.center = center     # a Coordinate object
+        self.radius = radius     # an int
+
+    def is_inside(self, point):
+        return point.distance(self.center) < self.radius
+```
+
+`is_inside` calls the `Coordinate` method `distance` on `point` — one class
+leaning on another.
+
+**Dunder methods** hook your class into Python's operators and built-ins. Define
+them with double underscores; Python calls them behind the scenes:
+
+| You write | Python calls |
+|---|---|
+| `self + other` | `__add__(self, other)` |
+| `self - other` | `__sub__(self, other)` |
+| `self * other` | `__mul__(self, other)` |
+| `self / other` | `__truediv__(self, other)` |
+| `self == other` | `__eq__(self, other)` |
+| `self < other` | `__lt__(self, other)` |
+| `len(self)` | `__len__(self)` |
+| `print(self)` | `__str__(self)` |
+| `float(self)` | `__float__(self)` |
+
+`__str__` must **return a string** — it's what `print` displays:
+
+```python
+class Coordinate(object):
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+    def __str__(self):
+        return "<" + str(self.x) + "," + str(self.y) + ">"
+
+c = Coordinate(3, 4)
+print(c)                 # <3,4>   -- instead of <__main__.Coordinate object at ...>
+```
+
+<Callout type="tip">
+When an operator method should produce another object of your type, **return a new
+instance**, not a raw number. `__mul__` on a `Fraction` should return
+`Fraction(top, bottom)` so you can keep chaining fraction operations; returning a
+bare `float` would break `(a * b) * c`.
+</Callout>
+
+## Worked example
+
+A `Fraction` type with `__str__`, `__mul__`, and `__float__`.
+
+```python
+class Fraction(object):
+    def __init__(self, n, d):
+        self.num = n
+        self.denom = d
+
+    def __str__(self):
+        return str(self.num) + "/" + str(self.denom)
+
+    def __mul__(self, other):
+        top = self.num * other.num
+        bottom = self.denom * other.denom
+        return Fraction(top, bottom)      # return a NEW Fraction
+
+    def __float__(self):
+        return self.num / self.denom
+```
+
+Now trace:
+
+```python
+a = Fraction(1, 4)
+b = Fraction(3, 4)
+print(a)                 # uses __str__ -> "1/4"
+c = a * b                # uses __mul__ -> Fraction(3, 16)
+print(c)                 # uses __str__ -> "3/16"
+print(float(c))          # uses __float__ -> 0.1875
+```
+
+- `print(a)` calls `a.__str__()`, which returns `"1/4"`.
+- `a * b` calls `a.__mul__(b)`: `top = 1*3 = 3`, `bottom = 4*4 = 16`, returns
+  `Fraction(3, 16)`.
+- `print(c)` calls `c.__str__()` → `"3/16"`.
+- `float(c)` calls `c.__float__()` → `3 / 16` = `0.1875`.
+
+These three lines are all equivalent, showing the shorthand at work:
+
+```python
+print(a * b)                    # cleanest
+print(a.__mul__(b))             # calls the dunder directly (bad style)
+print(Fraction.__mul__(a, b))   # fully explicit (bad style)
+```
+
+## Traps
+
+<Callout type="trap">
+**`__str__` that doesn't return a string.** Returning a number, or *printing*
+inside `__str__` instead of returning, breaks it. `__str__` must `return` a `str`.
+Concatenating with `+` means every piece has to be a string, so wrap numbers in
+`str()`: `str(self.num) + "/" + str(self.denom)`.
+</Callout>
+
+**An operator method that returns the wrong type.** If `Fraction.__mul__` returns
+`top / bottom` (a float) instead of `Fraction(top, bottom)`, then `a * b` is a
+float and you can no longer call fraction methods on it. Return a new instance of
+your class when the result should stay in your type.
+
+**Assuming operators work without defining the dunder.** `a + b` on two of your
+objects raises a `TypeError` unless you've defined `__add__`. The built-in types
+get these for free; your custom class does not.
+
+**Forgetting the operands can be different types.** `Fraction * int` won't work if
+`__mul__` assumes `other.num` exists — an `int` has no `.num`. On the ASE, watch
+for methods that reduce a fraction to an `int` and then get multiplied: that's a
+type mismatch waiting to happen.
+
+**Confusing `type()` and `isinstance()`.** `type(c)` gives `c`'s exact class;
+`isinstance(c, Coordinate)` returns `True`/`False`. Use `isinstance` to check
+membership, especially once inheritance is involved (next unit).
+
+**Returning a reduced value that changes the type unexpectedly.** A `reduce`
+method that returns `self.num` (an int) when the denominator is 1, but a
+`Fraction` otherwise, produces inconsistent types — later code that expects a
+`Fraction` breaks on the int case. Keep return types consistent.
+
+## Memorize vs understand
+
+| Just know it cold | Be able to derive |
+|---|---|
+| `__str__` → `print`, must return a string | Which dunder Python calls for a given operator (`*` → `__mul__`, etc.) |
+| `__add__`, `__mul__`, `__eq__`, `__lt__`, `__len__`, `__float__` names | Whether an operator method should return a new instance or a raw value |
+| `a * b` is shorthand for `a.__mul__(b)` | Predicting the output of `print(a * b)` given the dunder definitions |
+| Classes can hold instances of other classes as data | Spotting a type mismatch when an operator is applied to mixed types |
+| `isinstance(obj, Class)` checks membership | Why returning a float from `__mul__` breaks chained operations |
+
+## ASE check
+
+```python
+class Vec(object):
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+    def __add__(self, other):
+        return Vec(self.x + other.x, self.y + other.y)
+    def __str__(self):
+        return f"({self.x}, {self.y})"
+
+print(Vec(1, 2) + Vec(3, 4))
+```
+
+<ASECheck q="What does this print, and which two dunder methods run?">
+
+`(4, 6)`. First `__add__` runs (`1+3=4`, `2+4=6`, returning `Vec(4, 6)`), then
+`print` triggers `__str__` on that result, which returns `"(4, 6)"`.
+
+</ASECheck>
+
+```python
+class Fraction(object):
+    def __init__(self, n, d):
+        self.num = n
+        self.denom = d
+    def __mul__(self, other):
+        return self.num * other.num / (self.denom * other.denom)
+
+a = Fraction(1, 2)
+b = Fraction(1, 2)
+print(a * b)
+c = (a * b) * a
+```
+
+<ASECheck q="What does print(a * b) show, and why does the line defining c fail?">
+
+`print(a * b)` shows `0.25` because `__mul__` returns a raw `float`
+(`1*1 / (2*2)` = `0.25`). The line `c = (a * b) * a` then fails: `a * b` is a
+`float`, and `float * Fraction` tries `float.__mul__` on a `Fraction`, which
+doesn't work. The fix is for `__mul__` to return `Fraction(...)`.
+
+</ASECheck>
+
+```python
+class Money(object):
+    def __init__(self, cents):
+        self.cents = cents
+    def __str__(self):
+        return self.cents
+
+print(Money(150))
+```
+
+<ASECheck q="What goes wrong?">
+
+It raises a `TypeError` — `__str__` returns an `int` (`self.cents`) but `__str__`
+must return a `str`. The fix is `return str(self.cents)` or a formatted string
+like `f"${self.cents/100:.2f}"`.
+
+</ASECheck>
+
+```python
+class Box(object):
+    def __init__(self, items):
+        self.items = items
+    def __len__(self):
+        return len(self.items)
+
+b = Box([10, 20, 30])
+print(len(b))
+```
+
+<ASECheck q="What does this print, and what does len(b) actually call?">
+
+`3`. `len(b)` calls `b.__len__()`, which returns `len(self.items)` =
+`len([10, 20, 30])` = `3`. Without defining `__len__`, `len(b)` would raise a
+`TypeError`.
+
+</ASECheck>
+
+<ASECheck q="Name three equivalent ways to write a * b for Fraction objects, and say which is best style.">
+
+`a * b`, `a.__mul__(b)`, and `Fraction.__mul__(a, b)`. All three do the same
+thing. `a * b` is the best style — it's the clean shorthand; the other two call
+the dunder directly and are only useful for understanding what happens behind the
+scenes.
+
+</ASECheck>
+
+*Source: MIT OCW 6.100L Fall 2022, Lecture 18 (More Python Class Methods), Ana
+Bell. Content reconstructed as original prose under CC BY-NC-SA.*

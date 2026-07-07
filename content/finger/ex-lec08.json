@@ -1,0 +1,58 @@
+[
+  {
+    "id": "finger-lec08-q1",
+    "kind": "coding",
+    "source": "finger",
+    "reconstructed": true,
+    "topicSlug": "08-functions-as-objects",
+    "unit": 2,
+    "difficulty": "exam-level",
+    "title": "Same Characters",
+    "statement": "**OCW Lecture 8 finger exercise (reconstructed).** Implement `same_chars(s1, s2)`.\n\nReturn `True` if every character in `s1` also appears in `s2` **and** every character in `s2` also appears in `s1`; otherwise return `False`. Counts don't matter — only which distinct characters are present.\n\n- `same_chars('abc', 'cab')` → `True`\n- `same_chars('abccc', 'caaab')` → `True`  (both use exactly {a, b, c})\n- `same_chars('abcd', 'cabaa')` → `False`  (`d` is only in `s1`)\n- `same_chars('abcabc', 'cabz')` → `False`  (`z` is only in `s2`)\n\nYou must check both directions — a one-way `in` check passes `('abc', 'abcd')` incorrectly.\n\n*Source: MIT OCW 6.100L Fall 2022, Finger Exercise Lecture 8 (reconstructed for this study tool).*",
+    "functionSignature": "def same_chars(s1, s2):",
+    "starterCode": "def same_chars(s1, s2):\n    \"\"\"Return True iff s1 and s2 contain the same set of characters.\n\n    >>> same_chars('abc', 'cab')\n    True\n    >>> same_chars('abcd', 'cabaa')\n    False\n    \"\"\"\n    pass",
+    "solution": "def same_chars(s1, s2):\n    for i in s1:\n        if i not in s2:\n            return False\n    for i in s2:\n        if i not in s1:\n            return False\n    return True",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      {
+        "name": "anagram -> True",
+        "expression": "same_chars('abc', 'cab')",
+        "expected": "True"
+      },
+      {
+        "name": "same set, different counts -> True",
+        "expression": "same_chars('abccc', 'caaab')",
+        "expected": "True"
+      },
+      {
+        "name": "extra char in s1 -> False",
+        "expression": "same_chars('abcd', 'cabaa')",
+        "expected": "False"
+      },
+      {
+        "name": "extra char in s2 -> False",
+        "expression": "same_chars('abcabc', 'cabz')",
+        "expected": "False"
+      },
+      {
+        "name": "both empty -> True",
+        "expression": "same_chars('', '')",
+        "expected": "True",
+        "hidden": true
+      },
+      {
+        "name": "one empty, one not -> False",
+        "expression": "same_chars('a', '')",
+        "expected": "False",
+        "hidden": true
+      },
+      {
+        "name": "repeats vs single, same set -> True",
+        "expression": "same_chars('aaa', 'a')",
+        "expected": "True",
+        "hidden": true
+      }
+    ]
+  }
+]

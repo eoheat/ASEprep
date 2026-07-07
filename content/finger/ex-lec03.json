@@ -1,0 +1,42 @@
+[
+  {
+    "id": "finger-lec03-q1",
+    "kind": "coding",
+    "source": "finger",
+    "reconstructed": true,
+    "topicSlug": "03-iteration",
+    "unit": 1,
+    "difficulty": "warmup",
+    "title": "Repeat hello world N Times",
+    "statement": "**OCW Lecture 3 finger exercise (reconstructed).** The original OCW prompt assumes a positive integer `N` and asks you to `print` `hello world` on separate lines, `N` times, using a `while` or `for` loop.\n\nTo make it testable here, implement `repeat_hello(N)` that **returns** a single string of `N` copies of `hello world`, one per line (joined by `'\\n'`, with no trailing newline).\n\n- `repeat_hello(1)` → `'hello world'`\n- `repeat_hello(3)` → `'hello world\\nhello world\\nhello world'`\n\nEdge case: `repeat_hello(0)` returns the empty string `''` (the loop runs zero times).\n\n*Source: MIT OCW 6.100L Fall 2022, Finger Exercise Lecture 3 (reconstructed as a function for this study tool).*",
+    "functionSignature": "def repeat_hello(N):",
+    "starterCode": "def repeat_hello(N):\n    \"\"\"Return N copies of 'hello world', one per line, joined by newlines.\n\n    >>> repeat_hello(2)\n    'hello world\\nhello world'\n    \"\"\"\n    pass",
+    "solution": "def repeat_hello(N):\n    lines = []\n    for i in range(N):\n        lines.append('hello world')\n    return '\\n'.join(lines)",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      {
+        "name": "N = 1",
+        "expression": "repeat_hello(1)",
+        "expected": "'hello world'"
+      },
+      {
+        "name": "N = 3 (newline separated)",
+        "expression": "repeat_hello(3)",
+        "expected": "'hello world\\nhello world\\nhello world'"
+      },
+      {
+        "name": "N = 0 -> empty string",
+        "expression": "repeat_hello(0)",
+        "expected": "''",
+        "hidden": true
+      },
+      {
+        "name": "line count matches N",
+        "expression": "repeat_hello(5).count('hello world')",
+        "expected": "5",
+        "hidden": true
+      }
+    ]
+  }
+]

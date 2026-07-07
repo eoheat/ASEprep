@@ -1,0 +1,52 @@
+[
+  {
+    "id": "finger-20",
+    "kind": "coding",
+    "title": "Finger Exercise 20 — Container and Queue (FIFO)",
+    "topicSlug": "20-oop-fitness-tracker",
+    "unit": 3,
+    "source": "finger",
+    "reconstructed": true,
+    "difficulty": "exam-level",
+    "statement": "Implement a `Container` base class and a `Queue` subclass.\n\n`Container` (initializes `self.myList = []`):\n- `size(self)` — return the length of the list.\n- `add(self, elem)` — add `elem` to one end (keep the end consistent); returns nothing.\n\n`Queue(Container)` — a **first-in, first-out** structure:\n- `remove(self)` — remove and return the **oldest** element added, or `None` if empty.\n\n```\nq = Queue(); q.add(1); q.add(2); q.remove() -> 1  (FIFO)\n```\n\nSource: MIT OCW 6.100L Fall 2022, Finger Exercise Lecture 20 (reconstructed as a runnable problem for this study tool).",
+    "functionSignature": "class Container(object):",
+    "starterCode": "class Container(object):\n    \"\"\" A container object is a list and can store elements of any type \"\"\"\n    def __init__(self):\n        \"\"\" Initializes an empty list \"\"\"\n        self.myList = []\n\n    def size(self):\n        \"\"\" Returns the length of the container list \"\"\"\n        # Your code here\n        pass\n\n    def add(self, elem):\n        \"\"\" Adds elem to one end of the container list (keep the end\n        consistent). Does not return anything \"\"\"\n        # Your code here\n        pass\n\nclass Queue(Container):\n    \"\"\" A subclass of Container. Removes elements first-in, first-out \"\"\"\n    def remove(self):\n        \"\"\" Removes and returns the oldest element, or None if empty \"\"\"\n        # Your code here\n        pass\n",
+    "solution": "class Container(object):\n    def __init__(self):\n        self.myList = []\n\n    def size(self):\n        return len(self.myList)\n\n    def add(self, elem):\n        self.myList.append(elem)\n\nclass Queue(Container):\n    def remove(self):\n        if self.size() > 0:\n            return self.myList.pop(0)\n        return None\n",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      {
+        "name": "size after two adds",
+        "expression": "(lambda q: (q.add(1), q.add(2), q.size())[2])(Queue())",
+        "expected": "2"
+      },
+      {
+        "name": "remove returns oldest (FIFO)",
+        "expression": "(lambda q: (q.add(1), q.add(2), q.remove())[2])(Queue())",
+        "expected": "1"
+      },
+      {
+        "name": "full FIFO order of removals",
+        "expression": "(lambda q: (q.add('a'), q.add('b'), q.add('c'), [q.remove(), q.remove(), q.remove()])[3])(Queue())",
+        "expected": "['a', 'b', 'c']"
+      },
+      {
+        "name": "remove on empty queue -> None",
+        "expression": "Queue().remove()",
+        "expected": "None"
+      },
+      {
+        "name": "size shrinks after remove",
+        "expression": "(lambda q: (q.add(9), q.add(8), q.remove(), q.size())[3])(Queue())",
+        "expected": "1",
+        "hidden": true
+      },
+      {
+        "name": "Queue is a Container subclass",
+        "expression": "issubclass(Queue, Container)",
+        "expected": "True",
+        "hidden": true
+      }
+    ]
+  }
+]

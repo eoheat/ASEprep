@@ -1,0 +1,65 @@
+[
+  {
+    "id": "bank-03-a",
+    "kind": "coding",
+    "title": "Sum of Multiples",
+    "topicSlug": "03-iteration",
+    "unit": 1,
+    "source": "bank",
+    "difficulty": "warmup",
+    "reconstructed": false,
+    "statement": "Warmup on a counting loop with an accumulator. Implement `sum_multiples(n)` returning the sum of every positive integer **below** `n` that is a multiple of 3 or 5.\n\nFor example, below 10 the multiples of 3 or 5 are 3, 5, 6, 9, which sum to 23. If `n <= 1`, return 0.",
+    "functionSignature": "def sum_multiples(n):",
+    "starterCode": "def sum_multiples(n):\n    \"\"\"Sum the positive integers below n that are multiples of 3 or 5.\n\n    >>> sum_multiples(10)\n    23\n    >>> sum_multiples(1)\n    0\n    >>> sum_multiples(3)\n    0\n    \"\"\"\n    pass",
+    "solution": "def sum_multiples(n):\n    total = 0\n    for i in range(n):\n        if i % 3 == 0 or i % 5 == 0:\n            total += i\n    return total",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      { "name": "below 10", "expression": "sum_multiples(10)", "expected": "23" },
+      { "name": "n = 1 -> 0", "expression": "sum_multiples(1)", "expected": "0" },
+      { "name": "n = 0 -> 0", "expression": "sum_multiples(0)", "expected": "0" },
+      { "name": "below is exclusive: 3 excluded", "expression": "sum_multiples(3)", "expected": "0" },
+      { "name": "6 not double-counted", "expression": "sum_multiples(7)", "expected": "14" },
+      { "name": "larger range", "expression": "sum_multiples(20)", "expected": "78" }
+    ]
+  },
+  {
+    "id": "bank-03-b",
+    "kind": "coding",
+    "title": "Collatz Steps",
+    "topicSlug": "03-iteration",
+    "unit": 1,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "reconstructed": false,
+    "statement": "A `while` loop whose length depends on the data, not on a fixed range. Implement `collatz_steps(n)` counting how many steps it takes to reach 1 by the rule: if `n` is even, halve it; if odd, replace it with `3*n + 1`. Return the number of steps.\n\n- `collatz_steps(1)` is `0` (already at 1).\n- `collatz_steps(6)` is `8`: 6 -> 3 -> 10 -> 5 -> 16 -> 8 -> 4 -> 2 -> 1.\n\nYou may assume `n >= 1`.",
+    "functionSignature": "def collatz_steps(n):",
+    "starterCode": "def collatz_steps(n):\n    \"\"\"Count steps of the Collatz process to reach 1 from n (n >= 1).\n\n    >>> collatz_steps(1)\n    0\n    >>> collatz_steps(6)\n    8\n    >>> collatz_steps(2)\n    1\n    \"\"\"\n    pass",
+    "solution": "def collatz_steps(n):\n    steps = 0\n    while n != 1:\n        if n % 2 == 0:\n            n = n // 2\n        else:\n            n = 3 * n + 1\n        steps += 1\n    return steps",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      { "name": "already at 1", "expression": "collatz_steps(1)", "expected": "0" },
+      { "name": "smallest even", "expression": "collatz_steps(2)", "expected": "1" },
+      { "name": "the classic 6", "expression": "collatz_steps(6)", "expected": "8" },
+      { "name": "power of two shortcut", "expression": "collatz_steps(16)", "expected": "4" },
+      { "name": "odd start", "expression": "collatz_steps(7)", "expected": "16" },
+      { "name": "returns an int", "expression": "collatz_steps(3)", "expected": "7", "strictType": true }
+    ]
+  },
+  {
+    "id": "bank-03-c",
+    "kind": "code-reading",
+    "title": "Loop with break and else",
+    "topicSlug": "03-iteration",
+    "unit": 1,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "reconstructed": false,
+    "statement": "Trace the printed output. This tests accumulation across iterations, the effect of `break` on a loop, and the subtle `for/else` clause (the `else` runs only if the loop finished without `break`).",
+    "prompt": "total = 0\nfor i in range(1, 6):\n    if i == 4:\n        break\n    total += i\n    print('add', i, 'total', total)\nelse:\n    print('no break')\nprint('final', total)",
+    "answer": "add 1 total 1\nadd 2 total 3\nadd 3 total 6\nfinal 6",
+    "acceptedAnswers": [],
+    "explanation": "The loop runs i = 1, 2, 3 adding to `total` (1, then 3, then 6) and printing each time. At i = 4 the `break` fires before the add or print, ending the loop. Because the loop exited via `break`, the `for ... else` clause is SKIPPED, so 'no break' never prints. Finally `final 6` prints. Key trap: `for/else`'s else runs only when the loop completes normally."
+  }
+]

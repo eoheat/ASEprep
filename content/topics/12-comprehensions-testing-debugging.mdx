@@ -1,0 +1,191 @@
+## Intuition
+
+Three loosely related tools. A **list comprehension** is a one-liner that builds
+a new list by applying an expression to every element of an iterable, optionally
+filtered by a test — a compact stand-in for the "make an empty list, loop,
+append" pattern. **Keyword (default) parameters** let a function have sensible
+defaults that callers can override. And **testing/debugging** is the discipline
+of finding out *whether* code is wrong (testing) and *why* it's wrong
+(debugging), before and after bugs appear.
+
+Comprehension shape to memorize: `[expression for elem in iterable if test]`.
+
+## The mechanics
+
+The comprehension replaces this loop:
+
+```python
+Lnew = []
+for e in L:
+    Lnew.append(e ** 2)
+```
+
+with one line:
+
+```python
+Lnew = [e ** 2 for e in L]
+```
+
+Add an optional filter with `if`, which keeps only elements passing the test:
+
+```python
+[e ** 2 for e in range(6)]                    # [0, 1, 4, 9, 16, 25]
+[e ** 2 for e in range(8) if e % 2 == 0]      # [0, 4, 16, 36]
+[len(x) for x in ['xy', 'abcd', 7, '4.0'] if type(x) == str]   # [2, 4, 3]
+```
+
+Keyword parameters give defaults; they must come *after* all non-default
+parameters in the `def`:
+
+```python
+def bisection_root(x, epsilon=0.01):
+    ...
+
+bisection_root(123)              # uses epsilon = 0.01
+bisection_root(123, 0.5)         # positional override
+bisection_root(123, epsilon=0.1) # named override
+```
+
+Calling rules: a keyword argument can't come before a positional one, and
+positional order matters if you don't name.
+
+```python
+bisection_root(x=123, epsilon=0.1)   # ok
+bisection_root(epsilon=0.1, x=123)   # ok (all named)
+# bisection_root(epsilon=0.1, 123)   # SyntaxError
+# bisection_root(0.001, 123)         # no error, but x and epsilon swapped!
+```
+
+<Callout type="tip">
+Testing answers "is it working?"; debugging answers "why isn't it working?".
+**Unit test** each function alone, **regression test** by adding a test for
+every bug you fix, and **integration test** the whole program only after the
+pieces pass.
+</Callout>
+
+## Worked example
+
+Trace a comprehension in three steps: enumerate the iterable, apply the filter,
+apply the expression.
+
+```python
+result = [len(x) for x in ['xy', 'abcd', 7, '4.0'] if type(x) == str]
+```
+
+- Iterable elements: `'xy'`, `'abcd'`, `7`, `'4.0'`.
+- Filter `type(x) == str` keeps `'xy'`, `'abcd'`, `'4.0'` (drops the int `7`).
+- Expression `len(x)` on each survivor: `2`, `4`, `3`.
+- Result: `[2, 4, 3]`.
+
+Now testing approaches. **Black-box testing** designs cases from the spec
+without looking at the code — natural partitions plus boundary conditions
+(empty list, single element, big/small numbers). **Glass-box testing** uses the
+code to pick cases so every path runs at least once (each branch, loops run
+zero/one/many times). Glass-box path coverage can *still* miss a bug:
+
+```python
+def my_abs(x):
+    """Returns x if x >= 0 else -x."""
+    if x < -1:          # BUG: should be x < 0
+        return -x
+    else:
+        return x
+```
+
+A path-complete suite of `2` and `-2` passes (both branches run, both correct).
+But `my_abs(-1)` returns `-1` — wrong. That's why you *also* test boundary
+values like `-1` and `0`, not just one value per path.
+
+## Traps
+
+<Callout type="trap">
+**The `if` in a comprehension filters; it does not choose between two values.**
+`[e for e in L if e > 0]` keeps positives and drops the rest. It is not an
+`if/else`. (A conditional *expression* like `[e if e > 0 else 0 for e in L]`
+exists but is a different, less common construct.)
+</Callout>
+
+**Default parameters must come last in `def`.** `def f(a, b=1, c)` is a syntax
+error; non-default parameters can't follow default ones.
+
+**A keyword argument can't precede a positional one in a call.**
+`f(epsilon=0.1, 123)` is a `SyntaxError`.
+
+**Passing arguments in the wrong positional order.** `f(0.001, 123)` runs with
+no error but binds the wrong values — a silent logic bug that testing must
+catch.
+
+**Path-complete does not mean bug-free.** Covering every path can still miss
+boundary bugs (the `my_abs(-1)` case). Always test edges: empty, single element,
+zero, negatives.
+
+**Comprehensions can hurt readability.** A deeply nested comprehension is harder
+to debug than a plain loop. Reach for it when it's genuinely clearer.
+
+## Memorize vs understand
+
+| Just know it cold | Be able to derive |
+|---|---|
+| `[expr for x in iterable if test]` builds a filtered new list | The exact list a given comprehension produces |
+| The `if` filters elements; it does not pick between two outputs | Which test cases exercise every branch (glass-box) |
+| Default params come last; they let callers override | Boundary cases from a spec (black-box): empty, single, zero, negatives |
+| Keyword args can't come before positional args in a call | Why a path-complete suite can still miss a bug |
+| Unit vs regression vs integration testing | When a bug is a syntax/semantic error vs a logic error |
+
+## ASE check
+
+```python
+print([x * 2 for x in range(5) if x % 2 == 1])
+```
+
+<ASECheck q="What does this print?">
+
+`[2, 6]`. From `0..4`, the filter `x % 2 == 1` keeps 1 and 3; doubling gives
+`[2, 6]`.
+
+</ASECheck>
+
+```python
+print([len(w) for w in ['a', 'bb', 'ccc']])
+```
+
+<ASECheck q="What is the result?">
+
+`[1, 2, 3]`. No filter, so every element passes; `len` gives 1, 2, 3 in order.
+
+</ASECheck>
+
+```python
+def f(a, b=10):
+    return a - b
+print(f(3), f(3, 1))
+```
+
+<ASECheck q="What does this print?">
+
+`-7 2`. `f(3)` uses the default `b = 10`, giving `3 - 10 = -7`. `f(3, 1)`
+overrides `b` with 1, giving `3 - 1 = 2`.
+
+</ASECheck>
+
+```python
+nums = [4, 1, 7, 2]
+print([n for n in nums if n < 4])
+```
+
+<ASECheck q="What does this print, and is the original list changed?">
+
+`[1, 2]`, and `nums` is unchanged. A comprehension builds a brand-new list; it
+never mutates the source. Only 1 and 2 pass the `n < 4` filter.
+
+</ASECheck>
+
+<ASECheck q="Your test suite runs every branch of your function and all pass, yet a user reports a wrong answer. What kind of test did you skip?">
+
+Boundary-case testing. Path coverage alone can miss edge bugs (like the value
+right at a comparison boundary). Add tests for empty inputs, single elements,
+zero, and negative values.
+
+</ASECheck>
+
+*Content reconstructed from MIT OCW 6.100L Fall 2022, Lecture 12 (Ana Bell), CC BY-NC-SA.*

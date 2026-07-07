@@ -1,0 +1,72 @@
+[
+  {
+    "id": "finger-23-a",
+    "kind": "complexity",
+    "title": "Finger Exercise 23 (Q1) — running_product",
+    "topicSlug": "23-complexity-classes",
+    "unit": 4,
+    "source": "finger",
+    "reconstructed": true,
+    "difficulty": "exam-level",
+    "statement": "Choose the worst-case asymptotic order of growth (upper and lower bound) for the function.",
+    "prompt": "Assume `n = a`. Give the worst-case order of growth.\n\n```python\ndef running_product(a):\n    \"\"\" a is an int \"\"\"\n    product = 1\n    for i in range(5, a + 5):\n        product *= i\n        if product == a:\n            return True\n    return False\n```",
+    "answer": "O(n)",
+    "acceptedAnswers": [
+      "theta(n)",
+      "Θ(n)",
+      "n",
+      "linear"
+    ],
+    "explanation": "The loop runs over `range(5, a + 5)`, which is `a` iterations. Each iteration does constant work. In the worst case the early `return True` never triggers, so the loop runs all `a` times. With n = a, that is θ(n) — linear."
+  },
+  {
+    "id": "finger-23-b",
+    "kind": "complexity",
+    "title": "Finger Exercise 23 (Q2) — tricky_f",
+    "topicSlug": "23-complexity-classes",
+    "unit": 4,
+    "source": "finger",
+    "reconstructed": true,
+    "difficulty": "exam-level",
+    "statement": "Choose the worst-case asymptotic order of growth (upper and lower bound) for the function.",
+    "prompt": "Assume `n = len(L)` (and `L2` has the same length). Give the worst-case order of growth.\n\n```python\ndef tricky_f(L, L2):\n    \"\"\" L and L2 are lists of equal length \"\"\"\n    inL = False\n    for e1 in L:\n        if e1 in L2:\n            inL = True\n    inL2 = False\n    for e2 in L2:\n        if e2 in L:\n            inL2 = True\n    return inL and inL2\n```",
+    "answer": "O(n**2)",
+    "acceptedAnswers": [
+      "O(n^2)",
+      "O(n²)",
+      "theta(n**2)",
+      "theta(n^2)",
+      "Θ(n**2)",
+      "Θ(n^2)",
+      "n**2",
+      "n^2",
+      "quadratic"
+    ],
+    "explanation": "Each loop runs n times, and the membership test `e in L2` (or `e in L`) on a list is O(n). Two such loops give n*O(n) + n*O(n) = O(n**2). The second loop does not change the order of growth. So it is θ(n**2) — quadratic."
+  },
+  {
+    "id": "finger-23-c",
+    "kind": "complexity",
+    "title": "Finger Exercise 23 (Q3) — sum_f",
+    "topicSlug": "23-complexity-classes",
+    "unit": 4,
+    "source": "finger",
+    "reconstructed": true,
+    "difficulty": "exam-level",
+    "statement": "Choose the worst-case asymptotic order of growth (upper and lower bound) for the function.",
+    "prompt": "Give the worst-case order of growth in terms of `n`.\n\n```python\ndef sum_f(n):\n    \"\"\" n > 0 \"\"\"\n    answer = 0\n    while n > 0:\n        answer += n % 10\n        n = int(n / 10)\n    return answer\n```",
+    "answer": "O(log n)",
+    "acceptedAnswers": [
+      "O(logn)",
+      "O(log(n))",
+      "theta(log n)",
+      "theta(logn)",
+      "Θ(log n)",
+      "Θ(logn)",
+      "log n",
+      "logn",
+      "logarithmic"
+    ],
+    "explanation": "Each iteration divides n by 10 (integer division), so the number of iterations is the number of base-10 digits of n, which is proportional to log10(n). Base of the log doesn't matter for order of growth, so it is θ(log n) — logarithmic."
+  }
+]

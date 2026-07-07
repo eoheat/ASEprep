@@ -1,0 +1,66 @@
+[
+  {
+    "id": "bank-17-a",
+    "kind": "coding",
+    "source": "bank",
+    "topicSlug": "17-python-classes",
+    "unit": 3,
+    "difficulty": "warmup",
+    "reconstructed": false,
+    "title": "A Rectangle class",
+    "statement": "Define a class `Rectangle` with an `__init__(self, width, height)` that stores its two data attributes, plus two methods:\n\n- `area(self)` returns `width * height`.\n- `perimeter(self)` returns `2 * (width + height)`.\n\n```\n>>> r = Rectangle(3, 4)\n>>> r.area()\n12\n>>> r.perimeter()\n14\n```",
+    "functionSignature": "class Rectangle:",
+    "starterCode": "class Rectangle:\n    def __init__(self, width, height):\n        # store width and height as data attributes\n        pass\n\n    def area(self):\n        pass\n\n    def perimeter(self):\n        pass",
+    "solution": "class Rectangle:\n    def __init__(self, width, height):\n        self.width = width\n        self.height = height\n\n    def area(self):\n        return self.width * self.height\n\n    def perimeter(self):\n        return 2 * (self.width + self.height)",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      { "name": "area", "expression": "Rectangle(3, 4).area()", "expected": "12" },
+      { "name": "perimeter", "expression": "Rectangle(3, 4).perimeter()", "expected": "14" },
+      { "name": "square area", "expression": "Rectangle(5, 5).area()", "expected": "25" },
+      { "name": "zero width area", "expression": "Rectangle(0, 9).area()", "expected": "0", "hidden": true },
+      { "name": "attributes stored", "expression": "(lambda r: (r.width, r.height))(Rectangle(2, 7))", "expected": "(2, 7)", "hidden": true }
+    ]
+  },
+  {
+    "id": "bank-17-b",
+    "kind": "coding",
+    "source": "bank",
+    "topicSlug": "17-python-classes",
+    "unit": 3,
+    "difficulty": "exam-level",
+    "reconstructed": false,
+    "title": "A mutable Wallet with __str__",
+    "statement": "Define a class `Wallet` that tracks a balance.\n\n- `__init__(self, balance=0)` stores the starting balance (default 0).\n- `deposit(self, amount)` adds `amount` to the balance (assume `amount >= 0`).\n- `withdraw(self, amount)` subtracts `amount`, but **only if there are sufficient funds**. If `amount` exceeds the balance, leave the balance unchanged and return `False`; otherwise perform the withdrawal and return `True`.\n- `get_balance(self)` returns the current balance.\n- `__str__(self)` returns the string `'Wallet: $<balance>'`, e.g. `'Wallet: $30'`.\n\n```\n>>> w = Wallet(50)\n>>> w.withdraw(20)\nTrue\n>>> w.get_balance()\n30\n>>> w.withdraw(1000)\nFalse\n>>> str(w)\n'Wallet: $30'\n```",
+    "functionSignature": "class Wallet:",
+    "starterCode": "class Wallet:\n    def __init__(self, balance=0):\n        pass\n\n    def deposit(self, amount):\n        pass\n\n    def withdraw(self, amount):\n        pass\n\n    def get_balance(self):\n        pass\n\n    def __str__(self):\n        pass",
+    "solution": "class Wallet:\n    def __init__(self, balance=0):\n        self.balance = balance\n\n    def deposit(self, amount):\n        self.balance += amount\n\n    def withdraw(self, amount):\n        if amount > self.balance:\n            return False\n        self.balance -= amount\n        return True\n\n    def get_balance(self):\n        return self.balance\n\n    def __str__(self):\n        return 'Wallet: $' + str(self.balance)",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      { "name": "default balance is 0", "expression": "Wallet().get_balance()", "expected": "0" },
+      { "name": "deposit then balance", "expression": "(lambda w: (w.deposit(40), w.get_balance())[1])(Wallet(10))", "expected": "50" },
+      { "name": "successful withdraw returns True", "expression": "Wallet(50).withdraw(20)", "expected": "True", "strictType": true },
+      { "name": "balance after withdraw", "expression": "(lambda w: (w.withdraw(20), w.get_balance())[1])(Wallet(50))", "expected": "30" },
+      { "name": "overdraft returns False", "expression": "Wallet(50).withdraw(1000)", "expected": "False", "strictType": true },
+      { "name": "overdraft leaves balance unchanged", "expression": "(lambda w: (w.withdraw(1000), w.get_balance())[1])(Wallet(50))", "expected": "50", "hidden": true },
+      { "name": "exact withdrawal to zero", "expression": "(lambda w: (w.withdraw(50), w.get_balance())[1])(Wallet(50))", "expected": "0", "hidden": true },
+      { "name": "__str__ format", "expression": "str(Wallet(30))", "expected": "'Wallet: $30'", "hidden": true }
+    ]
+  },
+  {
+    "id": "bank-17-c",
+    "kind": "code-reading",
+    "source": "bank",
+    "topicSlug": "17-python-classes",
+    "unit": 3,
+    "difficulty": "exam-level",
+    "reconstructed": false,
+    "title": "Objects are passed by reference",
+    "statement": "An object is mutable and passed by reference. Trace this and give exactly what the program prints (both lines).",
+    "prompt": "```python\nclass Counter:\n    def __init__(self):\n        self.count = 0\n    def bump(self):\n        self.count += 1\n\ndef bump_twice(c):\n    c.bump()\n    c.bump()\n\na = Counter()\nb = a\nb.bump()\nbump_twice(a)\nprint(a.count)\nprint(a is b)\n```",
+    "answer": "3\nTrue",
+    "acceptedAnswers": ["3\nTrue", "3\ntrue", "3, True", "3 True"],
+    "explanation": "`b = a` aliases the same Counter object, so `b.bump()` bumps it to 1. `bump_twice(a)` receives the same object and bumps it twice more, reaching 3. `a is b` is True because they are one object with two names. The two printed lines are `3` then `True`."
+  }
+]

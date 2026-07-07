@@ -1,0 +1,41 @@
+{
+  "id": "exam4",
+  "title": "Practice Exam 4",
+  "timeLimitMinutes": 120,
+  "passThreshold": 0.7,
+  "blueprint": "10 problems sampling all four units — 6 coding (U1 basics/strings/loops x2, U2 data structures x2, U3 classes/recursion x1, U4 algorithms x1) + 4 short-answer (U1 loop/string trace, U2 aliasing/mutation trace, U3 scope/class trace, U4 Big-O). Points weighted U1 28% / U2 32% / U3 20% / U4 20%.",
+  "variants": [
+    {
+      "id": "exam4-A",
+      "label": "Variant A",
+      "problemIds": [
+        "bank-06-b",
+        "bank-04-a",
+        "bank-09-c",
+        "bank-13-b",
+        "bank-16-a",
+        "bank-21-d",
+        "bank-01-c",
+        "bank-08-e",
+        "bank-17-c",
+        "bank-23-c"
+      ]
+    },
+    {
+      "id": "exam4-B",
+      "label": "Variant B",
+      "problemIds": [
+        "bank-05-b",
+        "bank-04-b",
+        "bank-07-b",
+        "bank-07-c",
+        "bank-20-c",
+        "bank-25-d",
+        "bank-05-a",
+        "bank-12-e",
+        "bank-15-c",
+        "bank-26-e"
+      ]
+    }
+  ]
+}

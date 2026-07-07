@@ -1,0 +1,261 @@
+## Intuition
+
+Inheritance lets one class build on another instead of duplicating it. A `Cat`,
+a `Person`, and a `Rabbit` are all `Animal`s — they share age, name, and basic
+behavior — so you write those *once* in a parent class `Animal` and let each child
+class **inherit** them. A child (subclass) automatically gets everything the
+parent (superclass) has, and can then **add** new data or methods, **override** an
+inherited method with its own version, or use the parent's as-is. This mirrors
+real hierarchies and, more practically, kills code duplication. Two supporting
+ideas ride along: **getters and setters** (access data through methods, not by
+reaching in directly, so you can change the internals later without breaking
+callers) and **class variables** (a value shared by *every* instance of a class).
+
+## The mechanics
+
+**Parent class** — the general type:
+
+```python
+class Animal(object):
+    def __init__(self, age):
+        self.age = age
+        self.name = None
+    def get_age(self):
+        return self.age
+    def set_name(self, newname=""):
+        self.name = newname
+    def __str__(self):
+        return "animal:" + str(self.name) + ":" + str(self.age)
+```
+
+**Subclass** — inherit by naming the parent in parentheses. A subclass gets all
+of the parent's attributes for free:
+
+```python
+class Cat(Animal):
+    def speak(self):                 # NEW method, not in Animal
+        print("meow")
+    def __str__(self):               # OVERRIDES Animal's __str__
+        return "cat:" + str(self.name) + ":" + str(self.age)
+```
+
+`Cat` didn't define `__init__`, so it uses `Animal`'s. It *added* `speak` and
+*overrode* `__str__`.
+
+**Method lookup rule:** for an instance, Python looks for the method in the
+instance's own class first; if not found, it goes *up* the hierarchy (parent, then
+grandparent, ...). The first match wins.
+
+**Calling the parent's `__init__`** when the child needs more setup:
+
+```python
+class Person(Animal):
+    def __init__(self, name, age):
+        Animal.__init__(self, age)   # run the parent's constructor
+        self.set_name(name)
+        self.friends = []            # NEW data attribute
+```
+
+**Class variables** are shared across all instances. Define them in the class
+body (not in `__init__`), and access via `ClassName.var`:
+
+```python
+class Rabbit(Animal):
+    tag = 1                          # class variable, shared by ALL rabbits
+    def __init__(self, age):
+        Animal.__init__(self, age)
+        self.rid = Rabbit.tag        # give this rabbit a unique id
+        Rabbit.tag += 1              # bump the shared counter
+```
+
+<Callout type="tip">
+**Access data attributes through getters/setters, not directly.** If you write
+`a.get_age()` instead of `a.age`, and later the class author renames the internal
+attribute from `age` to `years`, only the getter needs updating — your calling
+code still works. Reaching in with `a.age` would break.
+</Callout>
+
+## Worked example
+
+Trace how class variables give each `Rabbit` a unique id.
+
+```python
+class Rabbit(Animal):
+    tag = 1
+    def __init__(self, age):
+        Animal.__init__(self, age)
+        self.rid = Rabbit.tag
+        Rabbit.tag += 1
+
+r1 = Rabbit(8)
+r2 = Rabbit(6)
+r3 = Rabbit(10)
+print(r1.rid, r2.rid, r3.rid)
+```
+
+- Before any rabbits, `Rabbit.tag` is `1`.
+- `r1 = Rabbit(8)`: `self.rid = Rabbit.tag` → `r1.rid = 1`; then `Rabbit.tag`
+  becomes `2`.
+- `r2 = Rabbit(6)`: `r2.rid = 2`; `Rabbit.tag` becomes `3`.
+- `r3 = Rabbit(10)`: `r3.rid = 3`; `Rabbit.tag` becomes `4`.
+- Prints `1 2 3`.
+
+The `tag` counter is **shared** — one rabbit incrementing it changes it for the
+whole class, which is exactly what gives unique ids. `rid`, by contrast, is a
+per-instance data attribute (each rabbit keeps its own).
+
+Now method overriding. Since `Cat` overrides `__str__` but `Person` overrides it
+differently, the lookup rule picks each class's own version:
+
+```python
+c = Cat(2)
+c.set_name("Jelly")
+print(c)                 # cat:Jelly:2   -- Cat's __str__ wins
+c.speak()                # meow          -- Cat's new method
+```
+
+`print(c)` finds `__str__` in `Cat` first (never reaching `Animal`'s). `c.speak()`
+finds `speak` in `Cat`. An `Animal` instance calling `.speak()` would error —
+`speak` only exists on `Cat`.
+
+## Traps
+
+<Callout type="trap">
+**Forgetting to call the parent's `__init__`.** If `Person.__init__` sets
+`self.friends = []` but never calls `Animal.__init__(self, age)`, the person has
+no `age` or `name` — those were the parent's job. Always chain to the parent's
+constructor when the child defines its own `__init__`.
+</Callout>
+
+**Mutating a class variable through an instance by accident.** `Rabbit.tag += 1`
+changes the shared counter for everyone (intended here). But if you *want*
+per-instance data, don't rely on the class variable — assign `self.something`.
+Confusing the two produces bugs where "changing one instance changed them all."
+
+**Overriding without matching the intended behavior.** When you override
+`__str__` or `__eq__`, the subclass version *replaces* the parent's entirely. If
+you still want the parent's logic plus a bit more, call it explicitly (e.g.
+`super().__eq__(other) and self.elev == other.elev`) rather than rewriting it.
+
+**Reaching into data attributes directly.** `a.age = 'infinite'` and
+`a.size = "tiny"` are *allowed* in Python (it doesn't truly hide data) but are bad
+style — they bypass validation and break if the internal representation changes.
+Use setters.
+
+**Comparing objects directly inside `__eq__` and recursing forever.** For a
+`Rabbit`, comparing `self.parent1 == other.parent1` calls `__eq__` again on the
+parents, then *their* parents, eventually hitting `None.parent1` and crashing.
+Compare stable ids instead (`self.parent1.rid == other.parent1.rid`).
+
+**Assuming a parent instance can do child things.** A `RunWorkout` can be used
+anywhere a `Workout` is expected (it *is* a `Workout`), but a plain `Workout`
+cannot be used where child-only methods like `get_elev()` are called.
+
+## Memorize vs understand
+
+| Just know it cold | Be able to derive |
+|---|---|
+| `class Child(Parent):` inherits all of Parent's attributes | Which class's method runs for an instance, using the lookup-up-the-hierarchy rule |
+| A subclass can add, override, or reuse inherited attributes | Whether a subclass needs to call the parent's `__init__` |
+| Class variables (defined in class body) are shared by all instances | Tracing a shared counter (`Rabbit.tag`) across several instantiations |
+| Access data via getters/setters, not directly | Why direct attribute access breaks when the class internals change |
+| Call the parent explicitly with `Parent.method(self, ...)` or `super()` | Spotting infinite recursion when `__eq__` compares objects instead of ids |
+
+## ASE check
+
+```python
+class Animal(object):
+    def __init__(self, age):
+        self.age = age
+    def describe(self):
+        return "an animal"
+
+class Dog(Animal):
+    def describe(self):
+        return "a dog"
+
+d = Dog(3)
+print(d.describe(), d.age)
+```
+
+<ASECheck q="What does this print, and where does each piece come from?">
+
+`a dog 3`. `describe` is found in `Dog` first (overriding `Animal`'s), so it
+returns `"a dog"`. `Dog` has no `__init__`, so it uses `Animal`'s, which set
+`self.age = 3`; `d.age` reads that inherited attribute.
+
+</ASECheck>
+
+```python
+class Counter(object):
+    count = 0
+    def __init__(self):
+        Counter.count += 1
+
+a = Counter()
+b = Counter()
+c = Counter()
+print(Counter.count)
+```
+
+<ASECheck q="What does this print, and why?">
+
+`3`. `count` is a class variable shared by all instances. Each `Counter()` call
+runs `__init__`, which does `Counter.count += 1`. Three instances mean three
+increments, so the shared `count` is `3`.
+
+</ASECheck>
+
+```python
+class Base(object):
+    def __init__(self, x):
+        self.x = x
+
+class Sub(Base):
+    def __init__(self, x, y):
+        self.y = y          # forgot to call Base.__init__
+
+s = Sub(1, 2)
+print(s.y)
+print(s.x)
+```
+
+<ASECheck q="What happens on each print line?">
+
+`print(s.y)` prints `2`. `print(s.x)` raises an `AttributeError` — `Sub.__init__`
+never called `Base.__init__(self, x)`, so `self.x` was never set. The fix is to add
+`Base.__init__(self, x)` (or `super().__init__(x)`) inside `Sub.__init__`.
+
+</ASECheck>
+
+```python
+class Animal(object):
+    def speak(self):
+        return "..."
+class Cat(Animal):
+    def speak(self):
+        return "meow"
+
+a = Animal(); c = Cat()
+print(a.speak(), c.speak())
+```
+
+<ASECheck q="What does this print, and what rule decides which speak runs?">
+
+`... meow`. Python looks for `speak` in the instance's own class first. For `a`
+(an `Animal`) it finds `Animal.speak` → `"..."`. For `c` (a `Cat`) it finds
+`Cat.speak` first, which overrides the parent → `"meow"`.
+
+</ASECheck>
+
+<ASECheck q="Why is calling a.get_age() better style than reading a.age directly?">
+
+Because it supports information hiding. If the class author later renames the
+internal attribute (say `age` becomes `years`), the getter `get_age` can be
+updated to return `self.years` and all calling code still works. Direct access via
+`a.age` would break the moment the internal name changed.
+
+</ASECheck>
+
+*Source: MIT OCW 6.100L Fall 2022, Lecture 19 (Inheritance), Ana Bell. Content
+reconstructed as original prose under CC BY-NC-SA.*

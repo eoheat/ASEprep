@@ -1,0 +1,52 @@
+[
+  {
+    "id": "finger-18",
+    "kind": "coding",
+    "title": "Finger Exercise 18 — Circle with __add__ and __str__",
+    "topicSlug": "18-more-class-methods",
+    "unit": 3,
+    "source": "finger",
+    "reconstructed": true,
+    "difficulty": "exam-level",
+    "statement": "Write a `Circle` class with these methods:\n\n- `__init__(self, radius)` — store the radius.\n- `get_radius(self)` — return the radius.\n- `__add__(self, c)` — `c` is a `Circle`; return a **new** `Circle` whose radius is the sum of `self`'s and `c`'s radii.\n- `__str__(self)` — the string representation is the radius (as a string).\n\n```\n(Circle(2) + Circle(3)).get_radius() -> 5\nstr(Circle(4)) -> '4'\n```\n\nSource: MIT OCW 6.100L Fall 2022, Finger Exercise Lecture 18 (reconstructed as a runnable problem for this study tool).",
+    "functionSignature": "class Circle():",
+    "starterCode": "class Circle():\n    def __init__(self, radius):\n        \"\"\" Initializes self with radius \"\"\"\n        # your code here\n        pass\n\n    def get_radius(self):\n        \"\"\" Returns the radius of self \"\"\"\n        # your code here\n        pass\n\n    def __add__(self, c):\n        \"\"\" c is a Circle object.\n        Returns a new Circle object whose radius is\n        the sum of self and c's radius \"\"\"\n        # your code here\n        pass\n\n    def __str__(self):\n        \"\"\" A Circle's string representation is the radius \"\"\"\n        # your code here\n        pass\n",
+    "solution": "class Circle():\n    def __init__(self, radius):\n        self.r = radius\n\n    def get_radius(self):\n        return self.r\n\n    def __add__(self, c):\n        return Circle(self.r + c.r)\n\n    def __str__(self):\n        return str(self.r)\n",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      {
+        "name": "__add__ sums radii into a new Circle",
+        "expression": "(Circle(2) + Circle(3)).get_radius()",
+        "expected": "5"
+      },
+      {
+        "name": "__add__ returns a Circle instance",
+        "expression": "isinstance(Circle(1) + Circle(1), Circle)",
+        "expected": "True"
+      },
+      {
+        "name": "__str__ is the radius as a string",
+        "expression": "str(Circle(4))",
+        "expected": "'4'"
+      },
+      {
+        "name": "operands unchanged after add",
+        "expression": "(lambda a, b: (a + b, a.get_radius(), b.get_radius())[1:])(Circle(2), Circle(3))",
+        "expected": "(2, 3)"
+      },
+      {
+        "name": "add with zero radius",
+        "expression": "(Circle(0) + Circle(7)).get_radius()",
+        "expected": "7",
+        "hidden": true
+      },
+      {
+        "name": "str of float radius",
+        "expression": "str(Circle(2.5))",
+        "expected": "'2.5'",
+        "hidden": true
+      }
+    ]
+  }
+]

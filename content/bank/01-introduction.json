@@ -1,0 +1,67 @@
+[
+  {
+    "id": "bank-01-a",
+    "kind": "coding",
+    "title": "Total Seconds",
+    "topicSlug": "01-introduction",
+    "unit": 1,
+    "source": "bank",
+    "difficulty": "warmup",
+    "reconstructed": false,
+    "statement": "Warmup on integer arithmetic and operator precedence. Implement `to_seconds(hours, minutes, seconds)` that converts a duration into a single integer number of seconds.\n\nThere are 60 seconds in a minute and 3600 seconds in an hour. All inputs are non-negative integers. Return an `int`.",
+    "functionSignature": "def to_seconds(hours, minutes, seconds):",
+    "starterCode": "def to_seconds(hours, minutes, seconds):\n    \"\"\"Convert a duration to a total number of seconds.\n\n    >>> to_seconds(1, 0, 0)\n    3600\n    >>> to_seconds(0, 2, 30)\n    150\n    >>> to_seconds(0, 0, 0)\n    0\n    \"\"\"\n    pass",
+    "solution": "def to_seconds(hours, minutes, seconds):\n    return hours * 3600 + minutes * 60 + seconds",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      { "name": "one hour", "expression": "to_seconds(1, 0, 0)", "expected": "3600" },
+      { "name": "minutes and seconds", "expression": "to_seconds(0, 2, 30)", "expected": "150" },
+      { "name": "all zero", "expression": "to_seconds(0, 0, 0)", "expected": "0" },
+      { "name": "mixed", "expression": "to_seconds(2, 15, 45)", "expected": "8145" },
+      { "name": "returns an int, not a float", "expression": "to_seconds(1, 1, 1)", "expected": "3661", "strictType": true }
+    ]
+  },
+  {
+    "id": "bank-01-b",
+    "kind": "coding",
+    "title": "Make Change",
+    "topicSlug": "01-introduction",
+    "unit": 1,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "reconstructed": false,
+    "statement": "This exercises the two division operators together: floor division `//` and modulo `%`, plus the fact that they must agree.\n\nImplement `make_change(cents)`. Given a non-negative integer number of `cents`, return a tuple `(quarters, dimes, nickels, pennies)` making that amount using the **fewest coins**, always taking the largest coin first (25, 10, 5, 1).\n\nThe four returned counts must be ints and must satisfy `25*q + 10*d + 5*n + p == cents`.",
+    "functionSignature": "def make_change(cents):",
+    "starterCode": "def make_change(cents):\n    \"\"\"Return (quarters, dimes, nickels, pennies) for `cents`, greedily.\n\n    >>> make_change(0)\n    (0, 0, 0, 0)\n    >>> make_change(99)\n    (3, 2, 0, 4)\n    >>> make_change(41)\n    (1, 1, 1, 1)\n    \"\"\"\n    pass",
+    "solution": "def make_change(cents):\n    quarters = cents // 25\n    cents = cents % 25\n    dimes = cents // 10\n    cents = cents % 10\n    nickels = cents // 5\n    pennies = cents % 5\n    return (quarters, dimes, nickels, pennies)",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      { "name": "zero", "expression": "make_change(0)", "expected": "(0, 0, 0, 0)" },
+      { "name": "99 cents", "expression": "make_change(99)", "expected": "(3, 2, 0, 4)" },
+      { "name": "one of each", "expression": "make_change(41)", "expected": "(1, 1, 1, 1)" },
+      { "name": "exactly one quarter", "expression": "make_change(25)", "expected": "(1, 0, 0, 0)" },
+      { "name": "four pennies only", "expression": "make_change(4)", "expected": "(0, 0, 0, 4)" },
+      { "name": "invariant holds for a large value", "expression": "(lambda t: 25*t[0] + 10*t[1] + 5*t[2] + t[3])(make_change(287))", "expected": "287" }
+    ]
+  },
+  {
+    "id": "bank-01-c",
+    "kind": "code-reading",
+    "title": "Types and Division",
+    "topicSlug": "01-introduction",
+    "unit": 1,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "reconstructed": false,
+    "statement": "Trace the output. This checks that you know `/` always yields a float, `//` and `%` on ints yield ints, `**` for exponent, and how `int()` truncates toward zero.",
+    "prompt": "print(7 / 2)\nprint(7 // 2)\nprint(7 % 2)\nprint(2 ** 3)\nprint(int(3.99))\nprint(9 // 2 + 9 % 2)",
+    "answer": "3.5\n3\n1\n8\n3\n5",
+    "acceptedAnswers": [
+      "3.5, 3, 1, 8, 3, 5",
+      "3.5 3 1 8 3 5"
+    ],
+    "explanation": "`7 / 2` is true division so it's the float `3.5`. `7 // 2` floors to `3`; `7 % 2` is the remainder `1`. `2 ** 3` is `8`. `int(3.99)` truncates toward zero to `3` (it does NOT round). Last line: `9 // 2` is `4` and `9 % 2` is `1`, summing to `5` — a reminder that `a == (a // b) * b + (a % b)`."
+  }
+]

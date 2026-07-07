@@ -1,0 +1,192 @@
+## Intuition
+
+Programming is writing **recipes** — precise step-by-step instructions — that a
+machine follows exactly, no more and no less. The course draws a line between
+*declarative* knowledge (statements of fact, like "the square root of 16 is 4")
+and *imperative* knowledge (a how-to that actually *produces* the fact). A
+computer only does two things, but does them a few hundred billion times a
+second: it performs simple operations, and it remembers results. Everything you
+build stacks on top of that. This first lecture is about the raw materials —
+objects, their types, expressions, and variables — and one hard rule that trips
+up every beginner: **a computer does exactly what you tell it, which is not
+always what you meant.**
+
+## The mechanics
+
+Every value in Python is an **object**, and every object has a **type** that
+decides what you're allowed to do with it. The four scalar (indivisible) types
+you meet first:
+
+```python
+type(5)        # <class 'int'>    integers: 5, -100
+type(3.0)      # <class 'float'>  reals: 3.27, 2.0, -1.22
+type(True)     # <class 'bool'>   True, False
+type(None)     # <class 'NoneType'>  the single value None
+```
+
+You can **cast** (convert) between types. Note that `int()` *truncates* toward
+zero — it does not round:
+
+```python
+float(3)     # 3.0
+int(3.9)     # 3   <- truncated, NOT 4
+round(3.9)   # 4   <- round is different
+int(1/2)     # 0   <- 1/2 is 0.5, truncates to 0
+```
+
+Combine objects with operators to form **expressions**. An expression evaluates
+to exactly one value, which has a type:
+
+```python
+3 + 2        # value 5,        type int
+5 / 3        # value 1.666..., type float  (/ ALWAYS gives a float)
+7 // 2       # value 3,        floor division
+7 % 2        # value 1,        remainder (modulo)
+2 ** 4       # value 16,       exponent
+```
+
+The arithmetic operators on numbers: `+ - * /` and also `//` (floor division),
+`%` (remainder), `**` (power). Type rules to memorize: if both operands are
+`int`, `+ - * // %` give an `int`; if either is a `float`, you get a `float`;
+and `/` **always** gives a `float` even for `6 / 2`.
+
+<Callout type="tip">
+Operator precedence follows math: `**` first, then `* / % //` left to right,
+then `+ -` left to right. Parentheses override everything. When in doubt,
+parenthesize — the reader (including future you) will thank you.
+</Callout>
+
+## Worked example
+
+A **variable** is a name bound to a value. The `=` sign is an *assignment*, not
+an equation to "solve." Python does it in two steps: (1) evaluate the
+right-hand side to a single value, (2) bind that value to the name on the left.
+
+```python
+pi = 355/113        # RHS 355/113 evaluates to 3.1415929..., then binds to pi
+radius = 2.2
+area = pi * (radius ** 2)     # area is computed ONCE, from current values
+radius = radius + 1          # radius is now 3.2
+```
+
+- Line 1: `355/113` is computed → `3.1415929...`, bound to `pi`.
+- Line 3: `area` is computed from the *current* `pi` and `radius` (2.2) →
+  `15.197...`. It is stored as a value, not as a live formula.
+- Line 4: `radius` is rebound to `3.2`. Crucially, **`area` does not change** —
+  Python already computed and stored it. Nothing recalculates unless you tell it
+  to.
+
+```python
+print(area)     # 15.197... (still based on radius 2.2, not 3.2!)
+```
+
+This is the whole model: lines run top to bottom, each `=` recomputes its RHS
+from whatever the variables hold *at that moment*, and old results don't update
+themselves.
+
+## Traps
+
+<Callout type="trap">
+**`=` is assignment; it is not symmetric and it is not algebra.** `x = 6` is
+legal (bind 6 to x). `6 = x` is a syntax error (you can't assign to a literal).
+`x * y = 3 + 4` is a syntax error (the left side must be a plain name).
+</Callout>
+
+**Assignment does not create a live link.** After `area = pi * radius**2`,
+changing `radius` later does *not* update `area`. Beginners expect a spreadsheet;
+Python is not a spreadsheet. Recompute explicitly if you need a fresh value.
+
+**`/` versus `//`.** `5 / 2` is `2.5` (float). `5 // 2` is `2` (floor, int). Mixing
+them up is the classic off-by-a-type bug. And `-7 // 2` is `-4`, not `-3` — floor
+division rounds *down* (toward negative infinity), not toward zero.
+
+**`int()` truncates, it does not round.** `int(3.99)` is `3`. If you want the
+nearest integer, use `round()`.
+
+**Reusing a name silently loses the old value.** After `x = 5` then `x = "hi"`,
+the `5` is gone and `x` is now a string. Python won't warn you; the name simply
+points at the new object.
+
+**A syntactically valid line can still be wrong.** `"hi" + 5` is well-formed
+syntax but raises a `TypeError` at runtime (can't add a string and an int).
+"No error message" is not the same as "correct."
+
+## Memorize vs understand
+
+| Just know it cold | Be able to derive |
+|---|---|
+| The four scalar types: `int`, `float`, `bool`, `NoneType` | Whether an expression's result is `int` or `float` from its operands |
+| `/` always returns float; `//` floors; `int()` truncates | The final value of a variable after several reassignments |
+| Precedence: `**` then `* / % //` then `+ -`, left to right | Why a computed variable doesn't update when its inputs change later |
+| `=` binds RHS value to LHS name (2 steps: eval, then bind) | Tracing a short program line by line to predict its output |
+| `round(3.9)` is 4; `int(3.9)` is 3 | Which assignments are legal (`x=6` yes, `6=x` no) |
+
+## ASE check
+
+```python
+print(type(4 * 3))
+print(type(4.0 * 3))
+print(6 / 2)
+```
+
+<ASECheck q="What three lines print, and why?">
+
+`<class 'int'>`, then `<class 'float'>`, then `3.0`. `4*3` is int times int → int.
+`4.0*3` involves a float → float. And `/` **always** produces a float, so `6/2`
+is `3.0`, not `3`.
+
+</ASECheck>
+
+```python
+x = int(7.9)
+y = round(7.2)
+print(x, y)
+```
+
+<ASECheck q="What does this print?">
+
+`7 7`. `int(7.9)` truncates toward zero to `7` (it does not round up to 8).
+`round(7.2)` rounds to the nearest integer, which is `7`. The point: `int` and
+`round` are different operations — `int` chops off the decimal, `round` finds the
+closest whole number.
+
+</ASECheck>
+
+```python
+pi = 3.14
+radius = 2.0
+area = pi * radius ** 2
+radius = 10
+print(area)
+```
+
+<ASECheck q="What is printed for area?">
+
+`12.56`. `area` was computed once from `radius = 2.0` (`3.14 * 4`). Rebinding
+`radius` to `10` afterward does not recompute `area` — Python stored the value,
+not the formula.
+
+</ASECheck>
+
+```python
+print((4 + 2) * 6 - 1)
+print(2 ** 3 ** 1)
+```
+
+<ASECheck q="What are the two values?">
+
+`35` and `8`. First: parentheses make `4+2 = 6`, then `6*6 = 36`, then `36-1 =
+35`. Second: `**` is evaluated right to left, so `3 ** 1 = 3`, then `2 ** 3 = 8`.
+
+</ASECheck>
+
+<ASECheck q="You write x = 6 on one line and 6 = x on the next. What happens?">
+
+The first line is fine (bind `6` to `x`). The second line is a `SyntaxError`: the
+left side of `=` must be a name (or other assignable target), never a literal.
+Assignment is not symmetric — it always flows right to left.
+
+</ASECheck>
+
+*Content reconstructed from MIT OCW 6.100L Fall 2022, Lecture 1 (Ana Bell),
+CC BY-NC-SA.*

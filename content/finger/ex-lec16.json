@@ -1,0 +1,52 @@
+[
+  {
+    "id": "finger-16",
+    "kind": "coding",
+    "title": "Finger Exercise 16 — flatten",
+    "topicSlug": "16-recursion-non-numerics",
+    "unit": 3,
+    "source": "finger",
+    "reconstructed": true,
+    "difficulty": "exam-level",
+    "statement": "Implement `flatten(L)` using **recursion**.\n\n- `L`: a (possibly deeply) nested list.\n- Return a new **flat** list containing every non-list element of `L`, in left-to-right order, at every depth.\n\n```\nflatten([[1, 4, [6], 2], [[[3]], 2], 4, 5]) -> [1, 4, 6, 2, 3, 2, 4, 5]\n```\n\nSource: MIT OCW 6.100L Fall 2022, Finger Exercise Lecture 16 (reconstructed as a runnable problem for this study tool).",
+    "functionSignature": "def flatten(L):",
+    "starterCode": "def flatten(L):\n    \"\"\"\n    L: a list (possibly nested)\n    Returns a copy of L flattened into a single, non-nested list.\n    \"\"\"\n    # Your code here\n    pass\n",
+    "solution": "def flatten(L):\n    result = []\n    for i in L:\n        if type(i) == list:\n            result.extend(flatten(i))\n        else:\n            result.append(i)\n    return result\n",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      {
+        "name": "OCW example",
+        "expression": "flatten([[1, 4, [6], 2], [[[3]], 2], 4, 5])",
+        "expected": "[1, 4, 6, 2, 3, 2, 4, 5]"
+      },
+      {
+        "name": "already flat list unchanged",
+        "expression": "flatten([1, 2, 3])",
+        "expected": "[1, 2, 3]"
+      },
+      {
+        "name": "deeply nested single value",
+        "expression": "flatten([[[[7]]]])",
+        "expected": "[7]"
+      },
+      {
+        "name": "empty list -> empty list",
+        "expression": "flatten([])",
+        "expected": "[]"
+      },
+      {
+        "name": "empty sublists contribute nothing",
+        "expression": "flatten([1, [], [2, []], 3])",
+        "expected": "[1, 2, 3]",
+        "hidden": true
+      },
+      {
+        "name": "preserves duplicates and order",
+        "expression": "flatten([[2, 1], [1, [2]]])",
+        "expected": "[2, 1, 1, 2]",
+        "hidden": true
+      }
+    ]
+  }
+]

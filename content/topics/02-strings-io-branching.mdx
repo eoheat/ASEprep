@@ -1,0 +1,217 @@
+## Intuition
+
+Three ideas that turn "evaluate one expression" into "write a program that reacts
+to the world." **Strings** give you a data type made of characters you can index
+and slice. **Input/output** lets the program talk to a user — `input` reads text
+in, `print` writes results out. And **branching** (`if`/`elif`/`else`) lets the
+program choose *different* code depending on a condition, so it's no longer a
+straight line from top to bottom. The single most important mechanical fact here:
+**`input` always hands you back a string**, even if the user typed a number, so
+you cast it. And **indentation is not decoration in Python — it defines which
+lines belong to which branch.**
+
+## The mechanics
+
+A **string** is a sequence of characters, indexed from `0`. Negative indices
+count from the end (`-1` is the last character):
+
+```python
+s = "abc"
+len(s)     # 3
+s[0]       # "a"    first char, index 0
+s[2]       # "c"    last char, index len(s)-1
+s[-1]      # "c"    same as s[2]
+s[3]       # IndexError: out of range
+```
+
+**Slicing** takes a substring with `[start:stop:step]` — up to but *not*
+including `stop`:
+
+```python
+s = "abcdefgh"
+s[3:6]     # "def"     indices 3,4,5 (stop 6 excluded)
+s[3:6:2]   # "df"      every 2nd char
+s[:]       # "abcdefgh"  whole string, same as s[0:len(s):1]
+s[::-1]    # "hgfedcba"  step -1 reverses
+```
+
+Strings **concatenate** with `+` and **repeat** with `*`:
+
+```python
+"me" + "myself"    # "memyself"
+"me" * 3           # "mememe"
+```
+
+Strings are **immutable** — you cannot change a character in place, but you can
+build a new string:
+
+```python
+s = "car"
+s[0] = 'b'                 # TypeError: strings don't support item assignment
+s = 'b' + s[1:len(s)]      # OK: s is now "bar" (a brand-new object)
+```
+
+I/O and casting:
+
+```python
+text = input("Type anything: ")   # ALWAYS returns a str
+print(5 * text)                    # repeats the string 5 times
+num = int(input("Type a number: "))  # cast to int to do math
+print(5 * num)                     # now multiplies numerically
+```
+
+## Worked example
+
+Branching chooses one block. Only the **first** `True` condition runs; `else`
+runs when none matched. Indentation says what's inside each block.
+
+```python
+pset_time = 15
+sleep_time = 8
+if (pset_time + sleep_time) > 24:
+    print("impossible!")
+elif (pset_time + sleep_time) >= 24:
+    print("full schedule!")
+else:
+    leftover = abs(24 - pset_time - sleep_time)
+    print(leftover, "h of free time!")
+print("end of day")
+```
+
+- `pset_time + sleep_time` is `23`.
+- First test `23 > 24` → `False`, skip.
+- Second test `23 >= 24` → `False`, skip.
+- `else` runs: `leftover = abs(24 - 23) = 1`, prints `1 h of free time!`.
+- `print("end of day")` is *not* indented, so it runs regardless — after the
+  chosen block.
+
+Output:
+
+```python
+1 h of free time!
+end of day
+```
+
+Comparison operators produce a `bool`: `>`, `>=`, `<`, `<=`, `==` (equal), `!=`
+(not equal). Logical operators combine bools: `not a`, `a and b` (both True),
+`a or b` (either True).
+
+## Traps
+
+<Callout type="trap">
+**`input` returns a string — always.** `num1 = input("num: ")` then `5 * num1`
+repeats the text (`"33333"`) instead of multiplying. Wrap it: `int(input(...))`
+or `float(input(...))` before doing arithmetic.
+</Callout>
+
+**Indentation *is* the syntax.** These two are completely different programs:
+
+```python
+if x == y:
+    print("equal")
+    print("both")     # inside the if — only runs when x == y
+```
+
+```python
+if x == y:
+    print("equal")
+print("both")         # NOT indented — runs every time
+```
+
+**`=` vs `==`.** `=` assigns; `==` tests equality and yields `True`/`False`.
+Writing `if x = 5:` is a syntax error; you meant `if x == 5:`.
+
+**String comparison is case-sensitive.** `'March' == 'march'` is `False`. And
+strings compare lexicographically, so `'a' < 'b'` is `True` but `'B' < 'a'` is
+also `True` (uppercase letters sort before lowercase in ASCII).
+
+**Slicing never raises for out-of-range bounds; indexing does.** `s[3]` on a
+3-char string is an `IndexError`, but `s[3:99]` just returns whatever exists (or
+`""`). And a slice like `s[6:3]` with a positive step returns `""` because you
+can't go left with step `+1`.
+
+**Off-by-one in slices.** `s[start:stop]` excludes `stop`. `"abcdef"[1:4]` is
+`"bcd"`, three characters, not four.
+
+## Memorize vs understand
+
+| Just know it cold | Be able to derive |
+|---|---|
+| Indexing starts at 0; `-1` is the last char | The value of any slice `s[a:b:c]`, including negative steps |
+| `input()` always returns a `str` | When to cast input to `int` vs `float` for a task |
+| Strings are immutable; build new ones instead | Whether a branch is inside or outside an `if` from indentation |
+| `if`/`elif`/`else`: first True block runs, then skip rest | The output of a nested `if`/`elif`/`else` given specific values |
+| `==` value test; `=` assignment | Rewriting bad indentation to match the intended logic |
+| `+` concatenates, `*` repeats strings | Whether two strings are equal given case differences |
+
+## ASE check
+
+```python
+s = "ABC d3f ghi"
+print(s[4:0:-1])
+```
+
+<ASECheck q="What does this slice print?">
+
+`d CB`. Start at index 4 (`'d'`), step `-1` toward index 0 but excluding 0, so it
+collects indices 4, 3, 2, 1: `s[4]='d'`, `s[3]=' '`, `s[2]='C'`, `s[1]='B'` →
+`"d CB"`.
+
+</ASECheck>
+
+```python
+num1 = input("num: ")   # user types 3
+print(5 * num1)
+```
+
+<ASECheck q="If the user types 3, what prints?">
+
+`33333`. `input` returns the string `"3"`, and `"3" * 5` repeats the character
+five times. To get `15` you would need `int(input(...))`.
+
+</ASECheck>
+
+```python
+x = 11
+y = 20
+answer = ''
+if x == y:
+    answer = answer + 'M'
+if x >= y:
+    answer = answer + 'i'
+else:
+    answer = answer + 'T'
+print(answer)
+```
+
+<ASECheck q="What is answer when y is 20?">
+
+`T`. The first `if` (`11 == 20`) is False, adds nothing. The second `if` (`11 >=
+20`) is False, so its `else` runs, adding `'T'`. Note the two `if`s are separate
+statements — both are evaluated. Result: `"T"`.
+
+</ASECheck>
+
+```python
+print('March' == 'march')
+print('a' < 'b')
+```
+
+<ASECheck q="What two booleans print?">
+
+`False` then `True`. String `==` is case-sensitive, so `'March'` and `'march'`
+differ. And `'a'` comes before `'b'` alphabetically, so `'a' < 'b'` is `True`.
+
+</ASECheck>
+
+<ASECheck q="Why does s[0] = 'b' raise an error but s = 'b' + s[1:] not?">
+
+Strings are immutable: you cannot mutate a character in place, so `s[0] = 'b'`
+raises a `TypeError`. But `'b' + s[1:]` builds a *new* string and rebinds the
+name `s` to it — that's allowed, because you're creating a new object, not
+modifying the old one.
+
+</ASECheck>
+
+*Content reconstructed from MIT OCW 6.100L Fall 2022, Lecture 2 (Ana Bell),
+CC BY-NC-SA.*

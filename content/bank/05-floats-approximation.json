@@ -1,0 +1,67 @@
+[
+  {
+    "id": "bank-05-a",
+    "kind": "code-reading",
+    "title": "Why Floats Lie",
+    "topicSlug": "05-floats-approximation",
+    "unit": 1,
+    "source": "bank",
+    "difficulty": "warmup",
+    "reconstructed": false,
+    "statement": "A True/False + tracing exercise on floating-point imprecision — a favorite ASE conceptual question. Decide what each line prints. Remember that `0.1` and `0.2` cannot be represented exactly in binary floating point, so `0.1 + 0.2` is slightly more than `0.3`.",
+    "prompt": "print(0.1 + 0.2 == 0.3)\nprint(round(0.1 + 0.2, 2) == 0.3)\nprint(abs((0.1 + 0.2) - 0.3) < 1e-9)\nprint(1 == 1.0)",
+    "answer": "False\nTrue\nTrue\nTrue",
+    "acceptedAnswers": [
+      "False, True, True, True",
+      "false true true true"
+    ],
+    "explanation": "`0.1 + 0.2` is `0.30000000000000004`, so `== 0.3` is `False` — never compare floats with `==`. Rounding to 2 places gives `0.3`, so line 2 is `True`. Comparing within a small epsilon (`< 1e-9`) is the correct idiom, `True`. And `1 == 1.0` is `True` because Python compares an int and a float by value (only their `type` differs)."
+  },
+  {
+    "id": "bank-05-b",
+    "kind": "coding",
+    "title": "Square Root by Exhaustive Enumeration",
+    "topicSlug": "05-floats-approximation",
+    "unit": 1,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "reconstructed": false,
+    "statement": "Reconstruct the approximation-by-enumeration method from lecture. Implement `sqrt_approx(x)` that estimates the square root of a non-negative float `x` by stepping a `guess` up from 0 by a fixed `increment = 0.0001` until `guess**2` is within `epsilon = 0.0001` of `x`. Return the `guess`.\n\nBecause of float error you must compare with `abs(guess**2 - x) < epsilon`, never `==`. Your answer will be within `0.01` of the true root, which is all the tests check.",
+    "functionSignature": "def sqrt_approx(x):",
+    "starterCode": "def sqrt_approx(x):\n    \"\"\"Approximate sqrt(x) for x >= 0 by exhaustive enumeration.\n    Use epsilon = 0.0001 and increment = 0.0001.\n\n    >>> abs(sqrt_approx(4.0) - 2.0) < 0.01\n    True\n    >>> abs(sqrt_approx(0.0)) < 0.01\n    True\n    \"\"\"\n    pass",
+    "solution": "def sqrt_approx(x):\n    epsilon = 0.0001\n    increment = 0.0001\n    guess = 0.0\n    while abs(guess ** 2 - x) >= epsilon and guess ** 2 <= x:\n        guess += increment\n    return guess",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      { "name": "sqrt(4) ~ 2", "expression": "sqrt_approx(4.0)", "expected": "2.0", "compare": "float", "tolerance": 0.01 },
+      { "name": "sqrt(0) ~ 0", "expression": "sqrt_approx(0.0)", "expected": "0.0", "compare": "float", "tolerance": 0.01 },
+      { "name": "sqrt(2) ~ 1.4142", "expression": "sqrt_approx(2.0)", "expected": "1.41421356", "compare": "float", "tolerance": 0.01 },
+      { "name": "sqrt(1) ~ 1", "expression": "sqrt_approx(1.0)", "expected": "1.0", "compare": "float", "tolerance": 0.01 },
+      { "name": "non-perfect square", "expression": "sqrt_approx(6.25)", "expected": "2.5", "compare": "float", "tolerance": 0.01 }
+    ]
+  },
+  {
+    "id": "bank-05-c",
+    "kind": "coding",
+    "title": "Newton-Raphson Root",
+    "topicSlug": "05-floats-approximation",
+    "unit": 1,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "reconstructed": false,
+    "statement": "Implement Newton-Raphson for square roots, the fast approximation method from lecture. To approximate `sqrt(x)` for `x >= 0`, repeatedly improve a `guess` with `guess = guess - (guess**2 - x) / (2 * guess)` until `abs(guess**2 - x) < epsilon` where `epsilon = 1e-6`.\n\nStart from `guess = x / 2.0` when `x > 0`. Handle `x == 0` by returning `0.0` (the update rule divides by `2*guess` and would fail). Return the final float guess.",
+    "functionSignature": "def newton_sqrt(x):",
+    "starterCode": "def newton_sqrt(x):\n    \"\"\"Approximate sqrt(x) for x >= 0 using Newton-Raphson, epsilon = 1e-6.\n\n    >>> abs(newton_sqrt(16.0) - 4.0) < 1e-4\n    True\n    >>> newton_sqrt(0.0)\n    0.0\n    \"\"\"\n    pass",
+    "solution": "def newton_sqrt(x):\n    epsilon = 1e-6\n    if x == 0:\n        return 0.0\n    guess = x / 2.0\n    while abs(guess ** 2 - x) >= epsilon:\n        guess = guess - (guess ** 2 - x) / (2 * guess)\n    return guess",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      { "name": "sqrt(16) = 4", "expression": "newton_sqrt(16.0)", "expected": "4.0", "compare": "float", "tolerance": 1e-4 },
+      { "name": "zero edge case", "expression": "newton_sqrt(0.0)", "expected": "0.0", "compare": "float", "tolerance": 1e-9 },
+      { "name": "sqrt(2) irrational", "expression": "newton_sqrt(2.0)", "expected": "1.41421356", "compare": "float", "tolerance": 1e-4 },
+      { "name": "sqrt(1) = 1", "expression": "newton_sqrt(1.0)", "expected": "1.0", "compare": "float", "tolerance": 1e-4 },
+      { "name": "small value under 1", "expression": "newton_sqrt(0.25)", "expected": "0.5", "compare": "float", "tolerance": 1e-4 },
+      { "name": "large value", "expression": "newton_sqrt(10000.0)", "expected": "100.0", "compare": "float", "tolerance": 1e-4 }
+    ]
+  }
+]

@@ -1,0 +1,294 @@
+{
+  "id": "ps5",
+  "number": 5,
+  "title": "Using Libraries — Image Filters & Steganography",
+  "ocwUrl": "https://ocw.mit.edu/courses/6-100l-introduction-to-cs-and-programming-using-python-fall-2022/pages/problem-sets/",
+  "overview": "**Problem Set 5 — using the Pillow imaging library.** Part 1 converts an image to and from a flat list of pixels and applies a color-deficiency filter via matrix multiplication (uses `Pillow` + `numpy`). Part 2 is steganography: extract the low-order bits of each pixel to recover a hidden image.\n\nWhat is auto-graded here: `extract_end_bits` (pure integer/bit math, no packages), plus `img_to_pix`, `pix_to_img`, and `filter` (Pillow-backed, checked against `image_15.png`). What is study-only: `reveal_bw_image` / `reveal_color_image`, which in OCW are graded by visually inspecting the recovered image against pickled staff fixtures — no crisp assertion, so read the reference and run them in the workspace. Source: MIT OCW 6.100L Fall 2022, Problem Set 5 (statements, provided `make_matrix`/`matrix_multiply` helpers, and image assets from OCW; reference solutions and tests written and validated for this study tool).",
+  "reconstructed": false,
+  "problems": [
+    {
+      "id": "ps5-extract-end-bits",
+      "kind": "coding",
+      "source": "pset",
+      "reconstructed": false,
+      "topicSlug": "26-list-access-hashing-simulations",
+      "unit": 4,
+      "difficulty": "exam-level",
+      "title": "Part 2 — extract_end_bits",
+      "statement": "Implement `extract_end_bits(num_end_bits, pixel)`, the core of the steganography decoder. Extract the last `num_end_bits` bits of a value and return them as an integer.\n\n- **BW pixel** (an `int`): return the integer value of its last `num_end_bits` bits. Example: `214` is `11010110`; its last 5 bits are `10110` = `22`, so `extract_end_bits(5, 214)` → `22`.\n- **RGB pixel** (a `tuple` of three ints): apply the same extraction to each channel and return a tuple. Example: `extract_end_bits(3, (214, 17, 8))` → `(6, 1, 0)`.\n\nThe trick is just modulo: the last `k` bits of `n` are `n % (2**k)` — no string conversion needed. Detect the tuple case with `isinstance(pixel, tuple)`.\n\nThis one is pure arithmetic, so it auto-grades with no libraries.",
+      "functionSignature": "def extract_end_bits(num_end_bits, pixel):",
+      "starterCode": "def extract_end_bits(num_end_bits, pixel):\n    '''\n    Extract the last num_end_bits of each value of pixel.\n    pixel: an int (BW) or a tuple of ints (RGB).\n    Returns: an int (BW) or a tuple of ints (RGB).\n    '''\n    # TODO\n    pass",
+      "solution": "def extract_end_bits(num_end_bits, pixel):\n    # The last k bits of an integer n are exactly n % (2**k).\n    mask = 2 ** num_end_bits\n    if isinstance(pixel, tuple):\n        return tuple(value % mask for value in pixel)\n    return pixel % mask",
+      "pyPackages": [],
+      "dataFiles": [],
+      "tests": [
+        {
+          "name": "BW: last 2 bits of 3 -> 3",
+          "expression": "extract_end_bits(2, 3)",
+          "expected": "3"
+        },
+        {
+          "name": "BW: last 1 bit of 0 -> 0",
+          "expression": "extract_end_bits(1, 0)",
+          "expected": "0"
+        },
+        {
+          "name": "BW: last 5 bits of 214 -> 22",
+          "expression": "extract_end_bits(5, 214)",
+          "expected": "22"
+        },
+        {
+          "name": "BW: last 4 bits of 135 -> 7",
+          "expression": "extract_end_bits(4, 135)",
+          "expected": "7"
+        },
+        {
+          "name": "BW: last 4 bits of 235 -> 11",
+          "expression": "extract_end_bits(4, 235)",
+          "expected": "11"
+        },
+        {
+          "name": "RGB: last 3 bits of (214,17,8) -> (6,1,0)",
+          "expression": "extract_end_bits(3, (214, 17, 8))",
+          "expected": "(6, 1, 0)"
+        },
+        {
+          "name": "RGB: last 4 bits of (135,88,17) -> (7,8,1)",
+          "expression": "extract_end_bits(4, (135, 88, 17))",
+          "expected": "(7, 8, 1)"
+        },
+        {
+          "name": "RGB: last 6 bits of (255,255,255) -> (63,63,63)",
+          "expression": "extract_end_bits(6, (255, 255, 255))",
+          "expected": "(63, 63, 63)"
+        },
+        {
+          "name": "BW edge: 1 bit of 255 (odd) -> 1",
+          "expression": "extract_end_bits(1, 255)",
+          "expected": "1",
+          "hidden": true
+        },
+        {
+          "name": "BW edge: 1 bit of 254 (even) -> 0",
+          "expression": "extract_end_bits(1, 254)",
+          "expected": "0",
+          "hidden": true
+        },
+        {
+          "name": "8 bits returns the whole byte unchanged",
+          "expression": "extract_end_bits(8, 214)",
+          "expected": "214",
+          "hidden": true
+        },
+        {
+          "name": "BW result is an int, not a tuple (strict type)",
+          "expression": "extract_end_bits(5, 214)",
+          "expected": "22",
+          "strictType": true,
+          "hidden": true
+        }
+      ]
+    },
+    {
+      "id": "ps5-img-to-pix",
+      "kind": "coding",
+      "source": "pset",
+      "reconstructed": false,
+      "topicSlug": "26-list-access-hashing-simulations",
+      "unit": 4,
+      "difficulty": "warmup",
+      "title": "Part 1 — img_to_pix",
+      "statement": "Implement `img_to_pix(filename)` using Pillow. Open the image and return a **flat list of its pixels** in row-major order.\n\n- For an **RGB** image each pixel is a `(R, G, B)` tuple; for a **BW** image each pixel is an `int`. You don't have to detect the mode — `Image.open(...).getdata()` already yields the right kind of value.\n- `list(Image.open(filename).getdata())` is the whole job.\n\nThe test image `image_15.png` is a 270×271 RGB image (73170 pixels). This part needs the `Pillow` package (loaded for you).",
+      "functionSignature": "def img_to_pix(filename):",
+      "starterCode": "from PIL import Image\n\ndef img_to_pix(filename):\n    '''\n    Open the image at filename and return a flat list of its pixels.\n    RGB image -> list of (R,G,B) tuples; BW image -> list of ints.\n    '''\n    # TODO\n    pass",
+      "solution": "from PIL import Image\n\ndef img_to_pix(filename):\n    img = Image.open(filename)\n    return list(img.getdata())",
+      "pyPackages": ["Pillow"],
+      "dataFiles": [
+        {
+          "name": "image_15.png",
+          "url": "/psets/ps5/image_15.png"
+        }
+      ],
+      "tests": [
+        {
+          "name": "returns one pixel per pixel of the image",
+          "expression": "len(img_to_pix('image_15.png'))",
+          "expected": "73170"
+        },
+        {
+          "name": "first pixel is a white RGB tuple",
+          "expression": "img_to_pix('image_15.png')[0]",
+          "expected": "(255, 255, 255)"
+        },
+        {
+          "name": "each pixel is an (R,G,B) tuple",
+          "expression": "isinstance(img_to_pix('image_15.png')[0], tuple)",
+          "expected": "True"
+        },
+        {
+          "name": "a known interior pixel (idx 20000)",
+          "expression": "img_to_pix('image_15.png')[20000]",
+          "expected": "(235, 102, 70)",
+          "hidden": true
+        },
+        {
+          "name": "another known interior pixel (idx 40000)",
+          "expression": "img_to_pix('image_15.png')[40000]",
+          "expected": "(255, 140, 73)",
+          "hidden": true
+        }
+      ]
+    },
+    {
+      "id": "ps5-pix-to-img",
+      "kind": "coding",
+      "source": "pset",
+      "reconstructed": false,
+      "topicSlug": "26-list-access-hashing-simulations",
+      "unit": 4,
+      "difficulty": "warmup",
+      "title": "Part 1 — pix_to_img",
+      "statement": "Implement `pix_to_img(pixels_list, size, mode)`, the inverse of `img_to_pix`. Given a flat list of pixels, a `(width, height)` size, and a `mode` (`'RGB'` or `'L'`), build and return a Pillow `Image`.\n\n- Create a blank image: `Image.new(mode, size)`.\n- Fill it: `img.putdata(pixels_list)`.\n- Return the image.\n\nThe test checks that a round-trip (`img_to_pix` then `pix_to_img`) reproduces the original pixels, that the size and mode are right, and that a small handmade pixel list is placed correctly. Uses `Pillow`.",
+      "functionSignature": "def pix_to_img(pixels_list, size, mode):",
+      "starterCode": "from PIL import Image\n\ndef img_to_pix(filename):\n    img = Image.open(filename)\n    return list(img.getdata())\n\ndef pix_to_img(pixels_list, size, mode):\n    '''\n    Build an Image from a flat pixel list.\n    size: (width, height) with size[0]*size[1] == len(pixels_list).\n    mode: 'RGB' or 'L'.\n    '''\n    # TODO\n    pass",
+      "solution": "from PIL import Image\n\ndef img_to_pix(filename):\n    img = Image.open(filename)\n    return list(img.getdata())\n\ndef pix_to_img(pixels_list, size, mode):\n    img = Image.new(mode, size)\n    img.putdata(pixels_list)\n    return img",
+      "pyPackages": ["Pillow"],
+      "dataFiles": [
+        {
+          "name": "image_15.png",
+          "url": "/psets/ps5/image_15.png"
+        }
+      ],
+      "tests": [
+        {
+          "name": "round-trip preserves the pixels",
+          "expression": "list(pix_to_img(img_to_pix('image_15.png'), (270, 271), 'RGB').getdata()) == img_to_pix('image_15.png')",
+          "expected": "True"
+        },
+        {
+          "name": "round-trip preserves size and mode",
+          "expression": "(lambda im: (im.size, im.mode))(pix_to_img(img_to_pix('image_15.png'), (270, 271), 'RGB'))",
+          "expected": "((270, 271), 'RGB')"
+        },
+        {
+          "name": "small handmade RGB image places pixels correctly",
+          "expression": "list(pix_to_img([(10, 20, 30), (40, 50, 60), (70, 80, 90), (100, 110, 120)], (2, 2), 'RGB').getdata())",
+          "expected": "[(10, 20, 30), (40, 50, 60), (70, 80, 90), (100, 110, 120)]"
+        },
+        {
+          "name": "BW ('L') image places integer pixels correctly",
+          "expression": "list(pix_to_img([0, 64, 128, 255], (2, 2), 'L').getdata())",
+          "expected": "[0, 64, 128, 255]",
+          "hidden": true
+        },
+        {
+          "name": "getpixel reads back the top-left pixel",
+          "expression": "pix_to_img([(1, 2, 3), (4, 5, 6)], (2, 1), 'RGB').getpixel((0, 0))",
+          "expected": "(1, 2, 3)",
+          "hidden": true
+        }
+      ]
+    },
+    {
+      "id": "ps5-filter",
+      "kind": "coding",
+      "source": "pset",
+      "reconstructed": false,
+      "topicSlug": "26-list-access-hashing-simulations",
+      "unit": 4,
+      "difficulty": "exam-level",
+      "title": "Part 1 — filter (color-deficiency simulation)",
+      "statement": "Implement `filter(pixels_list, color)`. Simulate a color-vision deficiency by multiplying every RGB pixel by a 3×3 transformation matrix.\n\nThe provided helpers do the heavy lifting:\n- `make_matrix(color)` returns the 3×3 matrix for `'red'`, `'green'`, `'blue'`, or `'none'` (`'none'` is the identity).\n- `matrix_multiply(m1, m2)` multiplies matrices via numpy.\n\nFor each pixel: multiply the matrix by the pixel `[R, G, B]`, then **truncate each resulting channel to an `int`** and collect them into a `(R, G, B)` tuple. Return the list of transformed pixels in the same order.\n\n- `filter([(214, 17, 8)], 'none')` → `[(214, 17, 8)]` (identity).\n- `filter([(214, 17, 8)], 'red')` → `[(128, 126, 10)]`.\n\nUses `Pillow` and `numpy` (both loaded for you; numpy backs `matrix_multiply`).",
+      "functionSignature": "def filter(pixels_list, color):",
+      "starterCode": "from PIL import Image\nimport numpy\n\ndef make_matrix(color):\n    # Provided. You do not need to understand exactly how this works.\n    if color == 'red':\n        c = [[.567, .433, 0], [.558, .442, 0], [0, .242, .758]]\n    elif color == 'green':\n        c = [[0.625, 0.375, 0], [0.7, 0.3, 0], [0, 0.142, 0.858]]\n    elif color == 'blue':\n        c = [[.95, 0.05, 0], [0, 0.433, 0.567], [0, 0.475, .525]]\n    elif color == 'none':\n        c = [[1, 0., 0], [0, 1, 0.], [0, 0., 1]]\n    return c\n\ndef matrix_multiply(m1, m2):\n    # Provided.\n    product = numpy.matmul(m1, m2)\n    if type(product) == numpy.int64:\n        return float(product)\n    else:\n        result = list(product)\n        return result\n\ndef filter(pixels_list, color):\n    '''\n    Transform each RGB pixel by the color's matrix; truncate channels to int.\n    Returns a list of (R,G,B) tuples.\n    '''\n    # TODO\n    pass",
+      "solution": "from PIL import Image\nimport numpy\n\ndef make_matrix(color):\n    if color == 'red':\n        c = [[.567, .433, 0], [.558, .442, 0], [0, .242, .758]]\n    elif color == 'green':\n        c = [[0.625, 0.375, 0], [0.7, 0.3, 0], [0, 0.142, 0.858]]\n    elif color == 'blue':\n        c = [[.95, 0.05, 0], [0, 0.433, 0.567], [0, 0.475, .525]]\n    elif color == 'none':\n        c = [[1, 0., 0], [0, 1, 0.], [0, 0., 1]]\n    return c\n\ndef matrix_multiply(m1, m2):\n    product = numpy.matmul(m1, m2)\n    if type(product) == numpy.int64:\n        return float(product)\n    else:\n        result = list(product)\n        return result\n\ndef filter(pixels_list, color):\n    matrix = make_matrix(color)\n    result = []\n    for pixel in pixels_list:\n        transformed = matrix_multiply(matrix, list(pixel))\n        result.append(tuple(int(channel) for channel in transformed))\n    return result",
+      "pyPackages": ["Pillow", "numpy"],
+      "dataFiles": [],
+      "tests": [
+        {
+          "name": "'none' is the identity",
+          "expression": "filter([(214, 17, 8), (100, 150, 200), (0, 0, 0)], 'none')",
+          "expected": "[(214, 17, 8), (100, 150, 200), (0, 0, 0)]"
+        },
+        {
+          "name": "'red' filter on one pixel",
+          "expression": "filter([(214, 17, 8)], 'red')",
+          "expected": "[(128, 126, 10)]"
+        },
+        {
+          "name": "'green' filter on one pixel",
+          "expression": "filter([(214, 17, 8)], 'green')",
+          "expected": "[(140, 154, 9)]"
+        },
+        {
+          "name": "'blue' filter on one pixel",
+          "expression": "filter([(214, 17, 8)], 'blue')",
+          "expected": "[(204, 11, 12)]"
+        },
+        {
+          "name": "filters a whole list in order",
+          "expression": "filter([(100, 150, 200), (0, 0, 0)], 'red')",
+          "expected": "[(121, 122, 187), (0, 0, 0)]"
+        },
+        {
+          "name": "empty list -> empty list",
+          "expression": "filter([], 'red')",
+          "expected": "[]",
+          "hidden": true
+        },
+        {
+          "name": "black stays black under every filter",
+          "expression": "filter([(0, 0, 0)], 'blue')",
+          "expected": "[(0, 0, 0)]",
+          "hidden": true
+        }
+      ]
+    },
+    {
+      "id": "ps5-reveal-bw",
+      "kind": "coding",
+      "source": "pset",
+      "reconstructed": false,
+      "topicSlug": "26-list-access-hashing-simulations",
+      "unit": 4,
+      "difficulty": "stretch",
+      "title": "Part 2 — reveal_bw_image (study-only)",
+      "statement": "Recover a black-and-white image hidden in the least-significant bit of each pixel of `hidden1.bmp`.\n\nEach pixel's hidden data is its **single LSB** (`extract_end_bits(1, pixel)`), which is `0` or `1`. Scale that up to a visible BW value (`0` → `0`, `1` → `255`) and rebuild the image with `pix_to_img`.\n\nThis is **study-only**: OCW grades it by comparing the recovered image to a pickled staff fixture (`tester_bw_img.obj`) and by eye — there's no clean literal to assert here. Read the reference solution and run it in the workspace against the bundled `hidden1.bmp` to see the hidden image appear.",
+      "functionSignature": "def reveal_bw_image(filename):",
+      "studyOnly": true,
+      "starterCode": "from PIL import Image\n\ndef extract_end_bits(num_end_bits, pixel):\n    mask = 2 ** num_end_bits\n    if isinstance(pixel, tuple):\n        return tuple(v % mask for v in pixel)\n    return pixel % mask\n\ndef img_to_pix(filename):\n    return list(Image.open(filename).getdata())\n\ndef pix_to_img(pixels_list, size, mode):\n    img = Image.new(mode, size)\n    img.putdata(pixels_list)\n    return img\n\ndef reveal_bw_image(filename):\n    '''\n    Extract the single LSB of each pixel and scale it to a visible BW image.\n    Returns: an Image object containing the hidden image.\n    '''\n    # TODO\n    pass",
+      "solution": "from PIL import Image\n\ndef extract_end_bits(num_end_bits, pixel):\n    mask = 2 ** num_end_bits\n    if isinstance(pixel, tuple):\n        return tuple(v % mask for v in pixel)\n    return pixel % mask\n\ndef img_to_pix(filename):\n    return list(Image.open(filename).getdata())\n\ndef pix_to_img(pixels_list, size, mode):\n    img = Image.new(mode, size)\n    img.putdata(pixels_list)\n    return img\n\ndef reveal_bw_image(filename):\n    im = Image.open(filename)\n    size = im.size\n    pixels = img_to_pix(filename)\n    # LSB is 0 or 1; scale to 0 or 255 so it is actually visible.\n    revealed = [extract_end_bits(1, p) * 255 for p in pixels]\n    return pix_to_img(revealed, size, 'L')",
+      "pyPackages": ["Pillow"],
+      "dataFiles": [
+        {
+          "name": "hidden1.bmp",
+          "url": "/psets/ps5/hidden1.bmp"
+        }
+      ],
+      "tests": []
+    },
+    {
+      "id": "ps5-reveal-color",
+      "kind": "coding",
+      "source": "pset",
+      "reconstructed": false,
+      "topicSlug": "26-list-access-hashing-simulations",
+      "unit": 4,
+      "difficulty": "stretch",
+      "title": "Part 2 — reveal_color_image (study-only)",
+      "statement": "Recover a color image hidden in the 3 least-significant bits of each channel of `hidden2.bmp`.\n\nFor each RGB pixel, extract the low 3 bits of each channel (`extract_end_bits(3, pixel)` gives values `0..7`) and scale each channel up by ×32 so the recovered image spans the full `0..224` range and is visible. Rebuild with `pix_to_img(..., 'RGB')`.\n\nThis is **study-only** (OCW compares against `tester_rgb_img.obj` and by eye). Read the reference and run it against the bundled `hidden2.bmp` to see the hidden color image.",
+      "functionSignature": "def reveal_color_image(filename):",
+      "studyOnly": true,
+      "starterCode": "from PIL import Image\n\ndef extract_end_bits(num_end_bits, pixel):\n    mask = 2 ** num_end_bits\n    if isinstance(pixel, tuple):\n        return tuple(v % mask for v in pixel)\n    return pixel % mask\n\ndef img_to_pix(filename):\n    return list(Image.open(filename).getdata())\n\ndef pix_to_img(pixels_list, size, mode):\n    img = Image.new(mode, size)\n    img.putdata(pixels_list)\n    return img\n\ndef reveal_color_image(filename):\n    '''\n    Extract the 3 LSBs of each channel and scale to a visible RGB image.\n    Returns: an Image object containing the hidden image.\n    '''\n    # TODO\n    pass",
+      "solution": "from PIL import Image\n\ndef extract_end_bits(num_end_bits, pixel):\n    mask = 2 ** num_end_bits\n    if isinstance(pixel, tuple):\n        return tuple(v % mask for v in pixel)\n    return pixel % mask\n\ndef img_to_pix(filename):\n    return list(Image.open(filename).getdata())\n\ndef pix_to_img(pixels_list, size, mode):\n    img = Image.new(mode, size)\n    img.putdata(pixels_list)\n    return img\n\ndef reveal_color_image(filename):\n    im = Image.open(filename)\n    size = im.size\n    pixels = img_to_pix(filename)\n    # 3 LSBs give 0..7 per channel; scale by 32 to spread across 0..224.\n    revealed = [tuple(channel * 32 for channel in extract_end_bits(3, p)) for p in pixels]\n    return pix_to_img(revealed, size, 'RGB')",
+      "pyPackages": ["Pillow"],
+      "dataFiles": [
+        {
+          "name": "hidden2.bmp",
+          "url": "/psets/ps5/hidden2.bmp"
+        }
+      ],
+      "tests": []
+    }
+  ]
+}

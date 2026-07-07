@@ -1,0 +1,74 @@
+[
+  {
+    "id": "bank-16-a",
+    "kind": "coding",
+    "source": "bank",
+    "topicSlug": "16-recursion-non-numerics",
+    "unit": 3,
+    "difficulty": "warmup",
+    "reconstructed": false,
+    "title": "Recursive string reversal",
+    "statement": "Write `reverse(s)` that returns the string `s` reversed, using **recursion** — no slicing tricks like `s[::-1]`, no loops. Peel off one character per call.\n\n```\n>>> reverse('')\n''\n>>> reverse('a')\n'a'\n>>> reverse('cat')\n'tac'\n```",
+    "functionSignature": "def reverse(s):",
+    "starterCode": "def reverse(s):\n    \"\"\"Return s reversed, recursively (no slicing, no loops).\n\n    >>> reverse('cat')\n    'tac'\n    >>> reverse('')\n    ''\n    \"\"\"\n    pass",
+    "solution": "def reverse(s):\n    if len(s) <= 1:\n        return s\n    return reverse(s[1:]) + s[0]",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      { "name": "empty string", "expression": "reverse('')", "expected": "''" },
+      { "name": "single char", "expression": "reverse('a')", "expected": "'a'" },
+      { "name": "short word", "expression": "reverse('cat')", "expected": "'tac'" },
+      { "name": "with repeats", "expression": "reverse('noon')", "expected": "'noon'" },
+      { "name": "longer phrase no spaces", "expression": "reverse('recursion')", "expected": "'noisrucer'", "hidden": true }
+    ]
+  },
+  {
+    "id": "bank-16-b",
+    "kind": "coding",
+    "source": "bank",
+    "topicSlug": "16-recursion-non-numerics",
+    "unit": 3,
+    "difficulty": "exam-level",
+    "reconstructed": false,
+    "title": "Palindrome check, ignoring case and non-letters",
+    "statement": "Write `is_palindrome(s)` that returns `True` if `s` reads the same forwards and backwards **after** lowercasing and stripping every non-alphabetic character, else `False`. Do the actual forward/backward comparison **recursively**.\n\n- `is_palindrome('A man, a plan, a canal: Panama')` -> `True`\n- `is_palindrome('race a car')` -> `False`\n- The empty string and a single character are palindromes.\n\n```\n>>> is_palindrome('Was it a car or a cat I saw?')\nTrue\n>>> is_palindrome('hello')\nFalse\n```\n\nHint: first build a cleaned string with only letters, lowercased; then recurse comparing the first and last characters.",
+    "functionSignature": "def is_palindrome(s):",
+    "starterCode": "def is_palindrome(s):\n    \"\"\"Return True if s is a palindrome ignoring case and non-letters.\n\n    >>> is_palindrome('A man, a plan, a canal: Panama')\n    True\n    >>> is_palindrome('race a car')\n    False\n    \"\"\"\n    pass",
+    "solution": "def _check(s):\n    if len(s) <= 1:\n        return True\n    if s[0] != s[-1]:\n        return False\n    return _check(s[1:-1])\n\ndef is_palindrome(s):\n    cleaned = ''.join(c.lower() for c in s if c.isalpha())\n    return _check(cleaned)",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      { "name": "empty string", "expression": "is_palindrome('')", "expected": "True" },
+      { "name": "single char", "expression": "is_palindrome('x')", "expected": "True" },
+      { "name": "classic panama", "expression": "is_palindrome('A man, a plan, a canal: Panama')", "expected": "True" },
+      { "name": "not a palindrome", "expression": "is_palindrome('race a car')", "expected": "False" },
+      { "name": "punctuation and case only", "expression": "is_palindrome('Was it a car or a cat I saw?')", "expected": "True" },
+      { "name": "even length true", "expression": "is_palindrome('noon')", "expected": "True", "hidden": true },
+      { "name": "digits are stripped -> palindrome", "expression": "is_palindrome('12ab21')", "expected": "False", "hidden": true }
+    ]
+  },
+  {
+    "id": "bank-16-c",
+    "kind": "coding",
+    "source": "bank",
+    "topicSlug": "16-recursion-non-numerics",
+    "unit": 3,
+    "difficulty": "exam-level",
+    "reconstructed": false,
+    "title": "Flatten a nested list recursively",
+    "statement": "Write `flatten(lst)` that takes a list which may contain integers and/or other (arbitrarily nested) lists, and returns a **flat** list of all the integers in left-to-right order. Solve it **recursively**: for each element, if it is a list, flatten it; otherwise keep it.\n\n- `flatten([1, [2, [3, 4], 5], 6])` -> `[1, 2, 3, 4, 5, 6]`\n- `flatten([])` -> `[]`\n- `flatten([[], [[]], [1]])` -> `[1]`\n\n```\n>>> flatten([1, [2, [3, 4], 5], 6])\n[1, 2, 3, 4, 5, 6]\n```\n\nHint: `isinstance(x, list)` tells you whether to recurse.",
+    "functionSignature": "def flatten(lst):",
+    "starterCode": "def flatten(lst):\n    \"\"\"Return a flat list of all ints in a (possibly nested) list, recursively.\n\n    >>> flatten([1, [2, [3, 4], 5], 6])\n    [1, 2, 3, 4, 5, 6]\n    >>> flatten([])\n    []\n    \"\"\"\n    pass",
+    "solution": "def flatten(lst):\n    result = []\n    for x in lst:\n        if isinstance(x, list):\n            result.extend(flatten(x))\n        else:\n            result.append(x)\n    return result",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      { "name": "empty list", "expression": "flatten([])", "expected": "[]" },
+      { "name": "already flat", "expression": "flatten([1, 2, 3])", "expected": "[1, 2, 3]" },
+      { "name": "deeply nested", "expression": "flatten([1, [2, [3, 4], 5], 6])", "expected": "[1, 2, 3, 4, 5, 6]" },
+      { "name": "empty sublists only", "expression": "flatten([[], [[]], [1]])", "expected": "[1]" },
+      { "name": "single deep element", "expression": "flatten([[[[7]]]])", "expected": "[7]", "hidden": true },
+      { "name": "does not mutate input", "expression": "(lambda a: (flatten(a), a)[1])([1, [2]])", "expected": "[1, [2]]", "hidden": true }
+    ]
+  }
+]

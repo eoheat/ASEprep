@@ -1,0 +1,205 @@
+## Intuition
+
+Three tools that show up constantly on the exam. A **lambda** is an anonymous,
+one-line function — a function object with no name, handy when you need a tiny
+function once and don't want the ceremony of `def`. A **tuple** is an ordered,
+*immutable* sequence written with parentheses: great for returning several
+values at once and for data that shouldn't change. A **list** is an ordered,
+*mutable* sequence written with square brackets: great for data that grows and
+changes. Tuples, lists, and strings all share the same indexing and slicing
+mechanics you already know.
+
+The one distinction to burn in: **tuples cannot be changed, lists can.**
+
+## The mechanics
+
+A lambda has parameters, a colon, and a single expression body — no `return`
+keyword, the expression *is* the return value:
+
+```python
+square = lambda x: x ** 2
+square(5)                    # 25
+# equivalent to: def square(x): return x ** 2
+```
+
+Usually you don't even name it; you pass it inline:
+
+```python
+def apply(criteria, n):
+    count = 0
+    for i in range(n + 1):
+        if criteria(i):
+            count += 1
+    return count
+
+print(apply(lambda x: x % 2 == 0, 10))   # counts evens 0..10 -> 6
+```
+
+Tuples — immutable, parentheses. Note the trailing comma for a one-element
+tuple:
+
+```python
+t = (2, "mit", 3)
+t[0]              # 2
+t[1:3]            # ("mit", 3)  -- slicing gives a tuple
+len(t)            # 3
+t + (5, 6)        # (2, "mit", 3, 5, 6)  -- new tuple
+ts = (2,)         # one-element tuple; the comma is required
+# t[1] = 4        # TypeError: tuples are immutable
+```
+
+Tuples let a function return multiple values as one object, then unpack them:
+
+```python
+def quotient_and_remainder(x, y):
+    return (x // y, x % y)
+
+q, r = quotient_and_remainder(10, 3)   # q is 3, r is 1
+```
+
+Lists — mutable, square brackets, same indexing/slicing:
+
+```python
+L = [2, 'a', 4, [1, 2]]
+L[0]              # 2
+L[3]              # [1, 2]  -- a nested list
+L[1:3]            # ['a', 4]
+[1, 2] + [3, 4]   # [1, 2, 3, 4]
+```
+
+<Callout type="tip">
+The clean way to sum a list is to loop over its elements directly:
+`for e in L: total += e`. Looping over `range(len(L))` and indexing works too,
+but the direct form is what Python people call "Pythonic."
+</Callout>
+
+## Worked example
+
+Two things to trace: a lambda passed through a helper, and tuple unpacking from
+a return value.
+
+```python
+def do_twice(n, fn):
+    return fn(fn(n))
+
+print(do_twice(3, lambda x: x ** 2))
+```
+
+- `do_twice(3, ...)` binds `n` to 3 and `fn` to the lambda object.
+- Inner `fn(3)` runs the lambda with `x = 3`, returning `3 ** 2 = 9`.
+- Outer `fn(9)` runs it again with `x = 9`, returning `9 ** 2 = 81`.
+- `do_twice` returns 81, so the program prints `81`.
+
+Now a function that returns a tuple and a caller that unpacks it:
+
+```python
+def char_counts(s):
+    """s is a lowercase string. Returns (num_vowels, num_consonants)."""
+    vowels = 0
+    consonants = 0
+    for ch in s:
+        if ch in 'aeiou':
+            vowels += 1
+        else:
+            consonants += 1
+    return (vowels, consonants)
+
+v, c = char_counts("mit")   # v is 1, c is 2
+print(v, c)                  # 1 2
+```
+
+Returning `(vowels, consonants)` is returning *one* object (a tuple) that
+carries *two* values; the caller splits it apart with `v, c = ...`.
+
+## Traps
+
+<Callout type="trap">
+**A one-element tuple needs the trailing comma.** `(2)` is just the int `2` in
+parentheses; `(2,)` is a tuple of length 1. Slicing a single element out also
+gives a tuple: `t[1:2]` is `("mit",)`, not `"mit"`.
+</Callout>
+
+**Trying to mutate a tuple.** `t[1] = 4` raises `TypeError`. Tuples are frozen.
+If you "change" a tuple you're really making a brand new one with `+`.
+
+**Confusing `()` and `[]`.** Parentheses build a tuple (immutable); square
+brackets build a list (mutable). The exam loves to give you one and ask for an
+operation only the other supports.
+
+**Forgetting a lambda has no `return`.** The body of a lambda is a single
+expression whose value is automatically returned. Writing `lambda x: return x`
+is a syntax error.
+
+**Unpacking count mismatch.** `a, b = (1, 2, 3)` raises `ValueError` — the
+number of names on the left must match the number of elements on the right.
+
+## Memorize vs understand
+
+| Just know it cold | Be able to derive |
+|---|---|
+| `lambda params: expr` — anonymous, one expression, no `return` | The value of a lambda passed through a higher-order function |
+| Tuples use `()`, are immutable; lists use `[]`, are mutable | Whether an operation is legal on a tuple vs a list |
+| One-element tuple needs a trailing comma: `(2,)` | What a slice evaluates to (and that it stays the same type) |
+| Slicing a tuple/list/string returns the same type | How to return several values as one tuple and unpack them |
+| `a, b = func()` unpacks a returned tuple | Why indexing and slicing feel identical across strings, tuples, lists |
+
+## ASE check
+
+```python
+f = lambda x, y: x * y
+print(f(3, 4))
+```
+
+<ASECheck q="What does this print?">
+
+`12`. The lambda takes two parameters and returns their product; `f(3, 4)` is
+`3 * 4`.
+
+</ASECheck>
+
+```python
+t = (5,)
+print(type(t), len(t))
+```
+
+<ASECheck q="What is printed?">
+
+`<class 'tuple'> 1`. The trailing comma makes `t` a one-element tuple, so its
+length is 1. Without the comma, `(5)` would just be the int `5`.
+
+</ASECheck>
+
+```python
+def min_max(L):
+    return (min(L), max(L))
+lo, hi = min_max([4, 9, 2])
+print(hi - lo)
+```
+
+<ASECheck q="What does this print?">
+
+`7`. `min_max` returns the tuple `(2, 9)`; unpacking gives `lo = 2`, `hi = 9`,
+so `hi - lo` is 7.
+
+</ASECheck>
+
+```python
+seq = (2, 'a', 4, (1, 2))
+print(seq[3][0])
+```
+
+<ASECheck q="What does this print?">
+
+`1`. `seq[3]` is the nested tuple `(1, 2)`, and indexing that with `[0]` gives
+its first element, `1`.
+
+</ASECheck>
+
+<ASECheck q="You need a quick function that squares a number and you'll use it exactly once, inline. What's the tool?">
+
+A lambda: `lambda x: x ** 2`. It creates a function object without binding a
+name, perfect for one-time use passed directly as an argument.
+
+</ASECheck>
+
+*Content reconstructed from MIT OCW 6.100L Fall 2022, Lecture 9 (Ana Bell), CC BY-NC-SA.*

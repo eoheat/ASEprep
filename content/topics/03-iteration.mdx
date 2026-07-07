@@ -1,0 +1,187 @@
+## Intuition
+
+Branching lets a program pick a path *once*. **Iteration** lets it repeat a block
+of code many times — that's what makes computers powerful. Two loop shapes cover
+almost everything. A **`while` loop** repeats as long as a condition stays
+`True`; you use it when you don't know up front how many times you'll loop (or
+when it depends on user input). A **`for` loop** walks through a known sequence of
+values, one at a time; you use it when you *do* know the collection to march
+through — like `range(5)` or the characters of a string. The recurring danger:
+a `while` loop whose condition never becomes `False` runs forever.
+
+## The mechanics
+
+A **`while` loop** checks its condition, runs the body if `True`, then checks
+again — repeating until the condition is `False`:
+
+```python
+n = 0
+while n < 5:
+    print(n)      # prints 0, 1, 2, 3, 4
+    n = n + 1     # WITHOUT this, n stays 0 and loops forever
+```
+
+The three-part pattern: set the loop variable *before* the loop, test it *in* the
+condition, update it *inside* the body. Forget the update and you have an
+infinite loop (stop it with Ctrl-C or the red stop button).
+
+A **`for` loop** binds its variable to each value of a sequence in turn:
+
+```python
+for n in range(5):    # n takes 0, 1, 2, 3, 4
+    print(n)
+```
+
+`range(start, stop, step)` generates integers, *excluding* `stop` — just like
+slicing:
+
+```python
+range(4)          # 0, 1, 2, 3        (start defaults to 0, step to 1)
+range(3, 5)       # 3, 4              (step defaults to 1)
+range(1, 4, 1)    # 1, 2, 3
+range(4, 0, -1)   # 4, 3, 2, 1        (negative step counts down)
+```
+
+`+=` is shorthand: `n += 1` means `n = n + 1`, and `x *= i` means `x = x * i`.
+
+## Worked example
+
+The classic **running-accumulator** pattern: a variable outside the loop keeps a
+result, and each pass updates it. Factorial of 4:
+
+```python
+x = 4
+factorial = 1               # identity for multiplication
+for i in range(1, x + 1):   # i takes 1, 2, 3, 4  (x+1 to include x)
+    factorial *= i          # factorial = factorial * i
+print(factorial)            # 24
+```
+
+Trace it:
+
+| pass | `i` | `factorial` before | `factorial` after |
+|---|---|---|---|
+| 1 | 1 | 1 | 1 |
+| 2 | 2 | 1 | 2 |
+| 3 | 3 | 2 | 6 |
+| 4 | 4 | 6 | 24 |
+
+The `range(1, x+1)` is deliberate: `range` excludes its stop, so to loop *through*
+`x` you write `x + 1`. This same accumulator shape — initialize outside, update
+inside — computes running sums, counts, products, and more.
+
+Here's the equivalent `while` version, which makes the three parts explicit:
+
+```python
+x = 4
+i = 1                # init loop variable OUTSIDE
+factorial = 1
+while i <= x:        # test IN condition
+    factorial *= i
+    i += 1           # update INSIDE body
+print(factorial)     # 24
+```
+
+## Traps
+
+<Callout type="trap">
+**Forgetting to update the `while` variable is an infinite loop.** If `n = n + 1`
+is missing (or the condition can never go False), the loop runs forever. Every
+`while` needs a reason to eventually stop.
+</Callout>
+
+**`range` excludes its stop.** `range(5)` is `0,1,2,3,4` — five values, but the
+last is `4`, not `5`. To loop *through* `x`, use `range(x + 1)`. This off-by-one
+is the number-one `range` bug.
+
+**`while True:` is infinite by design.** It only stops if something inside
+`break`s out (or the condition variable is changed). Useful, but easy to hang
+your program with.
+
+**`for i in range(...)` copies the value; reassigning `i` doesn't change the
+loop.** Writing `i = i + 5` inside a `for` loop does *not* skip ahead — the next
+pass overwrites `i` with the next `range` value anyway.
+
+**Negative-step `range` needs a smaller stop.** `range(4, 0, -1)` gives
+`4,3,2,1`; `range(0, 4, -1)` gives *nothing* (you can't count down from 0 to 4).
+
+**`+=` requires the variable to already exist.** `total += 1` fails with a
+`NameError` if `total` was never initialized. Set accumulators to their starting
+value (`0` for sums, `1` for products, `''` for strings) before the loop.
+
+## Memorize vs understand
+
+| Just know it cold | Be able to derive |
+|---|---|
+| `range(a, b, c)` excludes `b`; defaults start 0, step 1 | The exact sequence any `range(...)` produces, including negative steps |
+| `while`: init outside, test in condition, update in body | Whether a given `while` loop terminates or spins forever |
+| `n += 1` is `n = n + 1`; `x *= i` is `x = x * i` | The final value of an accumulator after the loop finishes |
+| `for v in seq:` binds `v` to each element in order | How to convert a `while` loop to an equivalent `for` loop |
+| Accumulator: initialize before, update inside | Choosing `for` (known count) vs `while` (condition-driven) |
+
+## ASE check
+
+```python
+for j in range(1, 4, 2):
+    print(j * 2)
+```
+
+<ASECheck q="What does this print, one value per line?">
+
+`2` then `6`. `range(1, 4, 2)` yields `1` and `3` (stop 4 excluded, step 2).
+Doubling each gives `2` and `6`.
+
+</ASECheck>
+
+```python
+mysum = 0
+for i in range(10):
+    mysum += i
+print(mysum)
+```
+
+<ASECheck q="What is mysum?">
+
+`45`. `range(10)` is `0` through `9`. Their sum is `0+1+2+...+9 = 45`. The
+accumulator starts at 0 and adds each `i`.
+
+</ASECheck>
+
+```python
+n = 3
+while n > 0:
+    print("x")
+    n = n - 1
+```
+
+<ASECheck q="How many times does this print, and what stops it?">
+
+Three times (for `n = 3, 2, 1`). When `n` reaches `0`, the condition `n > 0` is
+`False`, so the loop exits. The `n = n - 1` line is what makes it terminate —
+remove it and it loops forever.
+
+</ASECheck>
+
+```python
+for me in range(4, 0, -1):
+    print("$" * me)
+```
+
+<ASECheck q="What does this print?">
+
+`$$$$`, then `$$$`, then `$$`, then `$`. `range(4, 0, -1)` counts down `4,3,2,1`,
+and `"$" * me` prints that many dollar signs each pass.
+
+</ASECheck>
+
+<ASECheck q="Why does range(0, 4, -1) produce no iterations?">
+
+With a negative step, `range` counts *down* from the start toward the stop. Since
+`0` is already below `4`, there's nothing to count down through — the sequence is
+empty and the loop body never runs. You'd need `range(4, 0, -1)` to go from 4
+down to 1.
+
+</ASECheck>
+
+*Content reconstructed from MIT OCW 6.100L Fall 2022, Lecture 3 (Ana Bell),
+CC BY-NC-SA.*

@@ -1,0 +1,73 @@
+[
+  {
+    "id": "bank-20-a",
+    "kind": "coding",
+    "source": "bank",
+    "topicSlug": "20-oop-fitness-tracker",
+    "unit": 3,
+    "difficulty": "warmup",
+    "reconstructed": false,
+    "title": "A Workout base class",
+    "statement": "In the spirit of the lecture's fitness-tracker example, define a base class `Workout`.\n\n- `__init__(self, minutes, calories)` stores the two data attributes.\n- `get_minutes(self)` and `get_calories(self)` are getters.\n- `rate(self)` returns calories burned per minute (`calories / minutes`). Assume `minutes > 0`.\n\n```\n>>> w = Workout(30, 300)\n>>> w.rate()\n10.0\n```",
+    "functionSignature": "class Workout:",
+    "starterCode": "class Workout:\n    def __init__(self, minutes, calories):\n        pass\n\n    def get_minutes(self):\n        pass\n\n    def get_calories(self):\n        pass\n\n    def rate(self):\n        pass",
+    "solution": "class Workout:\n    def __init__(self, minutes, calories):\n        self.minutes = minutes\n        self.calories = calories\n\n    def get_minutes(self):\n        return self.minutes\n\n    def get_calories(self):\n        return self.calories\n\n    def rate(self):\n        return self.calories / self.minutes",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      { "name": "rate", "expression": "Workout(30, 300).rate()", "expected": "10.0", "compare": "float", "tolerance": 1e-9 },
+      { "name": "get_minutes", "expression": "Workout(30, 300).get_minutes()", "expected": "30" },
+      { "name": "get_calories", "expression": "Workout(30, 300).get_calories()", "expected": "300" },
+      { "name": "fractional rate", "expression": "Workout(45, 300).rate()", "expected": "6.666666666666667", "compare": "float", "tolerance": 1e-9, "hidden": true }
+    ]
+  },
+  {
+    "id": "bank-20-b",
+    "kind": "coding",
+    "source": "bank",
+    "topicSlug": "20-oop-fitness-tracker",
+    "unit": 3,
+    "difficulty": "exam-level",
+    "reconstructed": false,
+    "title": "Run and Swim subclasses that override summary()",
+    "statement": "Build a small workout hierarchy. Start with this base class (paste it in):\n\n```python\nclass Workout:\n    def __init__(self, minutes, calories):\n        self.minutes = minutes\n        self.calories = calories\n    def summary(self):\n        return 'Workout: ' + str(self.calories) + ' cal'\n```\n\nDefine two subclasses:\n\n- `Run(Workout)`: `__init__(self, minutes, calories, distance_km)` calls the parent `__init__` and stores `distance_km`. Add `pace(self)` returning minutes per km (`minutes / distance_km`). **Override** `summary()` to return `'Run: <distance_km> km'`, e.g. `'Run: 5 km'`.\n- `Swim(Workout)`: `__init__(self, minutes, calories, laps)` calls the parent `__init__` and stores `laps`. **Override** `summary()` to return `'Swim: <laps> laps'`.\n\n```\n>>> Run(30, 300, 5).pace()\n6.0\n>>> Run(30, 300, 5).summary()\n'Run: 5 km'\n>>> Swim(40, 250, 20).summary()\n'Swim: 20 laps'\n```",
+    "functionSignature": "class Run(Workout):",
+    "starterCode": "class Workout:\n    def __init__(self, minutes, calories):\n        self.minutes = minutes\n        self.calories = calories\n    def summary(self):\n        return 'Workout: ' + str(self.calories) + ' cal'\n\nclass Run(Workout):\n    def __init__(self, minutes, calories, distance_km):\n        pass\n    def pace(self):\n        pass\n    def summary(self):\n        pass\n\nclass Swim(Workout):\n    def __init__(self, minutes, calories, laps):\n        pass\n    def summary(self):\n        pass",
+    "solution": "class Workout:\n    def __init__(self, minutes, calories):\n        self.minutes = minutes\n        self.calories = calories\n    def summary(self):\n        return 'Workout: ' + str(self.calories) + ' cal'\n\nclass Run(Workout):\n    def __init__(self, minutes, calories, distance_km):\n        Workout.__init__(self, minutes, calories)\n        self.distance_km = distance_km\n    def pace(self):\n        return self.minutes / self.distance_km\n    def summary(self):\n        return 'Run: ' + str(self.distance_km) + ' km'\n\nclass Swim(Workout):\n    def __init__(self, minutes, calories, laps):\n        Workout.__init__(self, minutes, calories)\n        self.laps = laps\n    def summary(self):\n        return 'Swim: ' + str(self.laps) + ' laps'",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      { "name": "run pace", "expression": "Run(30, 300, 5).pace()", "expected": "6.0", "compare": "float", "tolerance": 1e-9 },
+      { "name": "run summary override", "expression": "Run(30, 300, 5).summary()", "expected": "'Run: 5 km'" },
+      { "name": "run inherits calories attr", "expression": "Run(30, 300, 5).calories", "expected": "300" },
+      { "name": "swim summary override", "expression": "Swim(40, 250, 20).summary()", "expected": "'Swim: 20 laps'" },
+      { "name": "run is a Workout", "expression": "isinstance(Run(30, 300, 5), Workout)", "expected": "True", "hidden": true },
+      { "name": "swim inherits minutes attr", "expression": "Swim(40, 250, 20).minutes", "expected": "40", "hidden": true }
+    ]
+  },
+  {
+    "id": "bank-20-c",
+    "kind": "coding",
+    "source": "bank",
+    "topicSlug": "20-oop-fitness-tracker",
+    "unit": 3,
+    "difficulty": "exam-level",
+    "reconstructed": false,
+    "title": "Aggregate over a mixed list of Workout objects",
+    "statement": "Given the hierarchy from the previous problem (a `Workout` base with `minutes` and `calories`, and subclasses that all inherit those attributes), write a **standalone function** — not a method — that summarizes a whole week.\n\n`weekly_report(workouts)` takes a list of `Workout` (or subclass) objects and returns a dict with:\n\n- `'total_calories'`: sum of every workout's `calories`.\n- `'total_minutes'`: sum of every workout's `minutes`.\n- `'best'`: the object with the highest `calories` (return the object itself). On an empty list, `'best'` is `None`.\n\n```\n>>> r = weekly_report([Workout(30, 300), Workout(20, 250)])\n>>> r['total_calories']\n550\n>>> r['best'].calories\n300\n```\n\nA `Run` or `Swim` counts exactly like any `Workout` here because they inherit `calories` and `minutes` — your function should not special-case the subclass.",
+    "functionSignature": "def weekly_report(workouts):",
+    "starterCode": "class Workout:\n    def __init__(self, minutes, calories):\n        self.minutes = minutes\n        self.calories = calories\n\nclass Run(Workout):\n    def __init__(self, minutes, calories, distance_km):\n        Workout.__init__(self, minutes, calories)\n        self.distance_km = distance_km\n\ndef weekly_report(workouts):\n    \"\"\"Return {'total_calories', 'total_minutes', 'best'} over a list of Workouts.\n\n    'best' is the workout object with the most calories, or None if the list is empty.\n    \"\"\"\n    pass",
+    "solution": "class Workout:\n    def __init__(self, minutes, calories):\n        self.minutes = minutes\n        self.calories = calories\n\nclass Run(Workout):\n    def __init__(self, minutes, calories, distance_km):\n        Workout.__init__(self, minutes, calories)\n        self.distance_km = distance_km\n\ndef weekly_report(workouts):\n    total_cal = 0\n    total_min = 0\n    best = None\n    for w in workouts:\n        total_cal += w.calories\n        total_min += w.minutes\n        if best is None or w.calories > best.calories:\n            best = w\n    return {'total_calories': total_cal, 'total_minutes': total_min, 'best': best}",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      { "name": "empty list totals", "expression": "(lambda r: (r['total_calories'], r['total_minutes'], r['best']))(weekly_report([]))", "expected": "(0, 0, None)" },
+      { "name": "total calories", "expression": "weekly_report([Workout(30, 300), Workout(20, 250)])['total_calories']", "expected": "550" },
+      { "name": "total minutes", "expression": "weekly_report([Workout(30, 300), Workout(20, 250)])['total_minutes']", "expected": "50" },
+      { "name": "best is highest-calorie object", "expression": "weekly_report([Workout(30, 300), Workout(20, 250)])['best'].calories", "expected": "300" },
+      { "name": "single workout is its own best", "expression": "weekly_report([Workout(10, 99)])['best'].minutes", "expected": "10" },
+      { "name": "subclasses counted like base", "expression": "weekly_report([Run(30, 400, 5), Workout(20, 250)])['best'].calories", "expected": "400", "hidden": true },
+      { "name": "tie keeps first-seen best", "expression": "weekly_report([Workout(10, 200), Workout(99, 200)])['best'].minutes", "expected": "10", "hidden": true }
+    ]
+  }
+]

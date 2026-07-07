@@ -1,0 +1,205 @@
+## Intuition
+
+This is a capstone example that ties together everything from the OOP units:
+classes, methods, class variables, inheritance, `super()`, overriding, and
+equality. The scenario is a fitness tracker (like a smartwatch): every workout
+shares common data — start time, end time, calories — so that goes in a parent
+`Workout` class. Specific kinds (running, swimming) add their own data (elevation,
+stroke type) in **subclasses** that inherit the shared parts. The point isn't new
+syntax; it's seeing *why* the design choices pay off: shared code lives in one
+place, subclasses only describe their differences, and a subclass can be used
+anywhere the parent is expected.
+
+## The mechanics
+
+The parent bundles common data and a class variable, and computes calories one of
+two ways:
+
+```python
+class Workout(object):
+    cal_per_hr = 200                     # class variable, shared by all
+    def __init__(self, start, end, calories=None):
+        self.start = start
+        self.end = end
+        self.calories = calories         # may be None
+    def get_calories(self):
+        if self.calories is None:        # estimate from duration
+            hours = (self.end - self.start).total_seconds() / 3600
+            return Workout.cal_per_hr * hours
+        else:
+            return self.calories
+```
+
+A subclass inherits everything, then uses `super()` to run the parent's
+constructor and adds its own data:
+
+```python
+class RunWorkout(Workout):
+    def __init__(self, start, end, elev=0, calories=None):
+        super().__init__(start, end, calories)   # set up the Workout part
+        self.kind = 'Running'
+        self.elev = elev                          # NEW attribute
+    def get_elev(self):
+        return self.elev
+```
+
+<Callout type="tip">
+`super().__init__(...)` is the clean way to call the parent's constructor —
+equivalent to `Workout.__init__(self, ...)` but without naming the parent, so it
+keeps working if the hierarchy changes.
+</Callout>
+
+**Overriding** replaces a parent method; to *extend* rather than replace, call
+`super()` inside your override:
+
+```python
+class RunWorkout(Workout):
+    def __eq__(self, other):
+        return super().__eq__(other) and self.elev == other.elev
+```
+
+**Substitutability:** a `RunWorkout` can go anywhere a `Workout` is expected (it
+*is* one). The reverse fails — a plain `Workout` lacks `get_elev`, so passing it
+to a function that calls `get_elev()` errors.
+
+## Worked example
+
+A shared `total_calories` works on any mix of workouts, but `total_elevation`
+requires the run-specific method:
+
+```python
+def total_calories(workouts):
+    cals = 0
+    for w in workouts:
+        cals += w.get_calories()
+    return cals
+
+def total_elevation(run_workouts):
+    elev = 0
+    for w in run_workouts:
+        elev += w.get_elev()
+    return elev
+
+w1 = Workout(start1, end1)                 # 30 min -> 100 cal (estimated)
+rw1 = RunWorkout(start2, end2, 100)        # elev = 100
+rw2 = RunWorkout(start3, end3, 200)        # elev = 200
+
+total_calories([w1, rw1, rw2])   # works: all have get_calories (inherited)
+total_elevation([rw1, rw2])      # works: both are RunWorkouts with get_elev
+total_elevation([w1, rw1])       # ERROR: w1 (plain Workout) has no get_elev
+```
+
+`total_calories` accepts the mixed list because `get_calories` is defined on the
+parent, so every subclass inherits it. `total_elevation` breaks on `w1` because
+`get_elev` exists only on `RunWorkout` — this is the substitutability rule in
+action: child-for-parent is fine, parent-for-child is not.
+
+## Traps
+
+<Callout type="trap">
+**Overriding `__eq__` and forgetting the parent's fields.** A `RunWorkout.__eq__`
+that only compares `self.elev == other.elev` would call two runs "equal" even if
+their times and calories differ. Chain to the parent with `super().__eq__(other)
+and self.elev == other.elev` so the base fields are checked too.
+</Callout>
+
+**Passing a parent where a child is required.** `total_elevation([w1, rw1])` fails
+because `w1` is a plain `Workout` and has no `get_elev`. A function that calls
+child-only methods must receive child instances.
+
+**Mutating the shared class variable through an instance.** `Workout.cal_per_hr =
+250` changes the estimate for *every* workout, not just one. If you meant a
+per-instance value, store it on `self`, not on the class.
+
+**Not calling `super().__init__`.** If `RunWorkout.__init__` sets `self.elev` but
+skips `super().__init__(start, end, calories)`, the run has no start/end/calories —
+inherited setup doesn't happen automatically when the child defines its own
+`__init__`.
+
+## Memorize vs understand
+
+| Just know it cold | Be able to derive |
+|---|---|
+| `super().__init__(...)` calls the parent's constructor | Whether a mixed list of workouts is safe to pass to a given function |
+| A subclass can be used anywhere the parent is expected | Why parent-for-child substitution fails but child-for-parent works |
+| Overriding replaces; `super()` inside an override extends | Whether an overridden `__eq__` correctly checks base + new fields |
+| Class variables are shared across all instances | Predicting what changes when a class variable is reassigned |
+
+## ASE check
+
+```python
+class Workout(object):
+    def __init__(self, cals):
+        self.cals = cals
+    def get_cals(self):
+        return self.cals
+
+class RunWorkout(Workout):
+    def __init__(self, cals, elev):
+        super().__init__(cals)
+        self.elev = elev
+
+rw = RunWorkout(300, 50)
+print(rw.get_cals(), rw.elev)
+```
+
+<ASECheck q="What does this print, and where does get_cals come from?">
+
+`300 50`. `super().__init__(cals)` ran the parent constructor, setting
+`self.cals = 300`. `get_cals` is inherited from `Workout` and returns `300`.
+`rw.elev` is the `RunWorkout`-specific attribute, `50`.
+
+</ASECheck>
+
+```python
+def total_elev(runs):
+    total = 0
+    for r in runs:
+        total += r.get_elev()
+    return total
+
+w = Workout(100)              # plain Workout, no get_elev
+rw = RunWorkout(200, 30)
+print(total_elev([w, rw]))
+```
+
+<ASECheck q="What happens when this runs?">
+
+It raises an `AttributeError` on the first iteration: `w` is a plain `Workout` and
+has no `get_elev` method — that method exists only on `RunWorkout`. A function that
+calls `get_elev` must be given only `RunWorkout` (or other subclasses that define
+it).
+
+</ASECheck>
+
+```python
+class Workout(object):
+    cal_per_hr = 200
+
+a = Workout()
+b = Workout()
+Workout.cal_per_hr = 250
+print(a.cal_per_hr, b.cal_per_hr)
+```
+
+<ASECheck q="What does this print, and why?">
+
+`250 250`. `cal_per_hr` is a class variable shared by every instance. Reassigning
+`Workout.cal_per_hr = 250` changes it for the whole class, so both `a` and `b`
+see `250`.
+
+</ASECheck>
+
+<ASECheck q="Why should RunWorkout.__eq__ call super().__eq__(other) rather than only comparing self.elev == other.elev?">
+
+Because two runs with the same elevation but different start times, end times, or
+calories are not actually the same workout. `super().__eq__(other)` checks the
+shared base fields (times, calories, kind), and `and self.elev == other.elev` adds
+the run-specific check — so equality means *everything* matches, not just
+elevation.
+
+</ASECheck>
+
+*Source: MIT OCW 6.100L Fall 2022, Lecture 20 (Fitness Tracker OOP Example), Ana
+Bell (OOP example credited to Sam Madden). Content reconstructed as original prose
+under CC BY-NC-SA.*

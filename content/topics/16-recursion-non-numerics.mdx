@@ -1,0 +1,227 @@
+## Intuition
+
+Once you can recurse on numbers, the same idea works on *anything you can split
+into a first piece and a smaller rest*: lists, strings, tuples, and — the payoff
+— arbitrarily nested structures. A list is "naturally recursive": the sum of a
+list is its first element plus the sum of the rest. You peel off `L[0]`, recurse
+on `L[1:]`, and combine. The genuinely new power shows up with **nested** data
+(lists inside lists inside lists) where you *don't know how deep it goes* — that's
+where iteration falls apart and recursion shines, because a recursive call can
+dive into a sublist without you writing a loop for each level. This unit also
+introduces **memoization** (caching results in a dict) to rescue slow recursions
+like Fibonacci.
+
+## The mechanics
+
+The list recipe: base case handles the smallest list; recursive step processes
+`L[0]` and recurses on `L[1:]`.
+
+```python
+def total(L):
+    if len(L) == 1:            # base case: one element
+        return L[0]
+    else:                      # recursive step: first + sum of rest
+        return L[0] + total(L[1:])
+```
+
+Two base-case styles both work: `len(L) == 1 → return L[0]`, or the often-cleaner
+`L == [] → return 0` (empty list sums to 0), which also handles the empty input.
+
+**Multiple base cases and multiple recursive calls are fine.** Fibonacci has two
+of each:
+
+```python
+def fib(x):
+    if x == 1 or x == 2:       # two base cases
+        return 1
+    else:
+        return fib(x - 1) + fib(x - 2)   # two recursive calls
+```
+
+Plain `fib` is *exponentially* slow — `fib(34)` makes over 11 million calls
+because it recomputes the same values endlessly. **Memoize** by passing a dict
+that caches answers:
+
+```python
+def fib_fast(n, memo):
+    if n in memo:
+        return memo[n]         # already computed — just look it up
+    ans = fib_fast(n - 1, memo) + fib_fast(n - 2, memo)
+    memo[n] = ans
+    return ans
+
+d = {1: 1, 2: 1}
+print(fib_fast(34, d))         # 65 calls instead of 11 million
+```
+
+<Callout type="tip">
+**Every branch must return the same type.** If your base case returns a list but
+your recursive step returns an int (or vice versa), the `+` between them explodes
+at runtime. Decide the return type up front and make all cases honor it.
+</Callout>
+
+## Worked example
+
+**Flatten one level of nesting**, e.g. `[[1, 2], [3, 4], [9, 8, 7]]` → `[1, 2, 3,
+4, 9, 8, 7]`. Recall `+` between two lists *concatenates* them into a new list.
+
+```python
+def flatten(L):
+    if len(L) == 1:
+        return L[0]                 # the single inner list, as-is
+    else:
+        return L[0] + flatten(L[1:])
+```
+
+Trace `flatten([[1, 2], [3, 4], [9, 8, 7]])`:
+
+- `[1, 2] + flatten([[3, 4], [9, 8, 7]])`
+- inner: `[3, 4] + flatten([[9, 8, 7]])`
+- base case: `flatten([[9, 8, 7]])` returns `[9, 8, 7]`
+- so `[3, 4] + [9, 8, 7]` = `[3, 4, 9, 8, 7]`
+- and `[1, 2] + [3, 4, 9, 8, 7]` = `[1, 2, 3, 4, 9, 8, 7]`
+
+Now the **deep** version — reverse *all* elements at every level. The base case is
+no longer the same for a plain element versus a nested list, so we check the type:
+
+```python
+def deep_rev(L):
+    if L == []:
+        return []
+    elif type(L[0]) != list:
+        return deep_rev(L[1:]) + [L[0]]              # move plain elem to end
+    else:
+        return deep_rev(L[1:]) + [deep_rev(L[0])]    # reverse the sublist too
+```
+
+`deep_rev([1, [2, 3], 4])` → `[4, [3, 2], 1]`. The `type(L[0]) != list` check is
+what lets recursion handle *unknown depth* — a sublist gets its own `deep_rev`.
+
+## Traps
+
+<Callout type="trap">
+**Checking only the last element instead of every element.** A common buggy
+`in_list` recurses on `L[1:]` but only compares in the base case — so it reports
+whether the *last* element matches, not whether the element is anywhere. You must
+check `L[0]` at *each* call.
+</Callout>
+
+```python
+def in_list(L, e):        # correct version
+    if len(L) == 0:
+        return False
+    elif L[0] == e:       # check the first element AT EACH call
+        return True
+    else:
+        return in_list(L[1:], e)
+```
+
+**Type mismatch across branches.** If the base case returns `[]` (a list) and the
+recursive step returns `len(L[0]) + recur(L[1:])` (an int), you get a runtime type
+error. Every return path must produce the same type.
+
+**Memoization that mutates or has side effects.** Caching only works for functions
+that *always return the same result for the same input* (pure functions). If the
+function's answer depends on external state or it prints/mutates, the cache lies.
+
+**`L[1:]` copies the list every call.** Slicing builds a new list, so recursing on
+`L[1:]` is O(n) extra work per level. Fine for the ASE, but know it's not free —
+it's why loop versions are often more efficient.
+
+**Base case that misses the empty list.** `if len(L) == 1` crashes on `[]`
+(returns nothing, or `L[0]` indexes an empty list). If empty input is possible,
+use `if L == []` as the base.
+
+## Memorize vs understand
+
+| Just know it cold | Be able to derive |
+|---|---|
+| List recipe: process `L[0]`, recurse on `L[1:]`, combine | Whether a base case handles the empty list correctly |
+| `+` concatenates two lists into a new list | When you need `type(x) != list` to handle unknown nesting depth |
+| Every branch of a recursion must return the same type | Tracing a flatten/reverse/sum recursion by hand to the printed result |
+| Memoization caches results in a dict for pure functions | Why plain `fib` is exponential and memoized `fib` is linear |
+| Base can be `len(L)==1 → L[0]` or `L==[] → 0` | Spotting the "only checks the last element" bug in a search recursion |
+
+## ASE check
+
+```python
+def total(L):
+    if L == []:
+        return 0
+    else:
+        return L[0] + total(L[1:])
+print(total([30, 40, 50]))
+```
+
+<ASECheck q="What does this print, and what does the base case return for an empty list?">
+
+`120`. The base case returns `0` for the empty list (the identity for addition).
+Trace: `30 + total([40,50])` = `30 + (40 + total([50]))` = `30 + 40 + 50 +
+total([])` = `30 + 40 + 50 + 0` = `120`.
+
+</ASECheck>
+
+```python
+def flatten(L):
+    if len(L) == 1:
+        return L[0]
+    else:
+        return L[0] + flatten(L[1:])
+print(flatten([[1, 2], [3], [4, 5]]))
+```
+
+<ASECheck q="What list does this print?">
+
+`[1, 2, 3, 4, 5]`. Each step concatenates the first inner list with the flattened
+rest: `[1,2] + flatten([[3],[4,5]])` = `[1,2] + ([3] + [4,5])` = `[1,2,3,4,5]`.
+
+</ASECheck>
+
+```python
+def in_list(L, e):
+    if len(L) == 1:
+        return L[0] == e
+    else:
+        return in_list(L[1:], e)
+print(in_list([2, 1, 5, 8], 1))
+```
+
+<ASECheck q="What does this print, and why is it a bug?">
+
+`False`, and it's a bug — `1` is clearly in the list. This version only ever
+compares the *last* element (when the list shrinks to length 1); every other call
+just recurses without checking `L[0]`. The fix adds `elif L[0] == e: return True`
+before recursing.
+
+</ASECheck>
+
+```python
+def fib_fast(n, memo):
+    if n in memo:
+        return memo[n]
+    ans = fib_fast(n - 1, memo) + fib_fast(n - 2, memo)
+    memo[n] = ans
+    return ans
+d = {1: 1, 2: 1}
+print(fib_fast(5, d))
+```
+
+<ASECheck q="What does this print, and what job does the dict do?">
+
+`5`. The Fibonacci sequence is `1, 1, 2, 3, 5, ...`, so `fib(5)` is `5`. The dict
+`d` caches every computed value, so once `fib(3)` is known it's looked up instead
+of recomputed — turning an exponential number of calls into a linear one.
+
+</ASECheck>
+
+<ASECheck q="Why must every case (base and recursive) in a recursive function return the same type?">
+
+Because the recursive step *combines* the recursive call's return value with
+something (via `+`, arithmetic, etc.), and that combine only works if the types
+match. If the base returns a list but the recursive step tries to add an int to
+that list, Python raises a `TypeError` at runtime.
+
+</ASECheck>
+
+*Source: MIT OCW 6.100L Fall 2022, Lecture 16 (Recursion on Non-Numerics), Ana
+Bell. Content reconstructed as original prose under CC BY-NC-SA.*

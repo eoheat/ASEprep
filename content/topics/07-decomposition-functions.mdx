@@ -1,0 +1,204 @@
+## Intuition
+
+A function is a *black box*: you hand it inputs, it hands you back an output,
+and you don't care how it did the work. That's **abstraction** — hide the
+tedious details behind a name and an interface. Once you have black boxes, you
+**decompose** a big problem into small, self-contained, reusable pieces and
+snap them together. `max`, `abs`, `len` are black boxes you already trust
+without ever reading their code; a function you write is exactly the same kind
+of thing. The two big payoffs: you write the code once and run it many times,
+and you can reason about the caller and the function separately.
+
+The single most important mental model for the exam: **a function call is an
+expression, and Python replaces the whole call with its return value** — just
+like `3 + 4` becomes `7`.
+
+## The mechanics
+
+A function has a name, zero or more parameters, an optional docstring
+(the "contract"), a body, and it returns something.
+
+```python
+def is_even(i):
+    """
+    Input: i, a positive int
+    Returns True if i is even, otherwise False
+    """
+    return i % 2 == 0
+```
+
+Defining the function only creates a function object bound to the name
+`is_even` — none of the body runs yet. The body runs only when you **call**
+(invoke) it:
+
+```python
+is_even(3)          # the call is replaced by the return value False
+print(is_even(3))   # prints False
+```
+
+When you call `is_even(3)`, Python binds the parameter `i` to the argument `3`,
+runs the body with that binding, and the entire call `is_even(3)` evaluates to
+the returned value. You can drop that value anywhere an expression is allowed:
+
+```python
+for i in range(1, 10):
+    if is_even(i):
+        print(i, "even")
+    else:
+        print(i, "odd")
+```
+
+<Callout type="tip">
+Read the specs (docstring) as a promise: "if you give me input that matches
+these conditions, I promise to return output matching this description." Python
+does not enforce the promise — that's on you. Later you'll enforce it with
+assertions.
+</Callout>
+
+## Worked example
+
+The lecture's design method: **don't write code right away.** Work a concrete
+example on paper, solve a simpler version, then add the missing piece. Goal: sum
+all odd integers between `a` and `b` inclusive.
+
+Step 1 — solve the easier problem (sum *all* integers in the range), and get
+the loop bounds right. `range(a, b)` stops before `b`, so you need
+`range(a, b + 1)` to include `b`:
+
+```python
+def sum_odd(a, b):
+    sum_of_odds = 0
+    for i in range(a, b + 1):
+        sum_of_odds += i
+    return sum_of_odds
+
+print(sum_odd(2, 4))   # 2 + 3 + 4 = 9
+```
+
+Step 2 — add the "odd only" filter with `if i % 2 == 1`:
+
+```python
+def sum_odd(a, b):
+    sum_of_odds = 0
+    for i in range(a, b + 1):
+        if i % 2 == 1:
+            sum_of_odds += i
+    return sum_of_odds
+
+print(sum_odd(2, 4))   # only 3 is odd -> 3
+print(sum_odd(2, 7))   # 3 + 5 + 7    -> 15
+```
+
+Trace `sum_odd(2, 4)`: `i` is 2 (even, skip), 3 (odd, sum becomes 3), 4 (even,
+skip). Return 3. The initialization `sum_of_odds = 0` must live *before* the
+loop, or you'll get a `NameError` the first time you try `+=`.
+
+## Traps
+
+<Callout type="trap">
+**Forgetting the function actually runs on call, not on definition.** Writing
+`def f(): ...` does nothing observable. Beginners stare at a file that "does
+nothing" because they never wrote the call `f()`.
+</Callout>
+
+**Off-by-one in `range`.** `range(a, b)` gives `a, a+1, ..., b-1` — it excludes
+`b`. To include `b` you need `range(a, b + 1)`. This is the classic bug that
+made `sum_odd` return the wrong total in lecture.
+
+**Confusing `return` with `print`.** `print` shows a value on the console but
+the function still returns `None`. If you `print` inside a function instead of
+returning, the caller gets `None` and can't use the result:
+
+```python
+def add(x, y):
+    print(x + y)        # shows it, but returns None
+
+total = add(2, 3)       # prints 5
+print(total + 1)        # TypeError: None + 1
+```
+
+Return the value so the caller can keep computing with it.
+
+**Code after `return` never runs.** `return` immediately ends the function. Any
+lines below it in the same block are dead.
+
+**Assuming a bare expression "does something."** A line like `i % 2 == 0` inside
+a function computes a Boolean and then throws it away. You need `return` (or an
+assignment) to keep it.
+
+## Memorize vs understand
+
+| Just know it cold | Be able to derive |
+|---|---|
+| `def name(params):` defines; `name(args)` calls | Whether a piece of code should be its own function |
+| A function object exists at `def` time; body runs only on call | How to decompose a problem into small functions |
+| The call expression is replaced by the return value | The right loop bounds so `range` includes/excludes correctly |
+| `range(a, b)` excludes `b`; use `b + 1` to include it | Whether to `return` a value or `print` it |
+| A function with no `return` returns `None` | How to build up a solution: simpler problem first, then add features |
+
+## ASE check
+
+```python
+def f(x):
+    x + 1
+print(f(5))
+```
+
+<ASECheck q="What does this print, and why?">
+
+`None`. The line `x + 1` computes 6 and discards it — there is no `return`, so
+`f` returns `None`, and that's what prints.
+
+</ASECheck>
+
+```python
+def g(n):
+    for i in range(n):
+        return i
+print(g(4))
+```
+
+<ASECheck q="What is printed?">
+
+`0`. `return` fires on the very first iteration (`i` is 0), immediately ending
+the function. The loop never reaches `i = 1`.
+
+</ASECheck>
+
+```python
+def total(a, b):
+    s = 0
+    for i in range(a, b):
+        s += i
+    return s
+print(total(1, 4))
+```
+
+<ASECheck q="What does total(1, 4) return?">
+
+`6`. `range(1, 4)` yields 1, 2, 3 (it excludes 4), so `s` becomes 1 + 2 + 3 = 6.
+
+</ASECheck>
+
+```python
+def is_odd(i):
+    return i % 2 == 1
+
+print(is_odd(7), is_odd(8))
+```
+
+<ASECheck q="What is printed?">
+
+`True False`. `7 % 2` is 1 (equals 1, so True); `8 % 2` is 0 (not 1, so False).
+The `==` already produces the Boolean, so no `if/else` is needed.
+
+</ASECheck>
+
+<ASECheck q="You defined a function but nothing happens when you run the file. What's the most likely cause?">
+
+You never called it. Defining a function only creates the function object;
+its body runs only when you invoke it, e.g. `my_func(args)`.
+
+</ASECheck>
+
+*Content reconstructed from MIT OCW 6.100L Fall 2022, Lecture 7 (Ana Bell), CC BY-NC-SA.*

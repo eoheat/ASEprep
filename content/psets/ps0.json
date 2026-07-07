@@ -1,0 +1,42 @@
+{
+  "id": "ps0",
+  "number": 0,
+  "title": "Introduction & Installation",
+  "ocwUrl": "https://ocw.mit.edu/courses/6-100l-introduction-to-cs-and-programming-using-python-fall-2022/pages/problem-sets/",
+  "overview": "**Problem Set 0 — your first Python program.** The real ps0 is mostly installation checks and surveys; the one piece of code worth doing is a five-line program that uses the `numpy` library. Set `x = 5` and `y = 8`, compute `z = x + y`, then take `numpy.log2(z)` and store it in `a`. The point is small: import a package, call a library function, print a result. Source: MIT OCW 6.100L Fall 2022, Problem Set 0 (the ps0 handout has no gradeable starter file, so this program is reconstructed for this study tool; reference solution and tests written here).",
+  "problems": [
+    {
+      "topicSlug": "01-introduction",
+      "unit": 1,
+      "source": "pset",
+      "reconstructed": true,
+      "id": "ps0-p1",
+      "kind": "coding",
+      "difficulty": "warmup",
+      "title": "First Program — numpy.log2",
+      "statement": "Write your first program using an external library.\n\n1. Assign `x = 5` and `y = 8`.\n2. Compute their sum into `z` (so `z == 13`).\n3. Compute `a = numpy.log2(z)` — the base-2 logarithm of `z`.\n4. Print `z` and `a`.\n\nThis mirrors ps0's `pkgtest.py`: the goal is to confirm your Python + `numpy` install works. `numpy.log2` returns a **float** (`numpy.float64`), so `a ≈ 3.7004`.\n\nAttribution: adapted from MIT OCW 6.100L Fall 2022, Problem Set 0.",
+      "functionSignature": "import numpy",
+      "starterCode": "import numpy\n\n# 1) Set x to 5 and y to 8.\nx = 0\ny = 0\n\n# 2) Set z to the sum of x and y.\nz = 0\n\n# 3) Set a to numpy.log2(z).\na = 0\n\nprint(z)\nprint(a)",
+      "solution": "import numpy\n\nx = 5\ny = 8\nz = x + y\na = numpy.log2(z)\n\nprint(z)\nprint(a)",
+      "pyPackages": ["numpy"],
+      "dataFiles": [],
+      "tests": [
+        {
+          "name": "z is 13",
+          "expression": "z",
+          "expected": "13",
+          "compare": "float",
+          "tolerance": 1e-9
+        },
+        {
+          "name": "a is log2(13)",
+          "expression": "a",
+          "expected": "3.700439718141092",
+          "compare": "float",
+          "tolerance": 1e-9
+        }
+      ]
+    }
+  ],
+  "reconstructed": true
+}

@@ -1,0 +1,208 @@
+## Intuition
+
+Recursion is a function that solves a problem by calling *itself* on a smaller
+version of the same problem. The trick is to stop *doing* the whole job and
+instead split it into two pieces: one small step you can do right now, and the
+same problem again on slightly smaller input. Keep shrinking and eventually you
+hit a case so small you can answer it outright. That stopping point is the **base
+case**; the "same problem, smaller" piece is the **recursive step**. Anything you
+can write with a loop you can write with recursion and vice versa — but some
+problems (searching a nested folder tree, evaluating parenthesized expressions)
+fall out of recursion so naturally that iteration is painful. This unit is where
+the ASE starts asking you to *trace* recursive calls, so the goal is to read the
+call stack in your head.
+
+## The mechanics
+
+Every correct recursive function has exactly two parts. Miss either and it breaks.
+
+```python
+def fact(n):
+    if n == 1:          # base case: something you already know
+        return 1
+    else:               # recursive step: same problem, smaller n
+        return n * fact(n - 1)
+```
+
+- **Base case**: a case simple enough to answer without recursing. You must
+  *reach* it, or you loop forever (Python raises `RecursionError` after ~1000
+  deep).
+- **Recursive step**: reduce toward the base case and combine your one known
+  operation (`n *`) with the recursive result (`fact(n-1)`).
+
+The single most important idea: **each call gets its own separate scope**. When
+`fact(4)` calls `fact(3)`, the `n` inside `fact(3)` is a *different* `n` — it does
+not overwrite the caller's `n`. The `n=4` frame is paused, waiting, while `n=3`
+runs. Values are fully independent between frames.
+
+<Callout type="tip">
+Write the base case *first*. Then ask "assuming the recursive call already works
+correctly on smaller input, how do I finish the job?" This leap of faith — trust
+that `fact(n-1)` returns the right thing — is the whole skill. Don't try to trace
+all the way down; trust it and combine.
+</Callout>
+
+## Worked example
+
+Trace `fact(4)` completely. The calls go *down* to the base case, then the
+results are built back *up*.
+
+```python
+def fact(n):
+    if n == 1:
+        return 1
+    else:
+        return n * fact(n - 1)
+
+print(fact(4))
+```
+
+Going down (each call pauses, waiting on the next):
+
+- `fact(4)` needs `4 * fact(3)`
+- `fact(3)` needs `3 * fact(2)`
+- `fact(2)` needs `2 * fact(1)`
+- `fact(1)` hits the base case, returns `1`
+
+Now build back up, plugging each returned value into the paused caller:
+
+- `fact(2)` = `2 * 1` = `2`
+- `fact(3)` = `3 * 2` = `6`
+- `fact(4)` = `4 * 6` = `24`
+
+So it prints `24`. Notice the "earlier" calls (`fact(4)`, `fact(3)`) were *waiting
+on results* the entire time before they could finish.
+
+Compare with the iterative version — same answer, different shape:
+
+```python
+def fact_iter(n):
+    prod = 1
+    for i in range(1, n + 1):
+        prod *= i
+    return prod
+```
+
+The recursive version mirrors the math definition `n! = n * (n-1)!` directly; the
+iterative version tracks state (`prod`, `i`) explicitly.
+
+## Traps
+
+<Callout type="trap">
+**No base case, or a base case you never reach.** If `fact` recursed on `n-1` but
+tested `if n == 0` while being called with `n = 1.5` or a negative, it would sail
+past the base case forever. Make sure every recursive call moves *strictly*
+toward the base case.
+</Callout>
+
+**Forgetting to return the recursive call.** This is the classic silent bug:
+
+```python
+def fact_bug(n):
+    if n == 1:
+        return 1
+    else:
+        n * fact_bug(n - 1)   # BUG: computed but not returned
+```
+
+With no `return`, the `else` branch returns `None`, so `4 * None` blows up with a
+`TypeError`. The recursive call's result must be `return`ed (or combined into a
+`return`).
+
+**Assuming each call shares variables.** Students expect `n` to be "one variable"
+that changes. It isn't. Each frame has its own `n`. The `fact(3)` call cannot see
+or change the `fact(4)` frame's `n`.
+
+**Confusing recursion depth with a loop counter.** There's no `i` counting up.
+The "counter" is the argument shrinking on each call, and the number of frames
+stacked up *is* the depth. Deep recursion (say `fact(5000)`) hits Python's
+recursion limit and errors — recursion is not free.
+
+**Doing the combine step in the wrong order.** `return n * fact(n-1)` and
+`return fact(n-1) * n` both work for multiplication (commutative), but for
+non-commutative combines (string building, subtraction) order matters. Decide
+deliberately whether your known piece goes before or after the recursive result.
+
+## Memorize vs understand
+
+| Just know it cold | Be able to derive |
+|---|---|
+| A recursive function needs a base case AND a recursive step | Whether a given base case is actually reachable from the start input |
+| Each call has its own independent scope/frame | How to trace a call down to the base and back up, tracking each frame's return |
+| You must `return` the recursive call, not just evaluate it | Rewriting an iterative loop as recursion (and vice versa) |
+| `n! = n * (n-1)!`, base `1! = 1` | Whether recursion or iteration reads more clearly for a given problem |
+| Recursion trades programmer clarity for extra call overhead | Predicting the printed output of a small recursion by hand |
+
+## ASE check
+
+```python
+def mystery(a, b):
+    if b == 1:
+        return a
+    else:
+        return a + mystery(a, b - 1)
+print(mystery(5, 4))
+```
+
+<ASECheck q="What does this print, and what does the function compute?">
+
+`20`. It computes `a * b` by repeated addition: `mystery(5,4)` = `5 + mystery(5,3)`
+= `5 + 5 + mystery(5,2)` = `5 + 5 + 5 + mystery(5,1)` = `5 + 5 + 5 + 5` = `20`.
+The base case `b == 1` returns `a`; each step adds one more `a`.
+
+</ASECheck>
+
+```python
+def power(n, p):
+    if p == 0:
+        return 1
+    else:
+        return n * power(n, p - 1)
+print(power(2, 3))
+```
+
+<ASECheck q="What does power(2, 3) return, and why is p == 0 a good base case?">
+
+`8`. It computes `2**3` = `2 * 2 * 2`. `power(2,3)` = `2 * power(2,2)` =
+`2 * 2 * power(2,1)` = `2 * 2 * 2 * power(2,0)` = `2 * 2 * 2 * 1` = `8`. `p == 0`
+returning `1` is correct because anything to the power 0 is 1, and it is reachable
+by decrementing `p` down from any non-negative start.
+
+</ASECheck>
+
+```python
+def f(n):
+    if n == 1:
+        return 1
+    else:
+        n * f(n - 1)
+print(f(3))
+```
+
+<ASECheck q="What does this print? (Read the else branch carefully.)">
+
+It raises a `TypeError`. The `else` branch computes `n * f(n-1)` but never
+`return`s it, so the recursive calls return `None`, and `3 * None` fails. The fix
+is `return n * f(n - 1)`.
+
+</ASECheck>
+
+<ASECheck q="You call a recursive function and get RecursionError. What are the two most likely causes?">
+
+Either there is no base case at all, or the recursive step never moves toward the
+base case (e.g. it recurses on `n` instead of `n-1`, or the start value skips
+right past the base condition). Python stacks frames until it hits its recursion
+limit and then errors.
+
+</ASECheck>
+
+<ASECheck q="In fact(4), while fact(1) is running, what is happening to the fact(4) call?">
+
+It is *paused*, waiting. `fact(4)` cannot finish until `fact(3)` returns, which
+can't finish until `fact(2)` returns, and so on. All four frames coexist, each
+with its own `n`, and they complete bottom-up once the base case returns `1`.
+
+</ASECheck>
+
+*Source: MIT OCW 6.100L Fall 2022, Lecture 15 (Recursion), Ana Bell. Content
+reconstructed as original prose under CC BY-NC-SA.*

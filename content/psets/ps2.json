@@ -1,0 +1,173 @@
+{
+  "id": "ps2",
+  "number": 2,
+  "title": "Hangman",
+  "ocwUrl": "https://ocw.mit.edu/courses/6-100l-introduction-to-cs-and-programming-using-python-fall-2022/pages/problem-sets/",
+  "overview": "**Problem Set 2 — Hangman.** You build the classic word-guessing game by decomposing it into small, testable helper functions and one interactive game loop. The three pure helpers below are deterministic and auto-graded here. The full `hangman(secret_word, with_help)` game is **study-only**: it reads from stdin, prints a running transcript, and (in a real game) picks a random word, so it doesn't fit the expression-based autograder — a reference implementation is provided to read.\n\nConventions used throughout: `letters_guessed` is a list of lowercase letters; unguessed letters in the progress string are shown as `'*'`; `get_available_letters` returns the still-unguessed lowercase letters in alphabetical order.\n\nSource: MIT OCW 6.100L Fall 2022, Problem Set 2. Starter signatures and behavior are from the OCW `hangman.py`; reference solutions and tests written and validated for this study tool. The helper tests mirror the cases in the official `test_ps2_student.py` (including repeated letters and empty inputs).",
+  "problems": [
+    {
+      "topicSlug": "07-decomposition-functions",
+      "unit": 2,
+      "source": "pset",
+      "reconstructed": false,
+      "id": "ps2-a",
+      "kind": "coding",
+      "difficulty": "warmup",
+      "title": "has_player_won",
+      "statement": "Implement `has_player_won(secret_word, letters_guessed)`.\n\n- `secret_word`: a lowercase string, the word being guessed.\n- `letters_guessed`: a list of lowercase letters guessed so far.\n\nReturn `True` if **every** letter of `secret_word` appears in `letters_guessed`, else `False`.\n\nEdge cases: the empty word is already 'won' (`True`); a non-empty word with an empty guess list is `False`; repeated letters in the word don't need repeated guesses (one `'s'` covers every `'s'`).",
+      "functionSignature": "def has_player_won(secret_word, letters_guessed):",
+      "starterCode": "def has_player_won(secret_word, letters_guessed):\n    \"\"\"Return True iff every letter of secret_word is in letters_guessed.\n\n    >>> has_player_won('face', ['f', 'c', 'a', 'e'])\n    True\n    >>> has_player_won('moves', ['o', 'c', 'a', 'v', 'e'])\n    False\n    \"\"\"\n    pass",
+      "solution": "def has_player_won(secret_word, letters_guessed):\n    for letter in secret_word:\n        if letter not in letters_guessed:\n            return False\n    return True",
+      "pyPackages": [],
+      "dataFiles": [],
+      "tests": [
+        {
+          "name": "fully guessed word",
+          "expression": "has_player_won('face', ['f', 'c', 'a', 'e'])",
+          "expected": "True"
+        },
+        {
+          "name": "missing a letter",
+          "expression": "has_player_won('moves', ['o', 'c', 'a', 'v', 'e'])",
+          "expected": "False"
+        },
+        {
+          "name": "repeated letters, one guess covers all",
+          "expression": "has_player_won('bass', ['a', 's', 'b', 'e'])",
+          "expected": "True"
+        },
+        {
+          "name": "repeated letters, still missing one",
+          "expression": "has_player_won('rare', ['f', 't', 'r', 'e'])",
+          "expected": "False"
+        },
+        {
+          "name": "empty word is already won",
+          "expression": "has_player_won('', ['f', 'c', 'y', 'e'])",
+          "expected": "True",
+          "hidden": true
+        },
+        {
+          "name": "non-empty word, empty guesses",
+          "expression": "has_player_won('code', [])",
+          "expected": "False",
+          "hidden": true
+        }
+      ]
+    },
+    {
+      "topicSlug": "07-decomposition-functions",
+      "unit": 2,
+      "source": "pset",
+      "reconstructed": false,
+      "id": "ps2-b",
+      "kind": "coding",
+      "difficulty": "warmup",
+      "title": "get_word_progress",
+      "statement": "Implement `get_word_progress(secret_word, letters_guessed)`.\n\nReturn a string the same length as `secret_word`, where each letter that has been guessed is shown as itself and each **unguessed** letter is shown as `'*'`. No spaces.\n\n- `get_word_progress('face', ['f','c','a','e'])` → `'face'`\n- `get_word_progress('moves', ['o','c','a','v','e'])` → `'*ove*'`\n- `get_word_progress('rare', ['f','t','r','e'])` → `'r*re'`\n\nEdge cases: the empty word gives `''`; no guesses gives all asterisks (`get_word_progress('code', [])` → `'****'`).",
+      "functionSignature": "def get_word_progress(secret_word, letters_guessed):",
+      "starterCode": "def get_word_progress(secret_word, letters_guessed):\n    \"\"\"Return secret_word with unguessed letters replaced by '*'.\n\n    >>> get_word_progress('moves', ['o', 'c', 'a', 'v', 'e'])\n    '*ove*'\n    \"\"\"\n    pass",
+      "solution": "def get_word_progress(secret_word, letters_guessed):\n    progress = ''\n    for letter in secret_word:\n        if letter in letters_guessed:\n            progress += letter\n        else:\n            progress += '*'\n    return progress",
+      "pyPackages": [],
+      "dataFiles": [],
+      "tests": [
+        {
+          "name": "fully revealed",
+          "expression": "get_word_progress('face', ['f', 'c', 'a', 'e'])",
+          "expected": "'face'"
+        },
+        {
+          "name": "partly hidden",
+          "expression": "get_word_progress('moves', ['o', 'c', 'a', 'v', 'e'])",
+          "expected": "'*ove*'"
+        },
+        {
+          "name": "repeated letters fully revealed",
+          "expression": "get_word_progress('bass', ['a', 's', 'b', 'e'])",
+          "expected": "'bass'"
+        },
+        {
+          "name": "repeated letters partly hidden",
+          "expression": "get_word_progress('rare', ['f', 't', 'r', 'e'])",
+          "expected": "'r*re'"
+        },
+        {
+          "name": "empty word",
+          "expression": "get_word_progress('', ['f', 'c', 'y', 'e'])",
+          "expected": "''",
+          "hidden": true
+        },
+        {
+          "name": "no guesses -> all asterisks",
+          "expression": "get_word_progress('code', [])",
+          "expected": "'****'",
+          "hidden": true
+        }
+      ]
+    },
+    {
+      "topicSlug": "07-decomposition-functions",
+      "unit": 2,
+      "source": "pset",
+      "reconstructed": false,
+      "id": "ps2-c",
+      "kind": "coding",
+      "difficulty": "warmup",
+      "title": "get_available_letters",
+      "statement": "Implement `get_available_letters(letters_guessed)`.\n\nReturn a string of the lowercase letters that have **not** yet been guessed, in **alphabetical order**, with no spaces.\n\n- `get_available_letters(['a','b','c','d'])` → `'efghijklmnopqrstuvwxyz'`\n- `get_available_letters(['z','p','x','b','b'])` → `'acdefghijklmnoqrstuvwy'` (duplicates in the guess list are fine)\n\nEdge cases: after every letter is guessed, return `''`; with an empty guess list, return the whole alphabet `'abcdefghijklmnopqrstuvwxyz'`.\n\nHint: `string.ascii_lowercase` is `'abcdefghijklmnopqrstuvwxyz'`.",
+      "functionSignature": "def get_available_letters(letters_guessed):",
+      "starterCode": "import string\n\ndef get_available_letters(letters_guessed):\n    \"\"\"Return the still-unguessed lowercase letters, alphabetical, no spaces.\n\n    >>> get_available_letters(['a', 'b', 'c', 'd'])\n    'efghijklmnopqrstuvwxyz'\n    \"\"\"\n    pass",
+      "solution": "import string\n\ndef get_available_letters(letters_guessed):\n    available = ''\n    for letter in string.ascii_lowercase:\n        if letter not in letters_guessed:\n            available += letter\n    return available",
+      "pyPackages": [],
+      "dataFiles": [],
+      "tests": [
+        {
+          "name": "first four gone",
+          "expression": "get_available_letters(['a', 'b', 'c', 'd'])",
+          "expected": "'efghijklmnopqrstuvwxyz'"
+        },
+        {
+          "name": "scattered guesses with a duplicate",
+          "expression": "get_available_letters(['z', 'p', 'x', 'b', 'b'])",
+          "expected": "'acdefghijklmnoqrstuvwy'"
+        },
+        {
+          "name": "vowels and w removed",
+          "expression": "get_available_letters(['a', 'u', 'i', 'o', 'w'])",
+          "expected": "'bcdefghjklmnpqrstvxyz'"
+        },
+        {
+          "name": "whole alphabet guessed -> empty",
+          "expression": "get_available_letters(list('abcdefghijklmnopqrstuvwxyz'))",
+          "expected": "''",
+          "hidden": true
+        },
+        {
+          "name": "no guesses -> full alphabet",
+          "expression": "get_available_letters([])",
+          "expected": "'abcdefghijklmnopqrstuvwxyz'",
+          "hidden": true
+        }
+      ]
+    },
+    {
+      "topicSlug": "07-decomposition-functions",
+      "unit": 2,
+      "source": "pset",
+      "reconstructed": false,
+      "id": "ps2-d",
+      "kind": "coding",
+      "difficulty": "exam-level",
+      "title": "hangman (interactive game) — study only",
+      "statement": "**Study-only.** This is the full interactive game loop that ties the three helpers together. It is not auto-graded here because it reads guesses from stdin, prints a running transcript, and in real play chooses a random word — none of which fit the expression-based autograder. Read the reference solution to see how the helpers compose into the game.\n\nRules (from the OCW write-up):\n- The player starts with **10** guesses and is told the word length.\n- Each round, show guesses remaining and the available letters, then ask for one lowercase letter.\n- A correct guess reveals letters and costs nothing; an incorrect **consonant** costs 1 guess; an incorrect **vowel** (a, e, i, o, u) costs 2 guesses.\n- Repeated or invalid input is rejected without penalty (ask again).\n- With `with_help=True`, entering `'!'` reveals one missing letter at a cost of 3 guesses (warn if fewer than 3 remain).\n- Win when the whole word is revealed; lose at 0 guesses. Score at a win is `(guesses_remaining + 4 * len(set(secret_word))) + (3 * len(secret_word))`.\n\nUses the helpers `has_player_won`, `get_word_progress`, and `get_available_letters` from the earlier parts.",
+      "functionSignature": "def hangman(secret_word, with_help):",
+      "starterCode": "import string\n\n# The three helpers from Parts A-C are assumed available.\n\ndef hangman(secret_word, with_help):\n    \"\"\"Run an interactive game of Hangman. See the statement for the rules.\"\"\"\n    pass",
+      "solution": "import string\n\nVOWELS = 'aeiou'\n\ndef has_player_won(secret_word, letters_guessed):\n    for letter in secret_word:\n        if letter not in letters_guessed:\n            return False\n    return True\n\ndef get_word_progress(secret_word, letters_guessed):\n    progress = ''\n    for letter in secret_word:\n        progress += letter if letter in letters_guessed else '*'\n    return progress\n\ndef get_available_letters(letters_guessed):\n    available = ''\n    for letter in string.ascii_lowercase:\n        if letter not in letters_guessed:\n            available += letter\n    return available\n\ndef hangman(secret_word, with_help):\n    print('Welcome to Hangman!')\n    print('I am thinking of a word that is', len(secret_word), 'letters long.')\n    guesses_remaining = 10\n    letters_guessed = []\n    while guesses_remaining > 0 and not has_player_won(secret_word, letters_guessed):\n        print('------')\n        print('You have', guesses_remaining, 'guesses left.')\n        print('Available letters:', get_available_letters(letters_guessed))\n        guess = input('Please guess a letter: ')\n        if len(guess) != 1 or (guess not in string.ascii_lowercase and not (with_help and guess == '!')):\n            print('Oops! That is not a valid single lowercase letter:', get_word_progress(secret_word, letters_guessed))\n            continue\n        if with_help and guess == '!':\n            if guesses_remaining < 3:\n                print('Oops! You do not have enough guesses left to use a hint.')\n                continue\n            missing = [c for c in secret_word if c not in letters_guessed]\n            reveal = sorted(set(missing))[0]\n            letters_guessed.append(reveal)\n            guesses_remaining -= 3\n            print('Letter revealed:', reveal)\n            print(get_word_progress(secret_word, letters_guessed))\n            continue\n        if guess in letters_guessed:\n            print('Oops! You have already guessed that letter:', get_word_progress(secret_word, letters_guessed))\n            continue\n        letters_guessed.append(guess)\n        if guess in secret_word:\n            print('Good guess:', get_word_progress(secret_word, letters_guessed))\n        else:\n            penalty = 2 if guess in VOWELS else 1\n            guesses_remaining -= penalty\n            print('Oops! That letter is not in my word:', get_word_progress(secret_word, letters_guessed))\n    print('------')\n    if has_player_won(secret_word, letters_guessed):\n        score = (guesses_remaining + 4 * len(set(secret_word))) + (3 * len(secret_word))\n        print('Congratulations, you won!')\n        print('Your total score for this game is:', score)\n    else:\n        print('Sorry, you ran out of guesses. The word was', secret_word)",
+      "pyPackages": [],
+      "dataFiles": [],
+      "tests": [],
+      "studyOnly": true
+    }
+  ],
+  "reconstructed": false
+}

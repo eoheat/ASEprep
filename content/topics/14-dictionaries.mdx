@@ -1,0 +1,196 @@
+## Intuition
+
+A dictionary maps **keys** to **values**. Instead of indexing by position
+(`L[0]`, `L[1]`) you index by a meaningful label (`grades['Ana']`). It's the
+right structure whenever you want to look up one thing *by* another thing —
+a name to a grade, a word to its count. Behind the scenes Python runs a *hash
+function* on the key to jump straight to the value, which is why lookups are
+fast and why keys must be immutable.
+
+The two lookup styles to keep straight: a list indexes by an **integer
+position** in order; a dict indexes by an **immutable key** with **no
+guaranteed order**.
+
+## The mechanics
+
+Create, look up, add, change, delete:
+
+```python
+grades = {'Ana': 'B', 'Matt': 'A', 'John': 'B'}
+grades['John']            # 'B'   -- lookup by key
+grades['Grace'] = 'A'     # add a new entry
+grades['Grace'] = 'C'     # change an existing entry
+del(grades['Ana'])        # delete an entry
+grades['Nope']            # KeyError -- key not present
+```
+
+Membership with `in` checks **keys only**, not values:
+
+```python
+'John' in grades          # True
+'Daniel' in grades        # False
+'B' in grades             # False -- 'B' is a value, not a key
+```
+
+Iterate over keys, values, or key-value pairs (assume no order):
+
+```python
+grades.keys()             # dict_keys(['Matt', 'John', 'Grace'])
+grades.values()           # dict_values(['A', 'B', 'C'])
+grades.items()            # dict_items([('Matt', 'A'), ('John', 'B'), ...])
+
+for k, v in grades.items():
+    print(k, v)           # most useful: keys and values together
+```
+
+Keys must be **unique** and **immutable/hashable** (int, float, str, bool,
+tuple). Values can be *anything*, including lists and other dicts, and can
+repeat. Dicts are mutable — the same aliasing/cloning rules as lists apply;
+`d.copy()` makes a shallow copy.
+
+<Callout type="tip">
+Complexity that matters on the exam: `key in d` and `d[key]` are **O(1)
+average** (constant time via hashing), while `elem in L` for a list is
+**O(n)** (a scan). When you need fast membership or lookup, reach for a dict
+(or set).
+</Callout>
+
+## Worked example
+
+The canonical dict pattern: build a frequency map, then use it. Trace the
+build carefully.
+
+```python
+def word_count(song):
+    words = song.lower().split()   # string -> list of lowercase words
+    counts = {}
+    for w in words:
+        if w in counts:            # seen before -> bump the count
+            counts[w] += 1
+        else:                      # first time -> create the entry
+            counts[w] = 1
+    return counts
+
+print(word_count("Rah Rah AH"))
+```
+
+- `words` is `['rah', 'rah', 'ah']`.
+- `'rah'`: not in `counts`, so `counts['rah'] = 1`.
+- `'rah'`: already in `counts`, so `counts['rah'] += 1` → 2.
+- `'ah'`: not in `counts`, so `counts['ah'] = 1`.
+- Returns `{'rah': 2, 'ah': 1}`.
+
+Nested dicts are common — a dict whose values are themselves dicts. Chain the
+indexing:
+
+```python
+grades = {'Ana': {'mq': [5, 4, 4], 'fin': 'B'},
+          'Bob': {'mq': [6, 7, 8], 'fin': 'A'}}
+
+grades['Ana']['mq'][0]    # 5  -- index dict, then dict, then list
+grades['Bob']['fin']      # 'A'
+```
+
+Read `grades['Ana']['mq'][0]` left to right: `grades['Ana']` is Ana's inner
+dict, `['mq']` is her micro-quiz list, `[0]` is the first score.
+
+## Traps
+
+<Callout type="trap">
+**`in` checks keys, never values.** `'B' in grades` is `False` even if some
+student has grade `'B'`, because `'B'` is a value. There's no direct expression
+to find a key from a value — you must loop.
+</Callout>
+
+**Looking up a missing key raises `KeyError`.** Unlike a list's `IndexError`,
+this is the dict flavor. Guard with `if key in d:` or use `d.get(key)` before
+indexing directly.
+
+**Mutable objects can't be keys.** A list can't be a dict key (`TypeError:
+unhashable type`). Use a tuple if you need a compound key. Values, however, can
+be lists or dicts.
+
+**Assuming dict order matters for correctness.** Treat iteration order as
+unspecified for exam purposes; don't write code that depends on which key comes
+"first."
+
+**Mutating a dict while iterating over it.** Adding or deleting keys during a
+`for k in d:` loop raises `RuntimeError: dictionary changed size during
+iteration`. Iterate over `list(d.keys())` if you need to delete as you go.
+
+**Floats as keys.** Technically allowed, but float rounding makes them fragile
+lookups — avoid using `float` keys.
+
+## Memorize vs understand
+
+| Just know it cold | Be able to derive |
+|---|---|
+| `d[key]` looks up; `d[key] = v` adds/changes; `del(d[key])` deletes | What a frequency-counting loop produces on given input |
+| `in` checks keys only; missing key raises `KeyError` | The result of chained indexing into nested dicts |
+| `d.keys()`, `d.values()`, `d.items()` iterate the three views | Whether an object is a legal key (immutable) or not |
+| Keys are unique + immutable; values are any object, can repeat | When a dict beats a list for lookup (O(1) vs O(n)) |
+| `key in d` and `d[key]` are O(1) average; list `in` is O(n) | How to build/mutate a dict to solve a lookup-heavy problem |
+
+## ASE check
+
+```python
+d = {'a': 1, 'b': 2}
+d['c'] = 3
+d['a'] = 9
+print(d['a'], len(d))
+```
+
+<ASECheck q="What does this print?">
+
+`9 3`. `d['a'] = 9` overwrites the existing key (no new entry), while
+`d['c'] = 3` adds one, so the dict has 3 keys and `d['a']` is 9.
+
+</ASECheck>
+
+```python
+grades = {'Ana': 'A', 'Bob': 'B'}
+print('A' in grades)
+```
+
+<ASECheck q="What does this print, and why?">
+
+`False`. `in` checks *keys*, and `'A'` is a value, not a key. The keys are
+`'Ana'` and `'Bob'`.
+
+</ASECheck>
+
+```python
+counts = {}
+for ch in "aba":
+    counts[ch] = counts.get(ch, 0) + 1
+print(counts)
+```
+
+<ASECheck q="What is the resulting dict?">
+
+`{'a': 2, 'b': 1}`. `get(ch, 0)` returns the current count or 0 if unseen. `'a'`
+appears twice, `'b'` once.
+
+</ASECheck>
+
+```python
+data = {'Ana': {'ps': [10, 8]}, 'Bob': {'ps': [6]}}
+print(data['Ana']['ps'][1])
+```
+
+<ASECheck q="What does this print?">
+
+`8`. `data['Ana']` is Ana's inner dict, `['ps']` is `[10, 8]`, and `[1]` selects
+the second element, `8`.
+
+</ASECheck>
+
+<ASECheck q="You need to test membership millions of times against a big collection. Why choose a dict (or set) over a list?">
+
+Membership in a dict/set is O(1) average via hashing, while `elem in list` is
+O(n) because it scans every element. For heavy lookup, the dict is dramatically
+faster.
+
+</ASECheck>
+
+*Content reconstructed from MIT OCW 6.100L Fall 2022, Lecture 14 (Ana Bell), CC BY-NC-SA.*

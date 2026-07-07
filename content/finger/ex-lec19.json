@@ -1,0 +1,52 @@
+[
+  {
+    "id": "finger-19",
+    "kind": "coding",
+    "title": "Finger Exercise 19 — Container and Stack (LIFO)",
+    "topicSlug": "19-inheritance",
+    "unit": 3,
+    "source": "finger",
+    "reconstructed": true,
+    "difficulty": "exam-level",
+    "statement": "Implement a `Container` base class and a `Stack` subclass.\n\n`Container` (initializes `self.myList = []`):\n- `size(self)` — return the length of the list.\n- `add(self, elem)` — add `elem` to one end (keep the end consistent); returns nothing.\n\n`Stack(Container)` — a **last-in, first-out** structure:\n- `remove(self)` — remove and return the **newest** element added, or `None` if empty.\n\n```\ns = Stack(); s.add(1); s.add(2); s.remove() -> 2  (LIFO)\n```\n\nSource: MIT OCW 6.100L Fall 2022, Finger Exercise Lecture 19 (reconstructed as a runnable problem for this study tool).",
+    "functionSignature": "class Container(object):",
+    "starterCode": "class Container(object):\n    \"\"\" A container object is a list and can store elements of any type \"\"\"\n    def __init__(self):\n        \"\"\" Initializes an empty list \"\"\"\n        self.myList = []\n\n    def size(self):\n        \"\"\" Returns the length of the container list \"\"\"\n        # Your code here\n        pass\n\n    def add(self, elem):\n        \"\"\" Adds elem to one end of the container list (keep the end\n        consistent). Does not return anything \"\"\"\n        # Your code here\n        pass\n\nclass Stack(Container):\n    \"\"\" A subclass of Container. Removes elements last-in, first-out \"\"\"\n    def remove(self):\n        \"\"\" Removes and returns the newest element, or None if empty \"\"\"\n        # Your code here\n        pass\n",
+    "solution": "class Container(object):\n    def __init__(self):\n        self.myList = []\n\n    def size(self):\n        return len(self.myList)\n\n    def add(self, elem):\n        self.myList.append(elem)\n\nclass Stack(Container):\n    def remove(self):\n        if self.size() > 0:\n            return self.myList.pop()\n        return None\n",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      {
+        "name": "size after two adds",
+        "expression": "(lambda s: (s.add(1), s.add(2), s.size())[2])(Stack())",
+        "expected": "2"
+      },
+      {
+        "name": "remove returns newest (LIFO)",
+        "expression": "(lambda s: (s.add(1), s.add(2), s.remove())[2])(Stack())",
+        "expected": "2"
+      },
+      {
+        "name": "full LIFO order of removals",
+        "expression": "(lambda s: (s.add('a'), s.add('b'), s.add('c'), [s.remove(), s.remove(), s.remove()])[3])(Stack())",
+        "expected": "['c', 'b', 'a']"
+      },
+      {
+        "name": "remove on empty stack -> None",
+        "expression": "Stack().remove()",
+        "expected": "None"
+      },
+      {
+        "name": "size shrinks after remove",
+        "expression": "(lambda s: (s.add(9), s.add(8), s.remove(), s.size())[3])(Stack())",
+        "expected": "1",
+        "hidden": true
+      },
+      {
+        "name": "Stack is a Container subclass",
+        "expression": "issubclass(Stack, Container)",
+        "expected": "True",
+        "hidden": true
+      }
+    ]
+  }
+]

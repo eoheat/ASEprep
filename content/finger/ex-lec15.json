@@ -1,0 +1,54 @@
+[
+  {
+    "id": "finger-15",
+    "kind": "coding",
+    "title": "Finger Exercise 15 — recur_power",
+    "topicSlug": "15-recursion",
+    "unit": 3,
+    "source": "finger",
+    "reconstructed": true,
+    "difficulty": "warmup",
+    "statement": "Implement `recur_power(base, exp)` using **recursion** (no `**`, no loop).\n\n- `base`: int or float. `exp`: int >= 0.\n- Return `base` raised to the power `exp`.\n- Base case: `exp == 0` returns `1`. Recursive case: `base * recur_power(base, exp - 1)`.\n\n```\nrecur_power(2, 5) -> 32\nrecur_power(3, 0) -> 1\n```\n\nSource: MIT OCW 6.100L Fall 2022, Finger Exercise Lecture 15 (reconstructed as a runnable problem for this study tool).",
+    "functionSignature": "def recur_power(base, exp):",
+    "starterCode": "def recur_power(base, exp):\n    \"\"\"\n    base: int or float.\n    exp: int >= 0\n    Returns base to the power of exp using recursion.\n    Hint: Base case is when exp == 0. Otherwise return\n    base * recur_power(base, exp - 1).\n    \"\"\"\n    # Your code here\n    pass\n",
+    "solution": "def recur_power(base, exp):\n    if exp <= 0:\n        return 1\n    return base * recur_power(base, exp - 1)\n",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      {
+        "name": "OCW example 2**5 -> 32",
+        "expression": "recur_power(2, 5)",
+        "expected": "32"
+      },
+      {
+        "name": "exponent 0 -> 1 (base case)",
+        "expression": "recur_power(3, 0)",
+        "expected": "1"
+      },
+      {
+        "name": "exponent 1 -> base",
+        "expression": "recur_power(7, 1)",
+        "expected": "7"
+      },
+      {
+        "name": "float base",
+        "expression": "recur_power(1.5, 2)",
+        "expected": "2.25",
+        "compare": "float",
+        "tolerance": 1e-9
+      },
+      {
+        "name": "base 0 with positive exp -> 0",
+        "expression": "recur_power(0, 4)",
+        "expected": "0",
+        "hidden": true
+      },
+      {
+        "name": "any base to the 0 -> 1",
+        "expression": "recur_power(0, 0)",
+        "expected": "1",
+        "hidden": true
+      }
+    ]
+  }
+]

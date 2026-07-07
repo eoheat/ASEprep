@@ -1,0 +1,96 @@
+[
+  {
+    "id": "bank-10-a",
+    "kind": "coding",
+    "title": "Double Every Element (in place)",
+    "topicSlug": "10-lists-mutability",
+    "unit": 2,
+    "source": "bank",
+    "difficulty": "warmup",
+    "statement": "Practice mutating a list IN PLACE. Write `double_all(nums)` that multiplies every element of `nums` by 2, modifying the list itself, and returns `None` (like `list.sort()` does).\n\nThe test checks the list AFTER the call, so mutate the argument, don't return a new list.\n\n- After `double_all([1, 2, 3])`, the list is `[2, 4, 6]`.",
+    "functionSignature": "def double_all(nums):",
+    "starterCode": "def double_all(nums):\n    \"\"\"Multiply every element of nums by 2 IN PLACE. Return None.\n\n    >>> data = [1, 2, 3]\n    >>> double_all(data)\n    >>> data\n    [2, 4, 6]\n    \"\"\"\n    pass",
+    "solution": "def double_all(nums):\n    for i in range(len(nums)):\n        nums[i] = nums[i] * 2",
+    "tests": [
+      { "name": "mutates in place", "expression": "(lambda d: (double_all(d), d)[1])([1, 2, 3])", "expected": "[2, 4, 6]" },
+      { "name": "returns None", "expression": "double_all([1, 2, 3])", "expected": "None" },
+      { "name": "empty list", "expression": "(lambda d: (double_all(d), d)[1])([])", "expected": "[]" },
+      { "name": "negatives and zero", "expression": "(lambda d: (double_all(d), d)[1])([-1, 0, 5])", "expected": "[-2, 0, 10]", "hidden": true }
+    ]
+  },
+  {
+    "id": "bank-10-b",
+    "kind": "coding",
+    "title": "Remove Duplicates (keep order)",
+    "topicSlug": "10-lists-mutability",
+    "unit": 2,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "statement": "Write `dedupe(items)` that returns a NEW list with duplicates removed, keeping the FIRST occurrence of each value in its original order. Do not mutate the input.\n\n- `dedupe([1, 3, 1, 2, 3])` → `[1, 3, 2]`\n\nA `set` would lose order, so track what you've seen while iterating.",
+    "functionSignature": "def dedupe(items):",
+    "starterCode": "def dedupe(items):\n    \"\"\"Return a new list with duplicates removed, keeping first occurrences.\n\n    >>> dedupe([1, 3, 1, 2, 3])\n    [1, 3, 2]\n    >>> dedupe([])\n    []\n    >>> dedupe(['a', 'a', 'a'])\n    ['a']\n    \"\"\"\n    pass",
+    "solution": "def dedupe(items):\n    seen = set()\n    result = []\n    for x in items:\n        if x not in seen:\n            seen.add(x)\n            result.append(x)\n    return result",
+    "tests": [
+      { "name": "keeps first-seen order", "expression": "dedupe([1, 3, 1, 2, 3])", "expected": "[1, 3, 2]" },
+      { "name": "empty", "expression": "dedupe([])", "expected": "[]" },
+      { "name": "all same", "expression": "dedupe(['a', 'a', 'a'])", "expected": "['a']" },
+      { "name": "already unique", "expression": "dedupe([1, 2, 3])", "expected": "[1, 2, 3]" },
+      { "name": "does not mutate input", "expression": "(lambda x: (dedupe(x), x)[1])([1, 1, 2])", "expected": "[1, 1, 2]", "hidden": true }
+    ]
+  },
+  {
+    "id": "bank-10-c",
+    "kind": "coding",
+    "title": "Flatten One Level",
+    "topicSlug": "10-lists-mutability",
+    "unit": 2,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "statement": "Write `flatten(nested)` that takes a list of lists and returns a single NEW list with all inner elements concatenated in order.\n\n- `flatten([[1, 2], [3], [], [4, 5]])` → `[1, 2, 3, 4, 5]`\n\nInner empty lists contribute nothing. Only flatten one level (assume every element is itself a list).",
+    "functionSignature": "def flatten(nested):",
+    "starterCode": "def flatten(nested):\n    \"\"\"Concatenate a list of lists into one new list (one level deep).\n\n    >>> flatten([[1, 2], [3], [], [4, 5]])\n    [1, 2, 3, 4, 5]\n    >>> flatten([])\n    []\n    \"\"\"\n    pass",
+    "solution": "def flatten(nested):\n    result = []\n    for sub in nested:\n        for x in sub:\n            result.append(x)\n    return result",
+    "tests": [
+      { "name": "typical", "expression": "flatten([[1, 2], [3], [], [4, 5]])", "expected": "[1, 2, 3, 4, 5]" },
+      { "name": "outer empty", "expression": "flatten([])", "expected": "[]" },
+      { "name": "all inner empty", "expression": "flatten([[], [], []])", "expected": "[]" },
+      { "name": "single inner", "expression": "flatten([[9]])", "expected": "[9]" },
+      { "name": "strings inside", "expression": "flatten([['a'], ['b', 'c']])", "expected": "['a', 'b', 'c']", "hidden": true }
+    ]
+  },
+  {
+    "id": "bank-10-d",
+    "kind": "coding",
+    "title": "Rotate Left by k",
+    "topicSlug": "10-lists-mutability",
+    "unit": 2,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "statement": "Write `rotate_left(items, k)` that returns a NEW list rotated left by `k` positions: the first `k` elements move to the end.\n\n- `rotate_left([1, 2, 3, 4, 5], 2)` → `[3, 4, 5, 1, 2]`\n\n`k` may be 0, larger than the list length, so reduce it modulo the length. The empty list returns `[]` for any `k` (guard the modulo against divide-by-zero).",
+    "functionSignature": "def rotate_left(items, k):",
+    "starterCode": "def rotate_left(items, k):\n    \"\"\"Return a NEW list rotated left by k (k may exceed len; empty is safe).\n\n    >>> rotate_left([1, 2, 3, 4, 5], 2)\n    [3, 4, 5, 1, 2]\n    >>> rotate_left([1, 2, 3], 0)\n    [1, 2, 3]\n    >>> rotate_left([], 3)\n    []\n    \"\"\"\n    pass",
+    "solution": "def rotate_left(items, k):\n    n = len(items)\n    if n == 0:\n        return []\n    k = k % n\n    return items[k:] + items[:k]",
+    "tests": [
+      { "name": "basic rotate 2", "expression": "rotate_left([1, 2, 3, 4, 5], 2)", "expected": "[3, 4, 5, 1, 2]" },
+      { "name": "k = 0 unchanged", "expression": "rotate_left([1, 2, 3], 0)", "expected": "[1, 2, 3]" },
+      { "name": "empty for any k", "expression": "rotate_left([], 3)", "expected": "[]" },
+      { "name": "k equals length (full turn)", "expression": "rotate_left([1, 2, 3], 3)", "expected": "[1, 2, 3]" },
+      { "name": "k larger than length", "expression": "rotate_left([1, 2, 3], 7)", "expected": "[2, 3, 1]", "hidden": true },
+      { "name": "does not mutate input", "expression": "(lambda x: (rotate_left(x, 1), x)[1])([1, 2, 3])", "expected": "[1, 2, 3]", "hidden": true }
+    ]
+  },
+  {
+    "id": "bank-10-e",
+    "kind": "code-reading",
+    "title": "Mutate while iterating",
+    "topicSlug": "10-lists-mutability",
+    "unit": 2,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "statement": "This loop removes elements from the list it is iterating over. What does it print?",
+    "prompt": "nums = [1, 2, 3, 4, 5, 6]\nfor n in nums:\n    if n % 2 == 0:\n        nums.remove(n)\nprint(nums)",
+    "answer": "[1, 3, 5]",
+    "acceptedAnswers": ["[1, 3, 5]"],
+    "explanation": "Removing while iterating shifts later indices left, but here it happens to work out. Trace by index: i=0 sees 1 (keep). i=1 sees 2, removes it → list [1,3,4,5,6]. i=2 now sees 4 (2 was skipped? no) — actually after removing 2, index 2 holds 4; remove it → [1,3,5,6]. i=3 holds 6; remove → [1,3,5]. i=4 is past the end, loop ends. Result [1,3,5]. It only 'works' by luck; the reliable fix is iterating over a copy `nums[:]` or a comprehension. (Note the classic bug case `[1,2,4,3]` would skip the 4.)"
+  }
+]

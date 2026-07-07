@@ -1,0 +1,274 @@
+{
+  "id": "ps3",
+  "number": 3,
+  "title": "Document Distance",
+  "ocwUrl": "https://ocw.mit.edu/courses/6-100l-introduction-to-cs-and-programming-using-python-fall-2022/pages/problem-sets/",
+  "overview": "**Problem Set 3 — Document Distance.** Measure how similar two texts are using word- and letter-frequency **dictionaries**, then rank words by TF-IDF. Every function here builds or consumes a `dict`. The provided `load_file(filename)` helper reads a file, strips punctuation, and lowercases it — you never modify it. Source: MIT OCW 6.100L Fall 2022, Problem Set 3 (statements and starter code from OCW; reference solutions and tests written for this study tool).",
+  "problems": [
+    {
+      "topicSlug": "14-dictionaries",
+      "unit": 2,
+      "source": "pset",
+      "reconstructed": false,
+      "id": "ps3-p0",
+      "kind": "coding",
+      "difficulty": "warmup",
+      "title": "Prep Data — text_to_list",
+      "statement": "Implement `text_to_list(input_text)`. Given a cleaned string (already lowercased with punctuation removed by the provided `load_file`), return a **list of its words**, splitting on any run of whitespace.\n\n- `text_to_list('hello world hello')` → `['hello', 'world', 'hello']`\n- Collapse all whitespace: `'hello  it is\\nme\\rmario'` → `['hello', 'it', 'is', 'me', 'mario']`\n\nHint: `str.split()` with no argument splits on any whitespace and ignores leading/trailing/duplicate spaces.",
+      "functionSignature": "def text_to_list(input_text):",
+      "starterCode": "import string\nimport math\n\n### DO NOT MODIFY — provided by the pset.\ndef load_file(filename):\n    inFile = open(filename, 'r')\n    line = inFile.read().strip()\n    for char in string.punctuation:\n        line = line.replace(char, \"\")\n    inFile.close()\n    return line.lower()\n\ndef text_to_list(input_text):\n    \"\"\"Return a list of the words in input_text, split on whitespace.\n\n    >>> text_to_list('hello world hello')\n    ['hello', 'world', 'hello']\n    \"\"\"\n    pass",
+      "solution": "import string\nimport math\n\n### DO NOT MODIFY — provided by the pset.\ndef load_file(filename):\n    inFile = open(filename, 'r')\n    line = inFile.read().strip()\n    for char in string.punctuation:\n        line = line.replace(char, \"\")\n    inFile.close()\n    return line.lower()\n\ndef text_to_list(input_text):\n    return input_text.split()",
+      "pyPackages": [],
+      "dataFiles": [],
+      "tests": [
+        {
+          "name": "basic split",
+          "expression": "text_to_list('hello world hello')",
+          "expected": "['hello', 'world', 'hello']"
+        },
+        {
+          "name": "collapses mixed whitespace",
+          "expression": "text_to_list('hello  it is\\nme\\rmario')",
+          "expected": "['hello', 'it', 'is', 'me', 'mario']"
+        },
+        {
+          "name": "single word",
+          "expression": "text_to_list('hello')",
+          "expected": "['hello']"
+        },
+        {
+          "name": "empty string -> empty list",
+          "expression": "text_to_list('')",
+          "expected": "[]",
+          "hidden": true
+        }
+      ]
+    },
+    {
+      "topicSlug": "14-dictionaries",
+      "unit": 2,
+      "source": "pset",
+      "reconstructed": false,
+      "id": "ps3-p1",
+      "kind": "coding",
+      "difficulty": "warmup",
+      "title": "Get Frequencies",
+      "statement": "Implement `get_frequencies(input_iterable)`. Given a string or a list of strings, return a **dictionary** mapping each distinct element to the number of times it appears.\n\n- `get_frequencies(['hello', 'world', 'hello'])` → `{'hello': 2, 'world': 1}`\n- Works on a string too: `get_frequencies('nah')` → `{'n': 1, 'a': 1, 'h': 1}`",
+      "functionSignature": "def get_frequencies(input_iterable):",
+      "starterCode": "def get_frequencies(input_iterable):\n    \"\"\"Map each element of input_iterable (a string or list of strings) to how\n    many times it occurs.\n\n    >>> get_frequencies(['a', 'b', 'a'])\n    {'a': 2, 'b': 1}\n    \"\"\"\n    pass",
+      "solution": "def get_frequencies(input_iterable):\n    freq = {}\n    for item in input_iterable:\n        freq[item] = freq.get(item, 0) + 1\n    return freq",
+      "pyPackages": [],
+      "dataFiles": [],
+      "tests": [
+        {
+          "name": "word list",
+          "expression": "get_frequencies(['hello', 'world', 'hello'])",
+          "expected": "{'hello': 2, 'world': 1}"
+        },
+        {
+          "name": "letter list",
+          "expression": "get_frequencies(['h', 'e', 'l', 'l', 'o'])",
+          "expected": "{'h': 1, 'e': 1, 'l': 2, 'o': 1}"
+        },
+        {
+          "name": "string input",
+          "expression": "get_frequencies('nah')",
+          "expected": "{'n': 1, 'a': 1, 'h': 1}"
+        },
+        {
+          "name": "empty -> empty dict",
+          "expression": "get_frequencies([])",
+          "expected": "{}",
+          "hidden": true
+        }
+      ]
+    },
+    {
+      "topicSlug": "14-dictionaries",
+      "unit": 2,
+      "source": "pset",
+      "reconstructed": false,
+      "id": "ps3-p2",
+      "kind": "coding",
+      "difficulty": "warmup",
+      "title": "Letter Frequencies",
+      "statement": "Implement `get_letter_frequencies(word)`. Return a dictionary mapping each letter of `word` to its count. Your solution **must call `get_frequencies`** (provided) — a string is itself an iterable of characters.\n\n- `get_letter_frequencies('hello')` → `{'h': 1, 'e': 1, 'l': 2, 'o': 1}`",
+      "functionSignature": "def get_letter_frequencies(word):",
+      "starterCode": "# get_frequencies is provided here so you can build on it.\ndef get_frequencies(input_iterable):\n    freq = {}\n    for item in input_iterable:\n        freq[item] = freq.get(item, 0) + 1\n    return freq\n\ndef get_letter_frequencies(word):\n    \"\"\"Map each letter of word to its count. Must call get_frequencies.\n\n    >>> get_letter_frequencies('hello')\n    {'h': 1, 'e': 1, 'l': 2, 'o': 1}\n    \"\"\"\n    pass",
+      "solution": "def get_frequencies(input_iterable):\n    freq = {}\n    for item in input_iterable:\n        freq[item] = freq.get(item, 0) + 1\n    return freq\n\ndef get_letter_frequencies(word):\n    return get_frequencies(word)",
+      "pyPackages": [],
+      "dataFiles": [],
+      "tests": [
+        {
+          "name": "'hello'",
+          "expression": "get_letter_frequencies('hello')",
+          "expected": "{'h': 1, 'e': 1, 'l': 2, 'o': 1}"
+        },
+        {
+          "name": "single letter",
+          "expression": "get_letter_frequencies('a')",
+          "expected": "{'a': 1}"
+        },
+        {
+          "name": "long word with repeats",
+          "expression": "get_letter_frequencies('supercalifragilisticexpialidocious')",
+          "expected": "{'s': 3, 'u': 2, 'p': 2, 'e': 2, 'r': 2, 'c': 3, 'a': 3, 'l': 3, 'i': 7, 'f': 1, 'g': 1, 't': 1, 'x': 1, 'd': 1, 'o': 2}",
+          "hidden": true
+        }
+      ]
+    },
+    {
+      "topicSlug": "14-dictionaries",
+      "unit": 2,
+      "source": "pset",
+      "reconstructed": false,
+      "id": "ps3-p3",
+      "kind": "coding",
+      "difficulty": "exam-level",
+      "title": "Similarity Score",
+      "statement": "Implement `calculate_similarity_score(freq_dict1, freq_dict2)`. Return a float in [0, 1]:\n\n- **DIFF** = for every key appearing in either dict, sum `|count1 - count2|` (a missing key counts as 0).\n- **ALL** = sum of every count in both dicts.\n- Return `round(1 - DIFF/ALL, 2)`. Two identical dicts score `1.0`; disjoint dicts score `0.0`.\n\nWatch the edge case: two empty dicts are perfectly similar → `1.0` (don't divide by zero).",
+      "functionSignature": "def calculate_similarity_score(freq_dict1, freq_dict2):",
+      "starterCode": "def calculate_similarity_score(freq_dict1, freq_dict2):\n    \"\"\"Return 1 - (DIFF / ALL) rounded to 2 decimals, a float in [0, 1].\n\n    DIFF sums, over every key in either dict, the absolute difference of its\n    counts (a missing key counts as 0). ALL is the sum of all counts in both.\n\n    >>> calculate_similarity_score({'a': 1}, {'a': 1})\n    1.0\n    \"\"\"\n    pass",
+      "solution": "def calculate_similarity_score(freq_dict1, freq_dict2):\n    diff = 0\n    for k in set(freq_dict1) | set(freq_dict2):\n        diff += abs(freq_dict1.get(k, 0) - freq_dict2.get(k, 0))\n    total = sum(freq_dict1.values()) + sum(freq_dict2.values())\n    if total == 0:\n        return 1.0\n    return round(1 - (diff / total), 2)",
+      "pyPackages": [],
+      "dataFiles": [],
+      "tests": [
+        {
+          "name": "identical",
+          "expression": "calculate_similarity_score({'hello': 2, 'world': 1}, {'hello': 2, 'world': 1})",
+          "expected": "1.0",
+          "compare": "float",
+          "tolerance": 1e-9
+        },
+        {
+          "name": "disjoint (empty vs one)",
+          "expression": "calculate_similarity_score({}, {'hello': 1})",
+          "expected": "0.0",
+          "compare": "float",
+          "tolerance": 1e-9
+        },
+        {
+          "name": "partial overlap",
+          "expression": "calculate_similarity_score({'hello': 2, 'world': 1}, {'hello': 2, 'friends': 1})",
+          "expected": "0.67",
+          "compare": "float",
+          "tolerance": 1e-9
+        },
+        {
+          "name": "letter dicts hello vs goodbye",
+          "expression": "calculate_similarity_score({'h': 1, 'e': 1, 'l': 2, 'o': 1}, {'g': 1, 'o': 2, 'd': 1, 'b': 1, 'y': 1, 'e': 1})",
+          "expected": "0.33",
+          "compare": "float",
+          "tolerance": 1e-9
+        },
+        {
+          "name": "both empty -> 1.0 (no ZeroDivision)",
+          "expression": "calculate_similarity_score({}, {})",
+          "expected": "1.0",
+          "compare": "float",
+          "tolerance": 1e-9,
+          "hidden": true
+        }
+      ]
+    },
+    {
+      "topicSlug": "14-dictionaries",
+      "unit": 2,
+      "source": "pset",
+      "reconstructed": false,
+      "id": "ps3-p4",
+      "kind": "coding",
+      "difficulty": "exam-level",
+      "title": "Most Frequent Word(s)",
+      "statement": "Implement `get_most_frequent_words(freq_dict1, freq_dict2)`. Combine the two dictionaries by **adding** the counts of shared words, then return the word(s) with the highest combined count. If several tie, return them all in **alphabetical order** (a list).\n\n- `get_most_frequent_words({'hello': 5, 'world': 1}, {'hello': 1, 'world': 5})` → `['hello', 'world']` (both total 6)",
+      "functionSignature": "def get_most_frequent_words(freq_dict1, freq_dict2):",
+      "starterCode": "def get_most_frequent_words(freq_dict1, freq_dict2):\n    \"\"\"Return the word(s) with the highest COMBINED count across both dicts.\n    On a tie, return all tied words in alphabetical order.\n\n    >>> get_most_frequent_words({'a': 5, 'b': 1}, {'a': 1, 'b': 5})\n    ['a', 'b']\n    \"\"\"\n    pass",
+      "solution": "def get_most_frequent_words(freq_dict1, freq_dict2):\n    combined = {}\n    for d in (freq_dict1, freq_dict2):\n        for k, v in d.items():\n            combined[k] = combined.get(k, 0) + v\n    if not combined:\n        return []\n    max_freq = max(combined.values())\n    return sorted([k for k in combined if combined[k] == max_freq])",
+      "pyPackages": [],
+      "dataFiles": [],
+      "tests": [
+        {
+          "name": "clear winner",
+          "expression": "get_most_frequent_words({'hello': 1, 'world': 2}, {'hello': 1, 'world': 5})",
+          "expected": "['world']"
+        },
+        {
+          "name": "two-way tie, alphabetical",
+          "expression": "get_most_frequent_words({'hello': 5, 'world': 1}, {'hello': 1, 'world': 5})",
+          "expected": "['hello', 'world']"
+        },
+        {
+          "name": "word only in one dict",
+          "expression": "get_most_frequent_words({'a': 3}, {})",
+          "expected": "['a']"
+        },
+        {
+          "name": "three-way tie sorts alphabetically",
+          "expression": "get_most_frequent_words({'b': 2, 'a': 2, 'c': 1}, {'c': 1})",
+          "expected": "['a', 'b', 'c']",
+          "hidden": true
+        },
+        {
+          "name": "both empty -> empty list",
+          "expression": "get_most_frequent_words({}, {})",
+          "expected": "[]",
+          "hidden": true
+        }
+      ]
+    },
+    {
+      "topicSlug": "14-dictionaries",
+      "unit": 2,
+      "source": "pset",
+      "reconstructed": false,
+      "id": "ps3-p5",
+      "kind": "coding",
+      "difficulty": "exam-level",
+      "title": "TF-IDF",
+      "statement": "Implement the three TF-IDF functions. Files are read with the provided `load_file`; `text_to_list` and `get_frequencies` are also provided.\n\n- `get_tf(file_path)` → `{word: TF}` where TF(w) = (times w appears) / (total words).\n- `get_idf(file_paths)` → `{word: IDF}` where IDF(w) = `log10(num_docs / num_docs_containing_w)` (use `math.log10`).\n- `get_tfidf(tf_file_path, idf_file_paths)` → list of `(word, TF*IDF)` tuples sorted by **increasing score**, breaking ties **alphabetically**.\n\nTwo small documents are available: `hello_world.txt` (`hello world hello`) and `hello_friends.txt` (`hello friends`).",
+      "functionSignature": "def get_tf(file_path):",
+      "starterCode": "import string\nimport math\n\n### DO NOT MODIFY — provided by the pset.\ndef load_file(filename):\n    inFile = open(filename, 'r')\n    line = inFile.read().strip()\n    for char in string.punctuation:\n        line = line.replace(char, \"\")\n    inFile.close()\n    return line.lower()\n\n# Provided from earlier problems so you can focus on TF-IDF.\ndef text_to_list(input_text):\n    return input_text.split()\n\ndef get_frequencies(input_iterable):\n    freq = {}\n    for item in input_iterable:\n        freq[item] = freq.get(item, 0) + 1\n    return freq\n\ndef get_tf(file_path):\n    \"\"\"Return {word: TF}. TF(w) = count of w / total words in the file.\"\"\"\n    pass\n\ndef get_idf(file_paths):\n    \"\"\"Return {word: IDF}. IDF(w) = log10(num_docs / num_docs_containing_w).\"\"\"\n    pass\n\ndef get_tfidf(tf_file_path, idf_file_paths):\n    \"\"\"Return a list of (word, TF*IDF) sorted by increasing score, then word.\"\"\"\n    pass",
+      "solution": "import string\nimport math\n\n### DO NOT MODIFY — provided by the pset.\ndef load_file(filename):\n    inFile = open(filename, 'r')\n    line = inFile.read().strip()\n    for char in string.punctuation:\n        line = line.replace(char, \"\")\n    inFile.close()\n    return line.lower()\n\ndef text_to_list(input_text):\n    return input_text.split()\n\ndef get_frequencies(input_iterable):\n    freq = {}\n    for item in input_iterable:\n        freq[item] = freq.get(item, 0) + 1\n    return freq\n\ndef get_tf(file_path):\n    words = text_to_list(load_file(file_path))\n    freq = get_frequencies(words)\n    total = len(words)\n    return {word: count / total for word, count in freq.items()}\n\ndef get_idf(file_paths):\n    doc_count = len(file_paths)\n    word_docs = {}\n    for p in file_paths:\n        for word in set(text_to_list(load_file(p))):\n            word_docs[word] = word_docs.get(word, 0) + 1\n    return {word: math.log10(doc_count / count) for word, count in word_docs.items()}\n\ndef get_tfidf(tf_file_path, idf_file_paths):\n    tf = get_tf(tf_file_path)\n    idf = get_idf(idf_file_paths)\n    result = [(word, tf[word] * idf[word]) for word in tf]\n    result.sort(key=lambda pair: (pair[1], pair[0]))\n    return result",
+      "pyPackages": [],
+      "dataFiles": [
+        {
+          "name": "hello_world.txt",
+          "text": "hello world, hello"
+        },
+        {
+          "name": "hello_friends.txt",
+          "text": "hello friends"
+        }
+      ],
+      "tests": [
+        {
+          "name": "get_tf(hello_world)",
+          "expression": "get_tf('hello_world.txt')",
+          "expected": "{'hello': 0.6666666666666666, 'world': 0.3333333333333333}",
+          "compare": "float"
+        },
+        {
+          "name": "get_idf(two docs)",
+          "expression": "get_idf(['hello_world.txt', 'hello_friends.txt'])",
+          "expected": "{'hello': 0.0, 'world': 0.3010299956639812, 'friends': 0.3010299956639812}",
+          "compare": "float"
+        },
+        {
+          "name": "get_tfidf(small)",
+          "expression": "get_tfidf('hello_world.txt', ['hello_world.txt', 'hello_friends.txt'])",
+          "expected": "[('hello', 0.0), ('world', 0.10034333188799373)]",
+          "compare": "float"
+        },
+        {
+          "name": "tf sums to 1.0",
+          "expression": "round(sum(get_tf('hello_world.txt').values()), 10)",
+          "expected": "1.0",
+          "compare": "float",
+          "tolerance": 1e-9,
+          "hidden": true
+        }
+      ]
+    }
+  ],
+  "reconstructed": false
+}

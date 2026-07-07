@@ -1,0 +1,220 @@
+## Intuition
+
+Everything in Python is already an object — `1234` is an `int` object, `"hi"` is a
+`str` object, `[1, 2]` is a `list` object. Each object bundles two things: some
+**internal data** and a set of **methods** for interacting with it (you never see
+how a list stores its elements; you just call `.append()`). A **class** lets *you*
+define a brand-new type this way. Think of the class as a **blueprint**: it
+describes what data every instance holds and what operations you can do, but it
+isn't a tangible thing itself. An **instance** is one actual object built from
+that blueprint. Writing a class means *you* make the design decisions: what data
+represents the object, and what a user is allowed to do with it. This is the
+foundation for the next few units (methods, inheritance, the fitness tracker).
+
+## The mechanics
+
+Define a class with `class`, name it, and inherit from `object`. The special
+`__init__` method runs when you create an instance and sets up its data:
+
+```python
+class Coordinate(object):
+    def __init__(self, xval, yval):
+        self.x = xval        # data attribute: belongs to THIS instance
+        self.y = yval
+```
+
+- `self` is the **instance being built/used**. `self.x = xval` creates a data
+  attribute *on that specific object*. Without `self.`, you'd just be making a
+  throwaway local variable.
+- Creating an instance calls the class like a function — Python passes the new
+  object as `self` automatically, so you supply only the *other* arguments:
+
+```python
+c = Coordinate(3, 4)         # self is filled in by Python; x=3, y=4
+origin = Coordinate(0, 0)
+print(c.x)                   # 3   -- dot notation reads a data attribute
+print(origin.x)              # 0
+```
+
+A **method** is a function defined inside the class whose first parameter is
+`self`. It works only with objects of this type:
+
+```python
+class Coordinate(object):
+    def __init__(self, xval, yval):
+        self.x = xval
+        self.y = yval
+
+    def distance(self, other):
+        x_diff_sq = (self.x - other.x) ** 2
+        y_diff_sq = (self.y - other.y) ** 2
+        return (x_diff_sq + y_diff_sq) ** 0.5
+```
+
+Call it with dot notation. The object *before the dot* becomes `self`:
+
+```python
+c = Coordinate(3, 4)
+zero = Coordinate(0, 0)
+print(c.distance(zero))      # 5.0   -- c is self, zero is other
+```
+
+<Callout type="tip">
+`c.distance(zero)` is exactly equivalent to `Coordinate.distance(c, zero)`. The
+thing before the dot is silently passed as the first argument (`self`). Seeing
+this makes `self` click: it's just "the object you called the method on."
+</Callout>
+
+## Worked example
+
+Build and use two `Coordinate` instances, then trace a method call.
+
+```python
+class Coordinate(object):
+    def __init__(self, xval, yval):
+        self.x = xval
+        self.y = yval
+
+    def distance(self, other):
+        x_diff_sq = (self.x - other.x) ** 2
+        y_diff_sq = (self.y - other.y) ** 2
+        return (x_diff_sq + y_diff_sq) ** 0.5
+
+c = Coordinate(3, 4)
+origin = Coordinate(0, 0)
+print(c.distance(origin))
+```
+
+Step through `c.distance(origin)`:
+
+1. The object before the dot is `c`, so Python looks up `c`'s type: `Coordinate`.
+2. It finds the `distance` method in `Coordinate`.
+3. It calls that method with `self = c` and `other = origin`.
+4. `self.x` is `3`, `other.x` is `0`, so `x_diff_sq = (3-0)**2 = 9`.
+5. `self.y` is `4`, `other.y` is `0`, so `y_diff_sq = (4-0)**2 = 16`.
+6. Returns `(9 + 16) ** 0.5` = `25 ** 0.5` = `5.0`.
+
+Every instance has its *own* `x` and `y`: `c.x` is `3` while `origin.x` is `0`.
+The blueprint is shared; the values are per-instance.
+
+## Traps
+
+<Callout type="trap">
+**Forgetting `self` when storing data.** Inside `__init__`, writing `x = xval`
+(instead of `self.x = xval`) creates a local variable that vanishes when
+`__init__` returns. The instance ends up with no `x` attribute, and later
+`c.x` raises an `AttributeError`.
+</Callout>
+
+**Passing a value for `self`.** You write `Coordinate(3, 4)` — *two* arguments —
+even though `__init__` lists three parameters (`self, xval, yval`). Python fills
+`self` in automatically. Passing three arguments raises a "takes 3 positional
+arguments but 4 were given" error.
+
+**Omitting `self` in the method definition.** `def distance(other):` (no `self`)
+means when you call `c.distance(origin)`, `c` binds to `other` and there's no room
+for the real `other` — a "positional arguments" error. Every method's first
+parameter must be `self`.
+
+**Confusing the class with an instance.** `Coordinate` is the type/blueprint;
+`c = Coordinate(3, 4)` is an instance. You call methods on instances, not on the
+bare class name (unless you deliberately pass `self` yourself).
+
+**Expecting `print(c)` to be readable.** Without a custom method, printing an
+instance gives something like `<__main__.Coordinate object at 0x7fa...>`. Making
+it print nicely is the job of `__str__`, covered in the next unit.
+
+**Reusing a data-attribute name as a plain variable.** Data attributes live under
+`self.` and persist for the object's lifetime; a local variable inside a method
+disappears after the method returns. `total = 0` inside a method is *not* the same
+as `self.total = 0`.
+
+## Memorize vs understand
+
+| Just know it cold | Be able to derive |
+|---|---|
+| `class Name(object):` defines a new type | Whether a name inside a method should be `self.x` or a plain local |
+| `__init__(self, ...)` initializes data attributes | What `c.method(arg)` binds to `self` and to the other parameters |
+| Data attributes are created with `self.x = ...` | Why `Coordinate(3, 4)` passes two args for a three-parameter `__init__` |
+| Methods take `self` as their first parameter | Tracing a method call's return value by hand |
+| `obj.attr` and `obj.method(args)` use dot notation | The difference between the class (blueprint) and an instance (object) |
+
+## ASE check
+
+```python
+class Dog(object):
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+
+d = Dog("Rex", 3)
+print(d.age)
+```
+
+<ASECheck q="What does this print, and how many arguments did we pass to Dog?">
+
+`3`. We passed *two* arguments (`"Rex"` and `3`); Python supplied `self`
+automatically. `self.age = age` stored `3` as a data attribute on the instance,
+and `d.age` reads it back.
+
+</ASECheck>
+
+```python
+class Counter(object):
+    def __init__(self, start):
+        count = start        # note: no self.
+    def get(self):
+        return self.count
+
+c = Counter(5)
+print(c.get())
+```
+
+<ASECheck q="What goes wrong here?">
+
+It raises an `AttributeError`. Inside `__init__`, `count = start` creates a
+*local* variable that disappears when `__init__` finishes — it never becomes a
+data attribute. So `self.count` in `get` doesn't exist. The fix is
+`self.count = start`.
+
+</ASECheck>
+
+```python
+class Coordinate(object):
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+    def distance(self, other):
+        return ((self.x - other.x)**2 + (self.y - other.y)**2) ** 0.5
+
+a = Coordinate(0, 0)
+b = Coordinate(6, 8)
+print(b.distance(a))
+```
+
+<ASECheck q="What does this print, and which object is self?">
+
+`10.0`. `b` is the object before the dot, so `b` is `self` and `a` is `other`.
+`(6-0)**2 + (8-0)**2` = `36 + 64` = `100`, and `100 ** 0.5` = `10.0`.
+
+</ASECheck>
+
+<ASECheck q="Rewrite c.distance(origin) as an equivalent call using the class name explicitly. Why does that work?">
+
+`Coordinate.distance(c, origin)`. It works because dot-notation method calls are
+shorthand: `c.distance(origin)` looks up `distance` in `c`'s class and passes `c`
+as the first argument (`self`) and `origin` as the second (`other`). Writing it
+the long way just makes that automatic first argument explicit.
+
+</ASECheck>
+
+<ASECheck q="Two instances c1 = Coordinate(1, 2) and c2 = Coordinate(9, 9) exist. Do they share their x values?">
+
+No. Each instance has its *own* data attributes stored on the object itself, so
+`c1.x` is `1` and `c2.x` is `9`. The class definition is shared as a blueprint,
+but the per-instance values are independent.
+
+</ASECheck>
+
+*Source: MIT OCW 6.100L Fall 2022, Lecture 17 (Python Classes), Ana Bell. Content
+reconstructed as original prose under CC BY-NC-SA.*

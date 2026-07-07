@@ -1,0 +1,184 @@
+## Intuition
+
+Approximation-by-increment works but is *painfully slow* — finding the square root
+of 54321 with a tiny increment can take tens of millions of guesses. **Bisection
+search** is the smart alternative: when the answer lives in an ordered range and
+you can tell whether a guess is *too high* or *too low*, you repeatedly guess the
+**midpoint** and throw away half the range each time. That's the difference
+between checking N candidates one by one (linear) and halving the space (about
+`log2(N)` steps). For 54321, brute force took ~23 million guesses; bisection took
+about 30. The two properties that make it work: the search space has an **order**,
+and each guess gives **directional feedback**.
+
+## The mechanics
+
+**Bisection square root** — keep a `low` and `high` bracket, guess the midpoint,
+and move whichever endpoint keeps the root inside:
+
+```python
+x = 54321
+epsilon = 0.01
+low = 0
+high = x
+guess = (high + low) / 2.0
+while abs(guess**2 - x) >= epsilon:
+    if guess**2 < x:
+        low = guess       # guess too small -> raise the floor
+    else:
+        high = guess      # guess too big  -> lower the ceiling
+    guess = (high + low) / 2.0     # new midpoint of the shrunken range
+print(guess, "is close to square root of", x)
+```
+
+Each pass halves the interval, so the guess converges in `log2(N)` steps.
+
+**The x-less-than-1 fix.** If `0 < x < 1`, the root is *larger* than `x` (e.g.
+sqrt(0.25) = 0.5), so the range `0..x` doesn't even contain the answer. Pick the
+bracket by size:
+
+```python
+if x >= 1:
+    low, high = 1.0, x        # root is between 1 and x
+else:
+    low, high = x, 1.0        # root is between x and 1
+```
+
+**Newton-Raphson** is an even faster root-finder for polynomials. For `x**2 - k`
+(derivative `2*x`), a better guess from `g` is `g - (g**2 - k)/(2*g)`:
+
+```python
+epsilon = 0.01
+k = 24.0
+guess = k / 2.0
+while abs(guess*guess - k) >= epsilon:
+    guess = guess - (((guess**2) - k) / (2 * guess))
+print("Square root of", k, "is about", guess)
+```
+
+## Worked example
+
+Watch bisection converge on sqrt(16) (answer 4). Start `low = 0`, `high = 16`:
+
+| step | low | high | guess = (low+high)/2 | guess² | vs 16 | action |
+|---|---|---|---|---|---|---|
+| 1 | 0 | 16 | 8 | 64 | too big | high = 8 |
+| 2 | 0 | 8 | 4 | 16 | exact | done |
+
+Two steps, versus 40,000 for an increment method. The interval `16 → 8 → 4`
+halves every pass; the moment `guess**2` is within epsilon of `x`, we stop.
+
+**Why `log2(N)`?** After `k` guesses the range is `N / 2**k`. We're done when it's
+narrowed to one candidate: `N / 2**k = 1`, so `2**k = N`, so `k = log2(N)`. That's
+the whole efficiency argument — doubling the problem size adds just *one* guess,
+which is why bisection beats linear search by orders of magnitude.
+
+**When bisection applies.** You need all three:
+
+- an **ordering** on the possible answers,
+- a way to know a guess is **too high or too low** (not just wrong),
+- **two endpoints** bracketing the answer.
+
+A 4-digit PIN with only "correct / not correct" feedback *fails* the second
+condition — no direction, so bisection can't help. A number-guessing game with
+"too high / too low / correct" *works*.
+
+## Traps
+
+<Callout type="trap">
+**Bisection needs directional feedback, not just a yes/no.** If the only signal is
+"right or wrong" (like a PIN pad that just says "incorrect"), you can't decide
+which half to discard, and bisection is useless. You must be able to tell *too
+high* from *too low*.
+</Callout>
+
+**For `0 < x < 1`, the naive `0..x` bracket misses the root.** The square root of
+a number below 1 is *bigger* than the number, so search `x..1`, not `0..x`.
+Forgetting this makes the loop fail on fractional inputs.
+
+**Bisection requires an ordered search space.** It works for finding a square root
+(numbers are ordered) but not for, say, finding an unsorted item in a list —
+there's no "too high / too low" to exploit.
+
+**Recompute the midpoint *inside* the loop.** After moving `low` or `high`, you
+must recalculate `guess = (high + low) / 2.0`; if you compute the midpoint only
+once before the loop, the guess never changes and you get an infinite loop.
+
+**Don't confuse Newton-Raphson with bisection.** Both are iterative root-finders,
+but Newton uses the *derivative* to leap toward the root (`g - p(g)/p'(g)`), while
+bisection just halves a bracket. Newton is faster but needs a differentiable
+function and a decent starting guess.
+
+**Still use `abs(...) < epsilon`, never `==`.** Bisection produces floats, so the
+stopping test is `abs(guess**2 - x) >= epsilon`, exactly as in approximation
+methods — the float-comparison rule from the previous topic still holds.
+
+## Memorize vs understand
+
+| Just know it cold | Be able to derive |
+|---|---|
+| Bisection guesses the midpoint, discards half each step | The number of guesses (~log2 N) for a given range size |
+| Needs: ordered space, too-high/too-low feedback, two endpoints | Whether a given problem *can* use bisection (does it have direction?) |
+| `guess = (low + high) / 2.0`, recomputed each pass | Tracing `low`/`high`/`guess` for a specific square root |
+| For `0 < x < 1`, bracket is `x..1`, not `0..x` | Why `N / 2**k = 1` gives `k = log2 N` |
+| Newton-Raphson: `g - (g**2 - k)/(2*g)` for sqrt | Comparing linear (increment) vs logarithmic (bisection) cost |
+
+## ASE check
+
+```python
+low, high = 0, 16
+guess = (low + high) / 2.0
+guess = 8; low, high = 0, 8       # after guess 8 is too big
+guess = (low + high) / 2.0
+print(guess)
+```
+
+<ASECheck q="What is the second guess when finding sqrt(16)?">
+
+`4.0`. The first midpoint of `0..16` is `8`; since `8**2 = 64 > 16`, `high`
+becomes `8`. The new midpoint of `0..8` is `4.0` — which squares to exactly `16`,
+so the search is done.
+
+</ASECheck>
+
+<ASECheck q="You're guessing a 4-digit PIN and the phone only says 'correct' or 'incorrect'. Can bisection help? Why or why not?">
+
+No. Bisection requires *directional* feedback — you must know whether a guess is
+too high or too low so you can discard half the space. "Correct / incorrect" gives
+no direction, so you can't shrink the search; you're stuck with exhaustive
+guessing.
+
+</ASECheck>
+
+```python
+x = 0.25
+low, high = 0, x
+```
+
+<ASECheck q="Why is this bracket wrong for sqrt(0.25)?">
+
+The square root of `0.25` is `0.5`, which is *larger* than `x = 0.25`. The bracket
+`0..0.25` doesn't contain `0.5` at all, so the search can never find it. For
+`0 < x < 1` you must search `x..1` (here `0.25..1`), which does bracket `0.5`.
+
+</ASECheck>
+
+<ASECheck q="Roughly how many bisection steps to search a range of size N, and why?">
+
+About `log2(N)`. Each guess halves the remaining range, so after `k` guesses the
+range is `N / 2**k`. Setting that to 1 (one candidate left) gives `2**k = N`, i.e.
+`k = log2(N)`. That's why doubling N adds only one guess — the hallmark of
+logarithmic growth.
+
+</ASECheck>
+
+<ASECheck q="What breaks if you compute guess = (low + high) / 2.0 only once, before the while loop?">
+
+The guess never updates. You'd move `low` or `high` each pass, but `guess` stays
+frozen at the original midpoint, so `abs(guess**2 - x)` never changes and the loop
+runs forever. The midpoint must be recomputed inside the loop after each endpoint
+adjustment.
+
+</ASECheck>
+
+*Content reconstructed from MIT OCW 6.100L Fall 2022, Lecture 6 (Ana Bell),
+CC BY-NC-SA.*

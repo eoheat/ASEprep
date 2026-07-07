@@ -1,0 +1,52 @@
+[
+  {
+    "id": "finger-lec10-q1",
+    "kind": "coding",
+    "source": "finger",
+    "reconstructed": true,
+    "topicSlug": "10-lists-mutability",
+    "unit": 2,
+    "difficulty": "exam-level",
+    "title": "All Predicates True",
+    "statement": "**OCW Lecture 10 finger exercise (reconstructed).** Implement `all_true(n, Lf)`.\n\n`n` is an int and `Lf` is a **list of functions**, each taking an int and returning a Boolean. Return `True` if *every* function in `Lf` returns `True` when called with `n`; otherwise return `False`. (Note: the OCW prompt's example `all_true()` was a typo with no arguments — the spec in the docstring is the real contract.)\n\nEdge case: an **empty** `Lf` returns `True` (vacuously — there is no function that fails).\n\nThree predicate helpers are provided so the tests can build function lists: `_is_positive`, `_is_even`, and `_is_big` (`n > 100`).\n\n*Source: MIT OCW 6.100L Fall 2022, Finger Exercise Lecture 10 (reconstructed for this study tool).*",
+    "functionSignature": "def all_true(n, Lf):",
+    "starterCode": "# Provided predicate helpers (each takes an int, returns a bool).\ndef _is_positive(x):\n    return x > 0\n\ndef _is_even(x):\n    return x % 2 == 0\n\ndef _is_big(x):\n    return x > 100\n\ndef all_true(n, Lf):\n    \"\"\"Return True iff every function in Lf returns True when called with n.\n\n    >>> all_true(4, [_is_positive, _is_even])\n    True\n    >>> all_true(3, [_is_positive, _is_even])\n    False\n    \"\"\"\n    pass",
+    "solution": "def _is_positive(x):\n    return x > 0\n\ndef _is_even(x):\n    return x % 2 == 0\n\ndef _is_big(x):\n    return x > 100\n\ndef all_true(n, Lf):\n    flag = True\n    for f in Lf:\n        if not f(n):\n            flag = False\n            break\n    return flag",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      {
+        "name": "positive and even -> True",
+        "expression": "all_true(4, [_is_positive, _is_even])",
+        "expected": "True"
+      },
+      {
+        "name": "positive but not even -> False",
+        "expression": "all_true(3, [_is_positive, _is_even])",
+        "expected": "False"
+      },
+      {
+        "name": "fails first predicate -> False",
+        "expression": "all_true(-2, [_is_positive, _is_even])",
+        "expected": "False"
+      },
+      {
+        "name": "empty list -> True (vacuous)",
+        "expression": "all_true(5, [])",
+        "expected": "True",
+        "hidden": true
+      },
+      {
+        "name": "single predicate passes",
+        "expression": "all_true(4, [_is_positive])",
+        "expected": "True"
+      },
+      {
+        "name": "third predicate fails -> False",
+        "expression": "all_true(4, [_is_positive, _is_even, _is_big])",
+        "expected": "False",
+        "hidden": true
+      }
+    ]
+  }
+]

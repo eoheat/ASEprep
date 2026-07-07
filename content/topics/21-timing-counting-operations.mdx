@@ -1,0 +1,220 @@
+## Intuition
+
+Correctness comes first — but once a program is correct, the next question is
+*how does it scale?* A search that is instant on 10 items can hang for minutes on
+10 million. This lecture is about the two crude ways to measure that — put a
+**timer** around the code, or **count the operations** it does — and about why
+both of them are ultimately unsatisfying. They're stepping stones. The real prize
+(Big-O / Big-Θ, next topic) is a machine-independent way to describe how work
+*grows* with input size. Timing and counting are how you build the intuition that
+makes the abstraction believable.
+
+The key mental shift: stop asking "how many seconds did it take?" and start asking
+"if I make the input 10 times bigger, does the work go up by 10, by 100, or not at
+all?"
+
+## The mechanics
+
+**Timing** uses the `time` module. Read the clock, run the code, read the clock
+again, subtract:
+
+```python
+import time
+
+def mysum(x):
+    total = 0
+    for i in range(x + 1):
+        total += i
+    return total
+
+t0 = time.perf_counter()
+mysum(1000000)
+dt = time.perf_counter() - t0
+print(dt, "seconds")
+```
+
+`time.time()` returns seconds since the epoch (Jan 1, 1970). `time.perf_counter()`
+is the higher-resolution timer you actually want for benchmarking — same
+subtraction pattern, more precision.
+
+**Counting operations** assumes each of these is one constant-time step:
+mathematical operation, comparison, assignment, and accessing an object in memory.
+You then write the operation count as a *function of input size*. Trace the loop
+structure and multiply:
+
+```python
+def c_to_f(c):
+    return c * 9.0 / 5 + 32      # 3 ops, no matter what c is
+
+def mysum(x):
+    total = 0                    # 1 op
+    for i in range(x + 1):       # loop runs x+1 times
+        total += i               # 2 ops per pass (add, assign)
+    return total
+```
+
+`mysum` counts to `1 + (x+1)*(2) = 2x + 3`-ish ops. The exact constants depend on
+how you count, which is the whole problem — but the *shape* is linear in `x`.
+
+A nested loop multiplies:
+
+```python
+def square(n):
+    sqsum = 0                    # 1 op
+    for i in range(n):           # n times
+        for j in range(n):       #   n times each
+            sqsum += 1           #     2 ops
+    return sqsum
+```
+
+That's on the order of `3n^2 + 1` ops — quadratic. Ten times bigger `n` means
+~100 times more work.
+
+<Callout type="tip">
+When you count, the only thing that matters is the term that grows fastest. `2x + 3`
+and `500x` and `x` all "grow like x." Hold that thought — it becomes Big-Θ next
+lecture.
+</Callout>
+
+## Worked example
+
+Time three functions on inputs `[1, 10, 100, ... 10_000_000]` and watch how the
+time changes as the input grows by a factor of 10 each step.
+
+`c_to_f(x)` — constant work:
+
+```python
+def c_to_f(c):
+    return c * 9.0 / 5 + 32
+```
+
+Timing it for `x = 100, 1000, ... ` prints essentially `0.0` every time. The work
+does **not** depend on the size of `c` at all. Order of growth: constant.
+
+`mysum(x)` — one loop:
+
+```python
+def mysum(x):
+    total = 0
+    for i in range(x + 1):
+        total += i
+    return total
+```
+
+Measured operation counts (from a counter version) look like this:
+
+| input x | ops | vs. previous |
+|---|---|---|
+| 100 | 304 | — |
+| 1,000 | 3,004 | ~10x |
+| 10,000 | 30,004 | ~10x |
+| 100,000 | 300,004 | ~10x |
+
+Input up by 10 → ops up by ~10. **Linear.**
+
+`square(n)` — nested loops:
+
+| input n | ops | vs. previous |
+|---|---|---|
+| 100 | 30,101 | — |
+| 1,000 | 3,001,001 | ~100x |
+| 10,000 | 300,010,001 | ~100x |
+
+Input up by 10 → ops up by ~100 (that's `10^2`). Input up by 2 → ops up by ~4
+(that's `2^2`). **Quadratic.** The number "3" in `3n^2` is noise; the `n^2` is the
+signal.
+
+## Traps
+
+<Callout type="trap">
+**Small inputs lie.** `c_to_f`, `mysum(1)`, and `square(10)` all time as `0.0`
+seconds — the timer isn't precise enough to see the difference, and even a linear
+and a quadratic function look identical when the input is tiny. Growth only shows
+up at large inputs. Never conclude "these are equally fast" from a small test.
+</Callout>
+
+**Timing varies with everything except the algorithm.** The goal is to compare
+*algorithms*, but the clock also changes with the machine, the language, the
+implementation, and background load. Run the same code on a slower laptop and every
+number doubles — even though the algorithm is identical. That's exactly what you
+*don't* want in a measure of algorithmic efficiency.
+
+**Counting has no fixed definition.** Is `total += i` one operation or two? Do you
+count the `range` call? Different people count differently, so the exact formula
+(`2x+3` vs `3x+4`) is not reproducible. What *is* reproducible is the order of
+growth, which is why we throw the constants away.
+
+**Confusing "input size" with "input value."** For `mysum(x)`, the size *is* the
+number `x`. For a function that loops over a list `L`, the size is `len(L)`, not
+how big the numbers inside are. Picking the wrong thing to measure gives the wrong
+growth curve. Always ask: *what am I calling n?*
+
+**Assuming the loop count equals the input.** `for i in range(x+1)` runs `x+1`
+times, not `x`. Off-by-one in the count doesn't change the order of growth, but it
+does trip people up when they try to derive the exact formula.
+
+## Memorize vs understand
+
+| Just know it cold | Be able to derive |
+|---|---|
+| `time.perf_counter()` before and after, subtract for elapsed seconds | Whether a function's work is constant, linear, or quadratic in its input |
+| Constant-time steps: math op, comparison, assignment, memory access | The operation-count formula for a given loop nest, then its dominant term |
+| One loop over n → ~n ops; nested loops → ~n^2 ops | Which parameter is "n" for a given function (integer value vs list length) |
+| Timing depends on machine/language/implementation; counting depends on implementation | Why a 10x bigger input gives ~10x (linear) vs ~100x (quadratic) more work |
+| Order of growth is what survives after dropping constants | Why small inputs can't distinguish algorithms |
+
+## ASE check
+
+```python
+def f(L):
+    total = 0
+    for x in L:
+        total += x
+    return total
+```
+
+<ASECheck q="If len(L) grows from 1000 to 10000, roughly how does the number of operations change, and what is the order of growth?">
+
+It grows by about 10x — one loop over the list does work proportional to `len(L)`,
+so 10 times more elements means ~10 times more operations. Order of growth is
+linear in `len(L)`.
+
+</ASECheck>
+
+```python
+def g(n):
+    count = 0
+    for i in range(n):
+        for j in range(n):
+            count += 1
+    return count
+```
+
+<ASECheck q="Input n goes from 100 to 200. Roughly how many times more operations does g do?">
+
+About 4 times more. Two nested loops each run `n` times, so the work is
+proportional to `n^2`. Doubling `n` multiplies the work by `2^2 = 4`.
+
+</ASECheck>
+
+<ASECheck q="You time c_to_f(1) and c_to_f(1000000) and both print 0.0 seconds. What can you conclude about its order of growth?">
+
+That the work is (at least apparently) independent of the input — constant order of
+growth. The number of operations in `c_to_f` doesn't depend on `c` at all, so no
+matter how big the argument gets, the time stays flat. (The timer being `0.0` also
+tells you the function is too fast to measure reliably this way.)
+
+</ASECheck>
+
+<ASECheck q="Why is counting operations considered better than timing for comparing two algorithms, and where does it still fall short?">
+
+Counting is machine-, language-, and load-independent — it gives you a formula
+relating input size to work, which timing can't. It still falls short because it
+depends on the implementation and there's no agreed definition of which operations
+to count, so the constants are arbitrary. That's why we move to order-of-growth
+notation, which drops the constants entirely.
+
+</ASECheck>
+
+Source: MIT OCW 6.100L Fall 2022, Lecture 21 (Ana Bell), CC BY-NC-SA. Reconstructed
+as original prose.

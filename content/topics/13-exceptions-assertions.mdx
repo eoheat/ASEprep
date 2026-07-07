@@ -1,0 +1,228 @@
+## Intuition
+
+When code hits something it can't handle — indexing past the end of a list,
+dividing by zero, converting `'a'` to an int — Python raises an **exception**,
+and by default execution stops with an error. You have three tools. `try/except`
+lets you **catch** an exception and keep going. `raise` lets you **signal** an
+error yourself and halt with a clear message. `assert` is a **defensive**
+one-liner that halts immediately if an assumption about your data is false.
+
+The judgment call: use `try/except` when you can recover; use `raise`/`assert`
+when you'd rather stop loudly than let a bad value propagate.
+
+## The mechanics
+
+Common built-in exceptions you must recognize:
+
+```python
+[1, 2, 3][5]      # IndexError   -- past the end
+int('abc')        # ValueError   -- bad conversion
+undefined_name    # NameError    -- variable doesn't exist
+'a' / 4           # TypeError    -- incompatible types
+5 / 0             # ZeroDivisionError
+d['missing']      # KeyError     -- key not in dict
+```
+
+`try/except` runs the risky code; if it raises, control jumps to the `except`:
+
+```python
+try:
+    a = int(input("a number: "))
+    b = int(input("another: "))
+    print(a / b)
+except:
+    print("Bug in user input.")
+```
+
+Catch *specific* exceptions with separate clauses; a bare `except` catches
+everything else:
+
+```python
+try:
+    print(a / b)
+except ValueError:
+    print("could not convert to a number")
+except ZeroDivisionError:
+    print("can't divide by zero")
+except:
+    print("something else went wrong")
+```
+
+`raise` signals an error yourself, optionally with a message:
+
+```python
+raise ValueError("string contained a non-digit")
+```
+
+`assert` checks an assumption; if the condition is false it raises
+`AssertionError` and stops. Ideal for checking inputs and outputs:
+
+```python
+def avg(grades):
+    assert len(grades) != 0, "no grades data"
+    return sum(grades) / len(grades)
+```
+
+<Callout type="tip">
+Both `raise` and `assert` *halt* execution so a bad value never spreads. The
+difference in intent: `raise` handles expected-but-invalid input; `assert`
+enforces a "this should never happen" contract and is a supplement to testing.
+</Callout>
+
+## Worked example
+
+Trace `try/except` inside a loop. The key: when a statement in the `try` raises,
+Python jumps to the `except` and then continues *after* the whole `try/except`.
+
+```python
+def sum_digits(s):
+    """Returns the sum of the digit characters in s; skips non-digits."""
+    total = 0
+    for char in s:
+        try:
+            val = int(char)
+            total += val
+        except:
+            print("can't convert", char)
+    return total
+
+print(sum_digits("2a3"))
+```
+
+- `char` is `'2'`: `int('2')` is 2, `total` becomes 2.
+- `char` is `'a'`: `int('a')` raises `ValueError`, jump to `except`, print
+  `can't convert a`, then continue the loop.
+- `char` is `'3'`: `int('3')` is 3, `total` becomes 5.
+- Return 5. Output: `can't convert a` then `5`.
+
+Now compare three ways to handle a student with no grades, so `avg([])` doesn't
+crash the whole program with `ZeroDivisionError`:
+
+```python
+# Option 1 -- flag it, return None
+def avg(grades):
+    try:
+        return sum(grades) / len(grades)
+    except ZeroDivisionError:
+        print('warning: no grades data')   # falls off end -> returns None
+
+# Option 2 -- change the policy, return 0.0
+def avg(grades):
+    try:
+        return sum(grades) / len(grades)
+    except ZeroDivisionError:
+        print('warning: no grades data')
+        return 0.0
+
+# Option 3 -- refuse: halt with an assertion
+def avg(grades):
+    assert len(grades) != 0, 'no grades data'
+    return sum(grades) / len(grades)
+```
+
+Option 1 quietly returns `None`; Option 2 substitutes a default; Option 3 stops
+execution entirely. Pick based on whether the caller can sensibly continue.
+
+## Traps
+
+<Callout type="trap">
+**A bare `except:` swallows every error, hiding real bugs.** It catches typos,
+`NameError`s, everything — so you never learn what actually went wrong. Prefer
+naming the specific exception you expect (`except ValueError:`).
+</Callout>
+
+**An `except` clause that doesn't `return` gives back `None`.** Option 1 above
+prints a warning and falls off the end, so `avg([])` is `None`. If the caller
+then does arithmetic on it, you get a *new* error later.
+
+**`assert` halts; it does not let you recover.** Use it to catch programmer
+mistakes and bad inputs early, not for normal control flow you expect to happen
+often.
+
+**`KeyError` vs `IndexError`.** Missing dict *key* raises `KeyError`; list index
+out of range raises `IndexError`. Recognizing the right one is exam fodder.
+
+**`raise` needs the exception, `assert` needs the condition.** `raise ValueError("msg")`
+takes the error to throw; `assert condition, "msg"` takes a condition that
+should be `True`. Don't confuse the two syntaxes.
+
+## Memorize vs understand
+
+| Just know it cold | Be able to derive |
+|---|---|
+| `try/except` catches; `raise` signals; `assert` checks-and-halts | Which built-in exception a given line raises |
+| `IndexError`, `ValueError`, `NameError`, `TypeError`, `ZeroDivisionError`, `KeyError` | What a `try/except` inside a loop prints and returns |
+| `assert cond, "msg"` raises `AssertionError` if `cond` is false | Whether to recover (`except`) or halt (`raise`/`assert`) |
+| A bare `except:` catches everything (usually too much) | The return value when an `except` clause has no `return` |
+| `raise Error("msg")` stops execution with a message | Which handling policy fits: flag, substitute, or halt |
+
+## ASE check
+
+```python
+d = {'a': 1}
+print(d['b'])
+```
+
+<ASECheck q="What exception does this raise?">
+
+`KeyError`. `'b'` is not a key in the dictionary. (A missing *list index* would
+be `IndexError`; a missing *dict key* is `KeyError`.)
+
+</ASECheck>
+
+```python
+def safe_div(a, b):
+    try:
+        return a / b
+    except ZeroDivisionError:
+        return 0
+print(safe_div(10, 2), safe_div(10, 0))
+```
+
+<ASECheck q="What does this print?">
+
+`5.0 0`. `10 / 2` succeeds as `5.0`. `10 / 0` raises `ZeroDivisionError`, caught
+by the `except`, which returns `0`.
+
+</ASECheck>
+
+```python
+def f(x):
+    assert x > 0, "x must be positive"
+    return x * 2
+print(f(-3))
+```
+
+<ASECheck q="What happens?">
+
+It raises `AssertionError: x must be positive` and stops. The condition `x > 0`
+is false for `-3`, so the assertion fires before `return` is reached.
+
+</ASECheck>
+
+```python
+total = 0
+for ch in "1x2":
+    try:
+        total += int(ch)
+    except:
+        pass
+print(total)
+```
+
+<ASECheck q="What does this print?">
+
+`3`. `'1'` adds 1; `'x'` raises `ValueError`, caught and ignored (`pass`); `'2'`
+adds 2. Total is 3.
+
+</ASECheck>
+
+<ASECheck q="You want a function to refuse to run at all when handed an empty list, halting immediately. Which tool fits?">
+
+`assert len(lst) != 0, "empty list"`. It stops execution with an
+`AssertionError` the moment the assumption is violated, before any bad value can
+propagate.
+
+</ASECheck>
+
+*Content reconstructed from MIT OCW 6.100L Fall 2022, Lecture 13 (Ana Bell), CC BY-NC-SA.*

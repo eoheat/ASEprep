@@ -1,0 +1,70 @@
+[
+  {
+    "id": "bank-06-a",
+    "kind": "coding",
+    "title": "Bisection Square Root",
+    "topicSlug": "06-bisection-search",
+    "unit": 1,
+    "source": "bank",
+    "difficulty": "warmup",
+    "reconstructed": false,
+    "statement": "The lecture's bisection-search approximation. Implement `bisection_sqrt(x)` estimating `sqrt(x)` for `x >= 1` by halving a `[low, high]` interval until `abs(guess**2 - x) < epsilon` with `epsilon = 1e-6`.\n\nStart with `low = 0` and `high = x`, take `guess = (low + high) / 2`, and move whichever bound keeps the root bracketed. Return the final float guess. (Assume `x >= 1` so the true root lies in `[0, x]`.)",
+    "functionSignature": "def bisection_sqrt(x):",
+    "starterCode": "def bisection_sqrt(x):\n    \"\"\"Approximate sqrt(x) for x >= 1 by bisection search, epsilon = 1e-6.\n\n    >>> abs(bisection_sqrt(25.0) - 5.0) < 1e-4\n    True\n    >>> abs(bisection_sqrt(1.0) - 1.0) < 1e-4\n    True\n    \"\"\"\n    pass",
+    "solution": "def bisection_sqrt(x):\n    epsilon = 1e-6\n    low = 0.0\n    high = x\n    guess = (low + high) / 2\n    while abs(guess ** 2 - x) >= epsilon:\n        if guess ** 2 < x:\n            low = guess\n        else:\n            high = guess\n        guess = (low + high) / 2\n    return guess",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      { "name": "sqrt(25) = 5", "expression": "bisection_sqrt(25.0)", "expected": "5.0", "compare": "float", "tolerance": 1e-3 },
+      { "name": "sqrt(1) = 1", "expression": "bisection_sqrt(1.0)", "expected": "1.0", "compare": "float", "tolerance": 1e-3 },
+      { "name": "sqrt(2) irrational", "expression": "bisection_sqrt(2.0)", "expected": "1.41421356", "compare": "float", "tolerance": 1e-3 },
+      { "name": "sqrt(100) = 10", "expression": "bisection_sqrt(100.0)", "expected": "10.0", "compare": "float", "tolerance": 1e-3 },
+      { "name": "non-perfect square", "expression": "bisection_sqrt(30.0)", "expected": "5.4772255", "compare": "float", "tolerance": 1e-3 }
+    ]
+  },
+  {
+    "id": "bank-06-b",
+    "kind": "coding",
+    "title": "Binary Search a Sorted List",
+    "topicSlug": "06-bisection-search",
+    "unit": 1,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "reconstructed": false,
+    "statement": "Bisection applied to a sorted list — the O(log n) search. Implement `binary_search(sorted_list, target)` returning the **index** of `target` in the ascending `sorted_list`, or `-1` if absent. Use the low/high/mid bisection loop; do NOT use `.index()` or `in`.\n\nIf `target` appears more than once, any valid index is acceptable — the tests use lists with distinct elements. Handle the empty list.",
+    "functionSignature": "def binary_search(sorted_list, target):",
+    "starterCode": "def binary_search(sorted_list, target):\n    \"\"\"Return an index of target in the ascending sorted_list, or -1.\n\n    >>> binary_search([1, 3, 5, 7, 9], 7)\n    3\n    >>> binary_search([1, 3, 5, 7, 9], 4)\n    -1\n    >>> binary_search([], 1)\n    -1\n    \"\"\"\n    pass",
+    "solution": "def binary_search(sorted_list, target):\n    low = 0\n    high = len(sorted_list) - 1\n    while low <= high:\n        mid = (low + high) // 2\n        if sorted_list[mid] == target:\n            return mid\n        elif sorted_list[mid] < target:\n            low = mid + 1\n        else:\n            high = mid - 1\n    return -1",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      { "name": "found in the middle", "expression": "binary_search([1, 3, 5, 7, 9], 7)", "expected": "3" },
+      { "name": "absent -> -1", "expression": "binary_search([1, 3, 5, 7, 9], 4)", "expected": "-1" },
+      { "name": "empty list", "expression": "binary_search([], 1)", "expected": "-1" },
+      { "name": "first element", "expression": "binary_search([1, 3, 5, 7, 9], 1)", "expected": "0" },
+      { "name": "last element", "expression": "binary_search([1, 3, 5, 7, 9], 9)", "expected": "4" },
+      { "name": "single element present", "expression": "binary_search([42], 42)", "expected": "0" },
+      { "name": "single element absent", "expression": "binary_search([42], 7)", "expected": "-1" },
+      { "name": "below all elements", "expression": "binary_search([10, 20, 30], 5)", "expected": "-1" },
+      { "name": "negatives", "expression": "binary_search([-9, -4, -1, 0, 3], -4)", "expected": "1" }
+    ]
+  },
+  {
+    "id": "bank-06-c",
+    "kind": "code-reading",
+    "title": "Counting Bisection Steps",
+    "topicSlug": "06-bisection-search",
+    "unit": 1,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "reconstructed": false,
+    "statement": "Trace this bisection loop and report exactly what it prints. This tests that you can hand-simulate the low/high/mid updates and understand why bisection is logarithmic: each step halves the search interval.",
+    "prompt": "low = 0\nhigh = 16\nsteps = 0\nwhile high - low > 1:\n    mid = (low + high) // 2\n    if mid * mid < 40:\n        low = mid\n    else:\n        high = mid\n    steps += 1\nprint(low, high, steps)",
+    "answer": "6 7 4",
+    "acceptedAnswers": [
+      "6, 7, 4",
+      "(6, 7, 4)"
+    ],
+    "explanation": "We bisect [0,16] looking for where mid*mid crosses 40. Step 1: mid=8, 64>=40 -> high=8. Step 2: mid=4, 16<40 -> low=4. Step 3: mid=6, 36<40 -> low=6. Step 4: mid=7, 49>=40 -> high=7. Now high-low = 1, loop stops. Prints `6 7 4`. Four steps to shrink a width-16 interval to width 1 — that's log2(16) = 4, the hallmark of bisection."
+  }
+]

@@ -1,0 +1,168 @@
+## Intuition
+
+Plotting is about *seeing* your data — trends and outliers that are invisible in a
+column of numbers jump out in a picture. It's also a case study in **leveraging a
+library** instead of writing procedures from scratch: `matplotlib` gives you
+graphing for free. For the ASE you don't need to memorize every keyword, but you do
+need to know the core calls, the fact that `plot` connects points *in the order you
+give them*, and how to read the difference between a line plot, a scatter plot, and
+a log-scale plot.
+
+## The mechanics
+
+Import once, then call everything through `plt`:
+
+```python
+import matplotlib.pyplot as plt
+
+nVals = [0, 1, 2, 3, 4]
+squares = [0, 1, 4, 9, 16]
+plt.plot(nVals, squares)      # x values, then y values
+```
+
+`plt.plot(xs, ys)` takes two equal-length sequences, pairs them into `(x, y)`
+points, and **connects consecutive points with straight lines** in the order given.
+`plt.scatter(xs, ys)` plots the same points but does *not* connect them.
+
+Dress up the figure with titles, labels, ticks, and grid:
+
+```python
+plt.plot(months, temps)
+plt.title('Ave. Temperature in Boston')
+plt.xlabel('Month')
+plt.ylabel('Degrees F')
+plt.xticks((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12),
+           ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+            'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'))
+plt.grid()                    # toggle grid lines
+```
+
+`plt.xticks(locations, labels)` maps tick positions to custom text. Multiple
+`plt.plot` calls on the same figure overlay curves; add `label=...` to each and call
+`plt.legend()` to identify them.
+
+<Callout type="tip">
+A format string bundles color, line style, and marker: `plt.plot(x, y, 'r--')` is
+red dashed, `'b-'` blue solid, `'g-.'` green dash-dot, `'.b-'` adds point markers.
+Or use keywords: `color='b', linestyle='-', linewidth=2`.
+</Callout>
+
+To separate figures, name them with `plt.figure('name')`; to stack plots in one
+window, use `plt.subplot(rows, cols, index)`. And `plt.semilogy()` switches the
+y-axis to a **log scale**, where each equal step up the axis means a *multiplication*
+(exponential growth shows as a straight line).
+
+## Worked example
+
+Plot US population over four centuries, then re-plot on a log scale to expose a
+hidden trend.
+
+```python
+def get_us_pop(filename):
+    infile = open(filename, 'r')
+    dates, pops = [], []
+    for line in infile:
+        clean = ''
+        for c in line:
+            if c in '0123456789 ':    # strip commas
+                clean += c
+        parts = clean.split()          # ['1610', '350']
+        dates.append(int(parts[0]))
+        pops.append(int(parts[1]))
+    return dates, pops
+
+dates, pops = get_us_pop('USPopulation.txt')
+plt.plot(dates, pops)
+plt.title('US Population')
+plt.xlabel('Year')
+plt.ylabel('Population')
+```
+
+On a normal (linear) y-axis, the early centuries look flat at zero — all the visible
+action is post-1900, because 350 people is a pixel next to 300 million. Switch to a
+log scale:
+
+```python
+plt.plot(dates, pops)
+plt.semilogy()               # log-scaled y-axis
+```
+
+Now the early years show clear, even *faster* growth than later years — a straight
+line on a log axis means constant exponential growth rate. Same data, a completely
+different story, just by changing the scale.
+
+## Traps
+
+<Callout type="trap">
+**`plot` connects points in list order, not sorted order.** If your x-values are
+scrambled, `plt.plot(xs, ys)` draws a tangle of zig-zag lines between consecutive
+points. Sort the pairs by x first, or use `plt.scatter` (which doesn't connect) to
+see the true shape.
+</Callout>
+
+**Subplots with different y-scales mislead.** If Boston's subplot runs 0–80 and
+Miami's runs 40–90, the curves look similar but aren't comparable. Pin the same
+range on every subplot with `plt.ylim(0, 100)` before comparing.
+
+**Line plot vs scatter plot is a real choice.** Use `plot` for a function or
+time-series where order is meaningful; use `scatter` for a cloud of independent
+`(x, y)` observations where connecting them would invent a false trend.
+
+**Data files store numbers as strings with commas.** `'1,379,302,771'` won't
+`int()` directly — you must strip the commas first (keep only digit characters),
+exactly as the loop above does. Forgetting this is the classic plotting-a-file bug.
+
+## Memorize vs understand
+
+| Just know it cold | Be able to derive |
+|---|---|
+| `import matplotlib.pyplot as plt` | When to use `plot` (ordered) vs `scatter` (unordered cloud) |
+| `plt.plot(xs, ys)` connects points; `plt.scatter(xs, ys)` doesn't | Why a scrambled x-list produces a tangled line plot |
+| `title`, `xlabel`, `ylabel`, `xticks`, `legend`, `grid` | When a log scale (`semilogy`) reveals trends a linear scale hides |
+| Format strings: `'r--'`, `'b-'`, `'g-.'` | Why subplots need matched `ylim` to be comparable |
+| `plt.figure(name)`, `plt.subplot(r, c, i)`, `plt.ylim`, `plt.semilogy` | How to clean comma-formatted numbers from a data file before plotting |
+
+## ASE check
+
+```python
+xs = [0, 5, 3, 6, 2]
+ys = [0, 25, 9, 36, 4]
+plt.plot(xs, ys)
+```
+
+<ASECheck q="These are (n, n squared) pairs but in scrambled order. What will the line plot look like, and how do you fix it?">
+
+A tangle of zig-zag lines, because `plot` connects the points in the order given —
+0 to 5 to 3 to 6 to 2 — not in increasing x. Fix it by sorting the pairs by x first,
+or by using `plt.scatter(xs, ys)`, which plots the points without connecting them
+and so shows the true parabola.
+
+</ASECheck>
+
+<ASECheck q="What is the difference between plt.plot and plt.scatter?">
+
+`plt.plot(xs, ys)` draws the points and connects consecutive ones with line
+segments (good for functions and time series). `plt.scatter(xs, ys)` draws just the
+points with no connecting lines (good for independent observations, where a line
+would imply a trend that isn't there).
+
+</ASECheck>
+
+<ASECheck q="You plot US population 1610–2010 and the early centuries look completely flat at zero. What one change reveals the early growth?">
+
+Switch the y-axis to a log scale with `plt.semilogy()`. On a linear axis, 350 people
+is invisible next to 300 million; on a log axis each step is a multiplication, so
+the early exponential growth shows up as a clear (even steep) line.
+
+</ASECheck>
+
+<ASECheck q="Why does data read from a file often fail when you call int() on it directly?">
+
+Files store numbers as strings, and large numbers frequently include comma
+separators like `'1,379,302,771'`. `int('1,379,302,771')` raises an error. You must
+strip out the commas (keep only the digit characters) before converting.
+
+</ASECheck>
+
+Source: MIT OCW 6.100L Fall 2022, Lecture 25 (Ana Bell), CC BY-NC-SA. Reconstructed
+as original prose.

@@ -1,0 +1,94 @@
+[
+  {
+    "id": "bank-13-a",
+    "kind": "coding",
+    "title": "Safe Divide",
+    "topicSlug": "13-exceptions-assertions",
+    "unit": 2,
+    "source": "bank",
+    "difficulty": "warmup",
+    "statement": "Write `safe_divide(a, b)` that returns `a / b`, but if `b` is 0 (which would raise `ZeroDivisionError`), catch it and return `None` instead. Use `try`/`except`.\n\n- `safe_divide(10, 2)` → `5.0`\n- `safe_divide(10, 0)` → `None`",
+    "functionSignature": "def safe_divide(a, b):",
+    "starterCode": "def safe_divide(a, b):\n    \"\"\"Return a / b, or None if b is 0.\n\n    >>> safe_divide(10, 2)\n    5.0\n    >>> safe_divide(10, 0) is None\n    True\n    \"\"\"\n    pass",
+    "solution": "def safe_divide(a, b):\n    try:\n        return a / b\n    except ZeroDivisionError:\n        return None",
+    "tests": [
+      { "name": "normal division is float", "expression": "safe_divide(10, 2)", "expected": "5.0", "compare": "float", "tolerance": 1e-9 },
+      { "name": "divide by zero -> None", "expression": "safe_divide(10, 0)", "expected": "None" },
+      { "name": "zero numerator", "expression": "safe_divide(0, 5)", "expected": "0.0", "compare": "float", "tolerance": 1e-9 },
+      { "name": "negative", "expression": "safe_divide(-9, 3)", "expected": "-3.0", "compare": "float", "tolerance": 1e-9, "hidden": true }
+    ]
+  },
+  {
+    "id": "bank-13-b",
+    "kind": "coding",
+    "title": "Parse Ints, Skip Bad Ones",
+    "topicSlug": "13-exceptions-assertions",
+    "unit": 2,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "statement": "Write `parse_ints(strings)` that converts a list of strings to ints, SKIPPING any string that can't be parsed (which raises `ValueError`). Return the list of successfully-parsed ints, in order.\n\n- `parse_ints(['1', 'x', '2', '', '-3'])` → `[1, 2, -3]`\n\nUse `try`/`except ValueError` inside the loop so one bad value doesn't crash the whole thing.",
+    "functionSignature": "def parse_ints(strings):",
+    "starterCode": "def parse_ints(strings):\n    \"\"\"Return ints parsed from strings, skipping any that fail to convert.\n\n    >>> parse_ints(['1', 'x', '2', '', '-3'])\n    [1, 2, -3]\n    >>> parse_ints([])\n    []\n    \"\"\"\n    pass",
+    "solution": "def parse_ints(strings):\n    result = []\n    for s in strings:\n        try:\n            result.append(int(s))\n        except ValueError:\n            pass\n    return result",
+    "tests": [
+      { "name": "skips bad values", "expression": "parse_ints(['1', 'x', '2', '', '-3'])", "expected": "[1, 2, -3]" },
+      { "name": "empty list", "expression": "parse_ints([])", "expected": "[]" },
+      { "name": "all bad", "expression": "parse_ints(['a', 'b', '1.5'])", "expected": "[]" },
+      { "name": "all good", "expression": "parse_ints(['10', '20'])", "expected": "[10, 20]" },
+      { "name": "whitespace-padded still parses", "expression": "parse_ints([' 5 ', '?'])", "expected": "[5]", "hidden": true }
+    ]
+  },
+  {
+    "id": "bank-13-c",
+    "kind": "coding",
+    "title": "Average With Assertion",
+    "topicSlug": "13-exceptions-assertions",
+    "unit": 2,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "statement": "Assertions guard a function's assumptions. Write `average(nums)` that returns the mean of a list of numbers, but FIRST assert the list is non-empty with `assert len(nums) > 0, 'nums must be non-empty'`. On an empty list this raises `AssertionError`.\n\n- `average([2, 4, 6])` → `4.0`\n- `average([])` raises `AssertionError`.",
+    "functionSignature": "def average(nums):",
+    "starterCode": "def average(nums):\n    \"\"\"Return the mean of nums; assert nums is non-empty first.\n\n    >>> average([2, 4, 6])\n    4.0\n    >>> average([])\n    Traceback (most recent call last):\n    AssertionError: nums must be non-empty\n    \"\"\"\n    pass",
+    "solution": "def average(nums):\n    assert len(nums) > 0, 'nums must be non-empty'\n    return sum(nums) / len(nums)",
+    "tests": [
+      { "name": "typical mean is float", "expression": "average([2, 4, 6])", "expected": "4.0", "compare": "float", "tolerance": 1e-9 },
+      { "name": "single element", "expression": "average([7])", "expected": "7.0", "compare": "float", "tolerance": 1e-9 },
+      { "name": "negatives", "expression": "average([-2, 2])", "expected": "0.0", "compare": "float", "tolerance": 1e-9 },
+      { "name": "floats average", "expression": "average([1.0, 2.0])", "expected": "1.5", "compare": "float", "tolerance": 1e-9, "hidden": true }
+    ]
+  },
+  {
+    "id": "bank-13-d",
+    "kind": "coding",
+    "title": "Get With Fallback",
+    "topicSlug": "13-exceptions-assertions",
+    "unit": 2,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "statement": "Write `nth_or_default(items, index, default)` that returns `items[index]`, but if the index is out of range (which raises `IndexError`), return `default` instead. Support negative indices the way Python normally does (they count from the end and are valid).\n\n- `nth_or_default([10, 20, 30], 1, -1)` → `20`\n- `nth_or_default([10, 20, 30], 5, -1)` → `-1`\n- `nth_or_default([10, 20, 30], -1, -1)` → `30`",
+    "functionSignature": "def nth_or_default(items, index, default):",
+    "starterCode": "def nth_or_default(items, index, default):\n    \"\"\"Return items[index], or default if that index is out of range.\n\n    >>> nth_or_default([10, 20, 30], 1, -1)\n    20\n    >>> nth_or_default([10, 20, 30], 5, -1)\n    -1\n    >>> nth_or_default([10, 20, 30], -1, -1)\n    30\n    \"\"\"\n    pass",
+    "solution": "def nth_or_default(items, index, default):\n    try:\n        return items[index]\n    except IndexError:\n        return default",
+    "tests": [
+      { "name": "valid index", "expression": "nth_or_default([10, 20, 30], 1, -1)", "expected": "20" },
+      { "name": "out of range high", "expression": "nth_or_default([10, 20, 30], 5, -1)", "expected": "-1" },
+      { "name": "negative index valid", "expression": "nth_or_default([10, 20, 30], -1, -1)", "expected": "30" },
+      { "name": "empty list falls back", "expression": "nth_or_default([], 0, 'none')", "expected": "'none'" },
+      { "name": "negative index out of range", "expression": "nth_or_default([10], -5, 0)", "expected": "0", "hidden": true }
+    ]
+  },
+  {
+    "id": "bank-13-e",
+    "kind": "code-reading",
+    "title": "try / except / else / finally order",
+    "topicSlug": "13-exceptions-assertions",
+    "unit": 2,
+    "source": "bank",
+    "difficulty": "exam-level",
+    "statement": "Trace the control flow. What does this print?",
+    "prompt": "def run(x):\n    try:\n        print('try')\n        y = 10 / x\n        print('no error')\n    except ZeroDivisionError:\n        print('caught')\n    else:\n        print('else')\n    finally:\n        print('finally')\n\nrun(0)\nprint('---')\nrun(2)",
+    "answer": "try\ncaught\nfinally\n---\ntry\nno error\nelse\nfinally",
+    "acceptedAnswers": ["try\ncaught\nfinally\n---\ntry\nno error\nelse\nfinally\n"],
+    "explanation": "`run(0)`: prints 'try', then `10/0` raises ZeroDivisionError so 'no error' is skipped, `except` runs ('caught'), the `else` block is SKIPPED (it runs only when no exception occurred), and `finally` always runs ('finally'). `run(2)`: 'try', division succeeds so 'no error', no exception so `else` runs ('else'), then `finally` ('finally'). Key rule: `else` runs only on success; `finally` runs no matter what."
+  }
+]

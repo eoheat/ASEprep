@@ -1,0 +1,273 @@
+## Intuition
+
+Once you drop constants and keep the dominant term, almost every algorithm you'll
+meet lands in one of a handful of **complexity classes**. From best to worst:
+
+- `Theta(1)` — **constant**
+- `Theta(log n)` — **logarithmic**
+- `Theta(n)` — **linear**
+- `Theta(n log n)` — **log-linear**
+- `Theta(n^c)` — **polynomial** (usually quadratic, `n^2`)
+- `Theta(c^n)` — **exponential**
+
+The whole game of algorithm design is climbing this ladder toward the top. The gap
+between classes is staggering: for `n = 1,000,000`, a linear algorithm does a
+million operations, but an exponential one does `2^1000000` — more steps than
+there are atoms in the universe. This lecture is a tour: for each class, what code
+lands there, and how to recognize it.
+
+The recognition procedure is always the same. **Identify the input. Look at the
+loops and recursive calls — are they in terms of the input? How deep? Check the
+built-in operations — do any of them depend on the input?**
+
+## The mechanics
+
+**Constant `Theta(1)`** — work independent of input size. Can even contain loops,
+as long as the loop count doesn't depend on the input:
+
+```python
+def loop(x):
+    y = 100
+    total = 0
+    for i in range(y):    # runs 100 times regardless of x
+        total += x
+    return total          # Theta(1) in terms of x
+```
+
+Built-ins that are constant: list index `L[i]`, list append, dict lookup `d[key]`.
+
+**Linear `Theta(n)`** — a single loop over the input, or recursion with one call
+and constant overhead per call:
+
+```python
+def fact_iter(n):
+    prod = 1
+    for i in range(2, n + 1):   # n-1 passes, constant work each
+        prod *= i
+    return prod                 # Theta(n)
+```
+
+The recursive factorial is *also* linear — `n` nested calls, constant work per
+call. Iterative and recursive have the *same* order of growth. Built-ins that are
+linear on a list: `e in L`, `L1 == L2`, slicing a sublist, `del`.
+
+**Quadratic `Theta(n^2)`** — nested loops both over the input:
+
+```python
+def g(n):
+    x = 0
+    for i in range(n):        # Theta(n)
+        for j in range(n):    #   Theta(n) each
+            x += 1
+    return x                  # Theta(n) * Theta(n) = Theta(n^2)
+```
+
+**Exponential `Theta(c^n)`** — recursion with *more than one* recursive call per
+level, so the call tree branches:
+
+```python
+def fib_recur(n):
+    if n == 0:
+        return 0
+    elif n == 1:
+        return 1
+    else:
+        return fib_recur(n - 1) + fib_recur(n - 2)   # TWO calls -> Theta(2**n)
+```
+
+**Logarithmic `Theta(log n)`** — the input is cut by a constant factor each step:
+
+```python
+def digit_add(n):
+    answer = 0
+    for c in str(n)[::-1]:    # iterates over DIGITS, not magnitude
+        answer += int(c)
+    return answer             # Theta(log n): number of digits = log10(n)
+```
+
+<Callout type="tip">
+The `log` giveaway: something is divided (usually by 2, or by 10) each step until it
+hits 1. Solve `n / factor^k = 1` for `k` and you get `k = log n`. The base of the
+log doesn't matter for the class — `Theta(log n)` covers all bases.
+</Callout>
+
+## Worked example
+
+Classify these, being careful about *what the input is*.
+
+`mul(x, y)` — the twist is that complexity depends on which input you pick:
+
+```python
+def mul(x, y):
+    tot = 0
+    for i in range(y):
+        tot += x
+    return tot
+```
+
+In terms of `y`: `Theta(y)` (the loop runs `y` times). In terms of `x`: `Theta(1)`
+(the loop doesn't depend on `x` at all). Same code, two different answers — you must
+name the input.
+
+`is_subset` — nested loops, complexity depends on both list lengths:
+
+```python
+def is_subset(L1, L2):
+    for e1 in L1:               # Theta(len(L1))
+        matched = False
+        for e2 in L2:           #   Theta(len(L2)) each
+            if e1 == e2:
+                matched = True
+                break
+        if not matched:
+            return False
+    return True
+```
+
+Overall `Theta(len(L1) * len(L2))`. If both are length `n`, that's `Theta(n^2)`.
+
+`gen_subsets` — exponential, and subtly so:
+
+```python
+def gen_subsets(L):
+    if len(L) == 0:
+        return [[]]
+    extra = L[-1:]
+    smaller = gen_subsets(L[:-1])   # solve for the rest
+    new = []
+    for small in smaller:
+        new.append(small + extra)   # copy every subset, adding the last element
+    return smaller + new
+```
+
+For input `[1, 2, 3]` this returns all 8 subsets:
+`[[], [1], [2], [3], [1,2], [1,3], [2,3], [1,2,3]]`. Each element added doubles the
+number of subsets, so there are `2^n` of them — and each requires copying, which
+costs `Theta(n)`. Overall `Theta(n * 2^n)`.
+
+## Traps
+
+<Callout type="trap">
+**More than one recursive call means exponential, not linear.** `fact_recur` makes
+*one* call → linear. `fib_recur` makes *two* calls → exponential. The number of
+calls per level, not the presence of recursion, sets the class.
+</Callout>
+
+**Iterative and recursive versions of the same algorithm are the same class.**
+Recursion adds function-call overhead (a bit slower in wall-clock time) but does not
+change the order of growth. `fact_iter` and `fact_recur` are both `Theta(n)`.
+
+**Log complexity is about the number of digits/halvings, not the value.** In
+`digit_add(n)`, `n = 4271` loops only 4 times, not 4271 — because it iterates over
+the *string* of digits. Reading the loop count as the magnitude of `n` gives the
+wrong class (linear instead of log).
+
+**Watch the built-ins.** `e in L` on a *list* is `Theta(len(L))`; putting it inside
+a loop quietly makes the whole thing quadratic. `e in s` on a *set* is `Theta(1)`.
+Same syntax, wildly different cost.
+
+**"Twist" problems: name the input.** For `mul(x, y)` the answer changes with which
+parameter you measure. On the exam, if a function has several inputs, state which
+one you're giving the complexity in.
+
+**The inner loop that doesn't run the full n is still `Theta(n)`.** In `is_subset`,
+`for j in range(i, n)` averages `n/2` passes — dropping the constant `1/2` still
+leaves `Theta(n)`, and the nest is still `Theta(n^2)`.
+
+## Memorize vs understand
+
+| Just know it cold | Be able to derive |
+|---|---|
+| The ladder: 1 &lt; log n &lt; n &lt; n log n &lt; n^c &lt; c^n | Which class a given function lands in, from its loops and recursion |
+| One loop over input → linear; nested → quadratic | Whether recursion is one-call (linear) or branching (exponential) |
+| One recursive call + constant work → linear | Complexity in terms of the *specific* input parameter |
+| Two+ recursive calls (Fibonacci) → exponential `Theta(2^n)` | Why halving/dividing each step gives `Theta(log n)` |
+| Halving each step → logarithmic | Overall class after applying addition/multiplication laws to sub-parts |
+
+Unit 4 operations-cost table — the backbone of every classification here:
+
+| Operation | Cost |
+|---|---|
+| list index `L[i]` | O(1) |
+| list append `L.append(x)` | O(1) amortized |
+| list `in` / `insert` / `delete` / `copy` | O(n) |
+| dict / set lookup, insert, `in` | O(1) average |
+| sort (`sorted`, `.sort`) | O(n log n) |
+| linear search | O(n) |
+| bisection (binary) search | O(log n) |
+| bubble sort | O(n^2) |
+| merge sort | O(n log n) |
+
+Why: consecutive-memory storage makes list indexing constant but forces `in`/`copy`
+to touch every element (linear). Hash tables make dict/set `in` constant on
+average. Comparison sorts bottom out at `n log n` (`log n` levels of `n`-work).
+
+## ASE check
+
+```python
+def f(L):
+    if len(L) == 0:
+        return 1
+    return L[0] * f(L[1:])
+```
+
+<ASECheck q="How many recursive calls per level, and what complexity class is f?">
+
+One recursive call per level, peeling off one element each time → `len(L)` calls
+total with constant overhead each. So `f` is `Theta(len(L))` — linear. (The `L[1:]`
+slice is itself `Theta(n)`, which would make it quadratic if you're strict, but the
+lecture treats single-call recursion with constant overhead as linear.)
+
+</ASECheck>
+
+```python
+def count_pairs(L):
+    c = 0
+    for i in range(len(L)):
+        for j in range(len(L)):
+            if L[i] < L[j]:
+                c += 1
+    return c
+```
+
+<ASECheck q="Complexity class?">
+
+`Theta(len(L)^2)` — quadratic. Two loops each running `len(L)` times, nested, give
+`Theta(n) * Theta(n) = Theta(n^2)` by the Law of Multiplication.
+
+</ASECheck>
+
+```python
+def t(n):
+    if n <= 1:
+        return 1
+    return t(n - 1) + t(n - 1)
+```
+
+<ASECheck q="What class is t, and why?">
+
+Exponential, `Theta(2^n)`. Each call spawns *two* recursive calls, so the call tree
+doubles at every level and has `~2^n` nodes. (Two calls per level = exponential,
+same as Fibonacci.)
+
+</ASECheck>
+
+<ASECheck q="Why is searching a sorted list with binary search Theta(log n) but with `e in L` Theta(n)?">
+
+Binary search halves the remaining range each step, so it finishes in `log n` steps
+(`n / 2^k = 1`). The built-in `in` on a list has no idea the list is sorted — it
+scans element by element, up to all `n` of them, so it's linear.
+
+</ASECheck>
+
+<ASECheck q="You write mul(x, y) that loops y times adding x. A classmate says it's Theta(x). Are they right?">
+
+Only if they mean complexity *in terms of x* — in which case it's `Theta(1)`, since
+the loop count doesn't depend on `x`. In terms of `y` it's `Theta(y)`, because the
+loop runs `y` times. The classmate has to say which input; "Theta(x)" alone is
+wrong (it's actually constant in `x`).
+
+</ASECheck>
+
+Source: MIT OCW 6.100L Fall 2022, Lecture 23 (Ana Bell), CC BY-NC-SA. Reconstructed
+as original prose.

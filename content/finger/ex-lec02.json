@@ -1,0 +1,47 @@
+[
+  {
+    "id": "finger-lec02-q1",
+    "kind": "coding",
+    "source": "finger",
+    "reconstructed": true,
+    "topicSlug": "02-strings-io-branching",
+    "unit": 1,
+    "difficulty": "warmup",
+    "title": "Sign of a Number",
+    "statement": "**OCW Lecture 2 finger exercise (reconstructed).** The original OCW prompt assumes a variable `number` and asks you to `print` one of `positive`, `negative`, or `zero` using `if`/`elif`/`else`.\n\nTo make it testable here, implement `sign_label(number)` that **returns** the string `'positive'` if `number > 0`, `'negative'` if `number < 0`, and `'zero'` if it equals `0`.\n\n- `sign_label(5)` → `'positive'`\n- `sign_label(-3)` → `'negative'`\n- `sign_label(0)` → `'zero'`\n\nThe classic trap: `zero` is the `else` branch, so a tiny negative like `-0.0001` is still `'negative'` — don't test `== 0` first and accidentally round.\n\n*Source: MIT OCW 6.100L Fall 2022, Finger Exercise Lecture 2 (reconstructed as a function for this study tool).*",
+    "functionSignature": "def sign_label(number):",
+    "starterCode": "def sign_label(number):\n    \"\"\"Return 'positive', 'negative', or 'zero' depending on the sign of number.\n\n    >>> sign_label(5)\n    'positive'\n    \"\"\"\n    pass",
+    "solution": "def sign_label(number):\n    if number > 0:\n        return 'positive'\n    elif number < 0:\n        return 'negative'\n    else:\n        return 'zero'",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      {
+        "name": "positive",
+        "expression": "sign_label(5)",
+        "expected": "'positive'"
+      },
+      {
+        "name": "negative",
+        "expression": "sign_label(-3)",
+        "expected": "'negative'"
+      },
+      {
+        "name": "zero",
+        "expression": "sign_label(0)",
+        "expected": "'zero'"
+      },
+      {
+        "name": "tiny negative float is still negative",
+        "expression": "sign_label(-0.0001)",
+        "expected": "'negative'",
+        "hidden": true
+      },
+      {
+        "name": "zero as float",
+        "expression": "sign_label(0.0)",
+        "expected": "'zero'",
+        "hidden": true
+      }
+    ]
+  }
+]

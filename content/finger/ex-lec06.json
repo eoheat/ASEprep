@@ -1,0 +1,52 @@
+[
+  {
+    "id": "finger-lec06-q1",
+    "kind": "coding",
+    "source": "finger",
+    "reconstructed": true,
+    "topicSlug": "06-bisection-search",
+    "unit": 1,
+    "difficulty": "exam-level",
+    "title": "Bisection Search a Hidden Number",
+    "statement": "**OCW Lecture 6 finger exercise (reconstructed).** The original OCW prompt assumes an integer `0 <= N <= 1000` and asks you to use bisection search to guess `N`, then `print` `count:` (how many guesses it took) and `answer:` (the found value).\n\nTo make it testable here, implement `bisection_guess(N)` that runs the SAME bisection search and **returns** the tuple `(count, guess)`.\n\nUse the exact OCW procedure so counts match:\n- Start with `low = 0`, `high = 1001`, `guess = (high + low) // 2`, `count = 1`.\n- While `guess != N`: if `guess < N` set `low = guess`, elif `guess > N` set `high = guess`; then recompute `guess = (high + low) // 2` and increment `count`.\n- The `//` floor division means a halfway value between two integers rounds down (picks the smaller one), matching the hint.\n\n- `bisection_guess(500)` → `(1, 500)`  (the very first guess is 500)\n- `bisection_guess(0)` → `(10, 0)`\n\n*Source: MIT OCW 6.100L Fall 2022, Finger Exercise Lecture 6 (reconstructed as a function for this study tool).*",
+    "functionSignature": "def bisection_guess(N):",
+    "starterCode": "def bisection_guess(N):\n    \"\"\"Bisection-search for N in [0, 1000]; return (count, guess).\n\n    Start low=0, high=1001, guess=(high+low)//2, count=1. Narrow until\n    guess == N, counting each new guess.\n\n    >>> bisection_guess(500)\n    (1, 500)\n    \"\"\"\n    pass",
+    "solution": "def bisection_guess(N):\n    low = 0\n    high = 1001\n    guess = (high + low) // 2\n    count = 1\n    while guess != N:\n        if guess < N:\n            low = guess\n        elif guess > N:\n            high = guess\n        guess = (high + low) // 2\n        count += 1\n    return (count, guess)",
+    "pyPackages": [],
+    "dataFiles": [],
+    "tests": [
+      {
+        "name": "midpoint found immediately",
+        "expression": "bisection_guess(500)",
+        "expected": "(1, 500)"
+      },
+      {
+        "name": "lower bound 0",
+        "expression": "bisection_guess(0)",
+        "expected": "(10, 0)"
+      },
+      {
+        "name": "upper bound 1000",
+        "expression": "bisection_guess(1000)",
+        "expected": "(10, 1000)"
+      },
+      {
+        "name": "guess always equals N (second element)",
+        "expression": "bisection_guess(1)[1]",
+        "expected": "1"
+      },
+      {
+        "name": "near upper bound 999",
+        "expression": "bisection_guess(999)",
+        "expected": "(9, 999)",
+        "hidden": true
+      },
+      {
+        "name": "arbitrary value 750",
+        "expression": "bisection_guess(750)",
+        "expected": "(2, 750)",
+        "hidden": true
+      }
+    ]
+  }
+]
