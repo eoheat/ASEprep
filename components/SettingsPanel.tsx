@@ -15,6 +15,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { useProgress } from '@/lib/progress';
 import { exportProgressJson, importProgressJson } from '@/lib/progress';
+import { importProgress } from '@/lib/actions/progress';
 import { DEFAULT_EXAM_MINUTES, DEFAULT_PASS_THRESHOLD } from '@/lib/types';
 
 const SETTINGS_KEY = 'ase-prep:settings:v1';
@@ -89,15 +90,23 @@ export function SettingsPanel() {
     }
   }
 
-  function onImport() {
+  async function onImport() {
     const next = importProgressJson(importText);
     if (!next) {
       setMessage({ tone: 'err', text: 'Import failed: not a valid ase-prep progress file.' });
       return;
     }
+    // Migrate the backup into the database (the localStorage → DB path), then
+    // reflect it locally. Reports the row counts written.
+    const counts = await importProgress(next);
     replaceState(next);
     setImportText('');
-    setMessage({ tone: 'ok', text: 'Progress imported.' });
+    setMessage({
+      tone: 'ok',
+      text: counts
+        ? `Imported ${counts.topics} topics, ${counts.problems} problems, ${counts.attempts} exam attempts.`
+        : 'Imported locally — sign in to sync it to the cloud.',
+    });
   }
 
   function onFile(e: React.ChangeEvent<HTMLInputElement>) {

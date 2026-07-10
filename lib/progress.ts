@@ -1,20 +1,21 @@
 'use client';
 
-// lib/progress.ts — localStorage-backed progress state + a React context/hook.
+// lib/progress.ts — progress state with server sync (M7) behind localStorage cache.
 //
-// All persisted state lives under a single versioned key (PROGRESS_KEY =
-// "ase-prep:v1"). This module is the ONLY place that touches that key. It is
-// SSR-safe: every window/localStorage access is guarded, so importing it on the
-// server (or first client render) yields emptyProgress() rather than crashing.
+// Server-authoritative with optimistic UI (PLAN-BACKEND §5). The component-facing
+// surface is UNCHANGED — <ProgressProvider> + useProgress() with the same mutators
+// — so no consumer changes (§6). The sync seam lives entirely in here:
 //
-// Public surface:
-//  - loadProgress() / saveProgress()        low-level read/write (guarded)
-//  - exportProgressJson() / importProgressJson()  backup round-trip
-//  - <ProgressProvider>                     wraps the app, holds live state
-//  - useProgress()                          hook: state + mutators used by UI
+//  - Read:  on mount, paint from the localStorage cache, then pull the full
+//           server state and hydrate (server wins). On offline, keep the cache.
+//  - Write: each mutator updates local state (optimistic) + the localStorage cache,
+//           and enqueues a server push. Topic/result/exam push immediately; drafts
+//           debounce ~2.5s. A failed push stays queued and retries on reconnect /
+//           next load. Exam attempts are idempotent server-side, so retry never
+//           duplicates ("attempts must never be lost").
 //
-// The mutators are intentionally small and explicit (CLAUDE.md): set a topic's
-// status, record a problem's test result, reset everything.
+// localStorage is demoted to a cache + offline write queue; the server is the
+// source of truth.
 
 import {
   createContext,
@@ -23,6 +24,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
@@ -35,9 +37,16 @@ import {
   type TopicStatus,
   type ExamAttempt,
 } from '@/lib/types';
+import {
+  pullProgress,
+  pushTopicStatus,
+  pushProblemResult,
+  pushDraft,
+} from '@/lib/actions/progress';
+import { pushExamAttempt } from '@/lib/actions/exam';
 
 // ---------------------------------------------------------------------------
-// Low-level persistence (SSR-safe)
+// Low-level cache persistence (SSR-safe). Unchanged public surface.
 // ---------------------------------------------------------------------------
 
 function nowIso(): string {
@@ -46,11 +55,7 @@ function nowIso(): string {
 
 const hasWindow = (): boolean => typeof window !== 'undefined';
 
-/**
- * Read + validate the persisted state. On the server, on first load, or when
- * the stored blob is missing/corrupt/from a future version, returns a fresh
- * empty state. Never throws.
- */
+/** Read + validate the cached state. Empty on server / first load / corrupt blob. */
 export function loadProgress(): ProgressState {
   if (!hasWindow()) return emptyProgress(nowIso());
   let raw: string | null;
@@ -60,35 +65,29 @@ export function loadProgress(): ProgressState {
     return emptyProgress(nowIso());
   }
   if (!raw) return emptyProgress(nowIso());
-
   try {
     const parsed = ProgressState.safeParse(JSON.parse(raw));
     if (parsed.success) return parsed.data;
   } catch {
-    // fall through to empty on JSON errors
+    /* fall through */
   }
   return emptyProgress(nowIso());
 }
 
-/** Persist state. No-op on the server or if storage is unavailable. */
+/** Persist the cache. No-op on the server or if storage is unavailable. */
 export function saveProgress(state: ProgressState): void {
   if (!hasWindow()) return;
   try {
     window.localStorage.setItem(PROGRESS_KEY, JSON.stringify(state));
   } catch {
-    // storage full / disabled — surface nothing; this is a personal tool.
+    /* storage full / disabled */
   }
 }
 
-/** Serialize the current stored state as pretty JSON for the export button. */
 export function exportProgressJson(): string {
   return JSON.stringify(loadProgress(), null, 2);
 }
 
-/**
- * Validate + persist an imported JSON blob. Returns the accepted state, or null
- * (and writes nothing) if the blob is not a valid ProgressState.
- */
 export function importProgressJson(json: string): ProgressState | null {
   let value: unknown;
   try {
@@ -103,20 +102,61 @@ export function importProgressJson(json: string): ProgressState | null {
 }
 
 // ---------------------------------------------------------------------------
+// Sync queue — pending server writes, persisted so they survive a reload/offline.
+// ---------------------------------------------------------------------------
+
+const QUEUE_KEY = 'ase-prep:syncq:v1';
+
+type SyncOp =
+  | { t: 'topic'; slug: string; status: TopicStatus }
+  | { t: 'result'; id: string; passed: number; total: number }
+  | { t: 'draft'; id: string; code: string }
+  | { t: 'exam'; attempt: ExamAttempt };
+
+function loadQueue(): SyncOp[] {
+  if (!hasWindow()) return [];
+  try {
+    const raw = window.localStorage.getItem(QUEUE_KEY);
+    return raw ? (JSON.parse(raw) as SyncOp[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function persistQueue(q: SyncOp[]): void {
+  if (!hasWindow()) return;
+  try {
+    window.localStorage.setItem(QUEUE_KEY, JSON.stringify(q));
+  } catch {
+    /* ignore */
+  }
+}
+
+async function sendOp(op: SyncOp): Promise<void> {
+  switch (op.t) {
+    case 'topic':
+      return pushTopicStatus(op.slug, op.status);
+    case 'result':
+      return pushProblemResult(op.id, op.passed, op.total);
+    case 'draft':
+      return pushDraft(op.id, op.code);
+    case 'exam':
+      return pushExamAttempt(op.attempt);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // React context
 // ---------------------------------------------------------------------------
 
 export type ProgressApi = {
   state: ProgressState;
-  /** True once the client has hydrated from localStorage (avoids SSR flash). */
+  /** True once the client has hydrated (from cache, then server). */
   hydrated: boolean;
   setTopicStatus: (slug: string, status: TopicStatus) => void;
-  /** Record a coding-problem test run (updates solved / lastPassed / lastTotal). */
   recordProblemResult: (id: string, passed: number, total: number) => void;
-  /** Persist a per-problem editor draft. */
   saveDraft: (id: string, draftCode: string) => void;
   addExamAttempt: (attempt: ExamAttempt) => void;
-  /** Replace the whole state (used by import). */
   replaceState: (next: ProgressState) => void;
   resetAll: () => void;
 };
@@ -124,79 +164,150 @@ export type ProgressApi = {
 const ProgressContext = createContext<ProgressApi | null>(null);
 
 export function ProgressProvider({ children }: { children: ReactNode }) {
-  // Start from empty (matches server render), then hydrate on mount.
   const [state, setState] = useState<ProgressState>(() => emptyProgress(nowIso()));
   const [hydrated, setHydrated] = useState(false);
 
-  useEffect(() => {
-    setState(loadProgress());
-    setHydrated(true);
+  const queueRef = useRef<SyncOp[]>([]);
+  const flushingRef = useRef(false);
+  const draftTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
+  // Flush queued writes in order. A failing op stops the run and stays queued.
+  const flush = useCallback(async () => {
+    if (flushingRef.current || !hasWindow()) return;
+    flushingRef.current = true;
+    try {
+      while (queueRef.current.length > 0) {
+        try {
+          await sendOp(queueRef.current[0]);
+        } catch {
+          break; // offline / server error — retry later
+        }
+        queueRef.current.shift();
+        persistQueue(queueRef.current);
+      }
+    } finally {
+      flushingRef.current = false;
+    }
   }, []);
 
-  // Persist on every change once hydrated (skip the initial empty state so we
-  // don't clobber stored data before hydration completes).
+  const enqueue = useCallback(
+    (op: SyncOp) => {
+      queueRef.current.push(op);
+      persistQueue(queueRef.current);
+      void flush();
+    },
+    [flush],
+  );
+
+  // Push pending writes, then pull the authoritative server state. Only overwrite
+  // local when the queue drained (else local has un-pushed edits to keep showing).
+  const sync = useCallback(async () => {
+    await flush();
+    try {
+      const server = await pullProgress();
+      if (queueRef.current.length === 0) {
+        setState(server);
+        saveProgress(server);
+      }
+    } catch {
+      /* offline — keep the cache */
+    }
+  }, [flush]);
+
+  // Mount: paint cache instantly, load the queue, then sync with the server.
+  useEffect(() => {
+    setState(loadProgress());
+    queueRef.current = loadQueue();
+    setHydrated(true);
+    void sync();
+
+    const onOnline = () => void sync();
+    window.addEventListener('online', onOnline);
+    return () => window.removeEventListener('online', onOnline);
+  }, [sync]);
+
+  // Keep the cache in step with local state (after hydration).
   useEffect(() => {
     if (hydrated) saveProgress(state);
   }, [state, hydrated]);
 
-  const setTopicStatus = useCallback((slug: string, status: TopicStatus) => {
-    setState((prev) => ({
-      ...prev,
-      topicStatus: { ...prev.topicStatus, [slug]: status },
-      updatedAt: nowIso(),
-    }));
-  }, []);
-
-  const recordProblemResult = useCallback((id: string, passed: number, total: number) => {
-    setState((prev) => {
-      const existing: ProblemProgress | undefined = prev.problems[id];
-      const next: ProblemProgress = {
-        draftCode: existing?.draftCode,
-        solved: (existing?.solved ?? false) || (total > 0 && passed >= total),
-        lastPassed: passed,
-        lastTotal: total,
-        updatedAt: nowIso(),
-      };
-      return {
+  const setTopicStatus = useCallback(
+    (slug: string, status: TopicStatus) => {
+      setState((prev) => ({
         ...prev,
-        problems: { ...prev.problems, [id]: next },
+        topicStatus: { ...prev.topicStatus, [slug]: status },
         updatedAt: nowIso(),
-      };
-    });
-  }, []);
+      }));
+      enqueue({ t: 'topic', slug, status });
+    },
+    [enqueue],
+  );
 
-  const saveDraft = useCallback((id: string, draftCode: string) => {
-    setState((prev) => {
-      const existing: ProblemProgress | undefined = prev.problems[id];
-      const next: ProblemProgress = {
-        draftCode,
-        solved: existing?.solved ?? false,
-        lastPassed: existing?.lastPassed ?? 0,
-        lastTotal: existing?.lastTotal ?? 0,
-        updatedAt: nowIso(),
-      };
-      return {
+  const recordProblemResult = useCallback(
+    (id: string, passed: number, total: number) => {
+      setState((prev) => {
+        const existing: ProblemProgress | undefined = prev.problems[id];
+        const next: ProblemProgress = {
+          draftCode: existing?.draftCode,
+          solved: (existing?.solved ?? false) || (total > 0 && passed >= total),
+          lastPassed: passed,
+          lastTotal: total,
+          updatedAt: nowIso(),
+        };
+        return { ...prev, problems: { ...prev.problems, [id]: next }, updatedAt: nowIso() };
+      });
+      enqueue({ t: 'result', id, passed, total });
+    },
+    [enqueue],
+  );
+
+  const saveDraft = useCallback(
+    (id: string, draftCode: string) => {
+      setState((prev) => {
+        const existing: ProblemProgress | undefined = prev.problems[id];
+        const next: ProblemProgress = {
+          draftCode,
+          solved: existing?.solved ?? false,
+          lastPassed: existing?.lastPassed ?? 0,
+          lastTotal: existing?.lastTotal ?? 0,
+          updatedAt: nowIso(),
+        };
+        return { ...prev, problems: { ...prev.problems, [id]: next }, updatedAt: nowIso() };
+      });
+      // Debounce the server write ~2.5s after the last keystroke for this problem.
+      const timers = draftTimers.current;
+      if (timers[id]) clearTimeout(timers[id]);
+      timers[id] = setTimeout(() => enqueue({ t: 'draft', id, code: draftCode }), 2500);
+    },
+    [enqueue],
+  );
+
+  const addExamAttempt = useCallback(
+    (attempt: ExamAttempt) => {
+      setState((prev) => ({
         ...prev,
-        problems: { ...prev.problems, [id]: next },
+        examAttempts: [...prev.examAttempts, attempt],
         updatedAt: nowIso(),
-      };
-    });
-  }, []);
+      }));
+      enqueue({ t: 'exam', attempt });
+    },
+    [enqueue],
+  );
 
-  const addExamAttempt = useCallback((attempt: ExamAttempt) => {
-    setState((prev) => ({
-      ...prev,
-      examAttempts: [...prev.examAttempts, attempt],
-      updatedAt: nowIso(),
-    }));
-  }, []);
-
+  // Replace the whole local state (used by import after the DB write). No extra
+  // queue op — the import action already wrote every row to the server.
   const replaceState = useCallback((next: ProgressState) => {
-    setState({ ...next, updatedAt: nowIso() });
+    const stamped = { ...next, updatedAt: nowIso() };
+    setState(stamped);
+    saveProgress(stamped);
   }, []);
 
+  // Clear the LOCAL view + queue. Server rows are left intact (a full account wipe
+  // is out of scope); the next load re-pulls from the server.
   const resetAll = useCallback(() => {
     setState(emptyProgress(nowIso()));
+    queueRef.current = [];
+    persistQueue(queueRef.current);
   }, []);
 
   const api = useMemo<ProgressApi>(
@@ -210,16 +321,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
       replaceState,
       resetAll,
     }),
-    [
-      state,
-      hydrated,
-      setTopicStatus,
-      recordProblemResult,
-      saveDraft,
-      addExamAttempt,
-      replaceState,
-      resetAll,
-    ],
+    [state, hydrated, setTopicStatus, recordProblemResult, saveDraft, addExamAttempt, replaceState, resetAll],
   );
 
   return createElement(ProgressContext.Provider, { value: api }, children);
