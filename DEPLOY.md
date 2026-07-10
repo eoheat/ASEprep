@@ -73,10 +73,9 @@ some steps depend on earlier ones.
 | Env var | Where to get it |
 |---|---|
 | `DATABASE_URL` | **Neon** — see A below |
-| `AUTH_GITHUB_ID` | **GitHub OAuth app** — Client ID (see B) |
-| `AUTH_GITHUB_SECRET` | **GitHub OAuth app** — Client secret (see B) |
-| `ALLOWED_GITHUB_ID` | Your **numeric** GitHub id (see C) |
-| `AUTH_SECRET` | Generate it yourself (see D) |
+| `AUTH_GOOGLE_ID` | **Google Cloud OAuth client** — Client ID (see B) |
+| `AUTH_GOOGLE_SECRET` | **Google Cloud OAuth client** — Client secret (see B) |
+| `AUTH_SECRET` | Generate it yourself (see C) |
 
 ### A. `DATABASE_URL` — Neon (free serverless Postgres)
 
@@ -92,31 +91,29 @@ some steps depend on earlier ones.
    Keep the `?sslmode=require` (Neon requires SSL). That whole string is
    `DATABASE_URL`.
 
-### B. `AUTH_GITHUB_ID` + `AUTH_GITHUB_SECRET` — a GitHub OAuth app
+### B. `AUTH_GOOGLE_ID` + `AUTH_GOOGLE_SECRET` — a Google Cloud OAuth client
 
-> Do this **after** step 2 above — you need the Vercel URL first.
+> Do this **after** the Vercel deploy — you need the app URL for the redirect URI.
+> Access is **open**: anyone with a Google account can sign in and gets their own
+> progress (the app separates users in the database).
 
-1. github.com → your avatar → **Settings** → **Developer settings** (bottom of the
-   left sidebar) → **OAuth Apps** → **New OAuth App**. (Shortcut:
-   `github.com/settings/applications/new`.)
-2. Fill in:
-   - **Application name:** anything (e.g. `ase-prep`)
-   - **Homepage URL:** your Vercel URL, e.g. `https://ase-prep-xxxx.vercel.app`
-   - **Authorization callback URL:** exactly
-     `https://ase-prep-xxxx.vercel.app/api/auth/callback/github`
-     (right scheme `https`, right host, no trailing slash — a mismatch causes a
-     `redirect_uri` error).
-3. **Register application** → copy the **Client ID** (= `AUTH_GITHUB_ID`).
-4. Click **Generate a new client secret** → copy it **immediately** (shown once) =
-   `AUTH_GITHUB_SECRET`.
+1. **console.cloud.google.com** → project menu (top bar) → **New Project** → name
+   it `ase-prep` → **Create**, then select it.
+2. **APIs & Services → OAuth consent screen** → **External** → fill the app name +
+   your email in the support/developer fields → Save. To let *anyone* sign in,
+   **Publish app** ("In production"). We only request basic `email`/`profile`, so
+   no Google verification review is required — the first time, users may see an
+   "unverified app" screen and click **Advanced → Go to ase-prep**. (Or leave it
+   in **Testing** and add each person under *Test users* — no warning, capped at 100.)
+3. **APIs & Services → Credentials → Create credentials → OAuth client ID** →
+   Application type **Web application**. Under **Authorized redirect URIs** add
+   BOTH (Google allows several on one client, so it works in prod *and* locally):
+   - `https://<your-app>.vercel.app/api/auth/callback/google`
+   - `http://localhost:3000/api/auth/callback/google`
+4. **Create** → copy the **Client ID** (ends `.apps.googleusercontent.com`) =
+   `AUTH_GOOGLE_ID`, and the **Client secret** = `AUTH_GOOGLE_SECRET`.
 
-### C. `ALLOWED_GITHUB_ID` — your numeric GitHub id
-
-Open `https://api.github.com/users/<your-login>` in a browser and read the
-top-level **`"id"`** field (an integer like `12345678`). Use that number — **not**
-`node_id` (which is a base64 string). This locks the app to only you.
-
-### D. `AUTH_SECRET` — generate one
+### C. `AUTH_SECRET` — generate one
 
 ```bash
 openssl rand -base64 32
@@ -126,7 +123,7 @@ your own.)
 
 ### Put them in Vercel + redeploy
 
-1. Vercel → Project → **Settings → Environment Variables** → add all five for
+1. Vercel → Project → **Settings → Environment Variables** → add all four for
    **Production** (and **Preview**).
 2. **Redeploy** — env-var changes are not retroactive: Deployments → latest → **⋯
    → Redeploy**. Only after this does auth/sync take effect.
@@ -139,10 +136,9 @@ your own.)
 
 ### Local development (Tier 2)
 
-Create `.env.local` (gitignored) with the same five vars. Because a classic GitHub
-OAuth app allows **one** callback URL, for localhost either (a) make a **second**
-OAuth app with callback `http://localhost:3000/api/auth/callback/github`, or (b)
-temporarily swap the single app's callback URL.
+Create `.env.local` (gitignored) with the same four vars. Google OAuth clients
+allow **multiple** redirect URIs, so the single client above — with both the Vercel
+and `localhost:3000` callbacks — works for local dev too; no second app needed.
 
 ---
 
@@ -152,13 +148,13 @@ temporarily swap the single app's callback URL.
   `master`.
 - Don't initialize the GitHub repo with a README/.gitignore/license.
 - GitHub HTTPS auth = token or `gh`, never your account password.
-- `ALLOWED_GITHUB_ID` is the numeric **`id`**, not `node_id`.
-- The OAuth **client secret is shown once** — copy it right away.
-- Callback URL must be **byte-exact**; one OAuth app = one callback URL.
+- Google sign-in is **open** — anyone with a Google account can use the app.
+- The redirect URI must be **byte-exact**; a Google client accepts several, so add
+  both the Vercel and `localhost:3000` callbacks to the one client.
 - After changing any Vercel env var, **redeploy**.
 - Neon: use the **pooled** string (`-pooler` in the host) and keep
   `?sslmode=require`; wrap it in quotes in `.env` (it contains `@ / ? &`).
 - **Never commit secrets** — `.env` and `.env*.local` are gitignored; only
   `.env.example` (the template) is committed.
-- NextAuth v5 auto-reads `AUTH_SECRET` / `AUTH_GITHUB_ID` / `AUTH_GITHUB_SECRET`
-  by name — don't rename to v4 forms (`NEXTAUTH_SECRET`, `GITHUB_ID`).
+- NextAuth v5 auto-reads `AUTH_SECRET` / `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET`
+  by name — don't rename to v4 forms (`NEXTAUTH_SECRET`).
