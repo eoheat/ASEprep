@@ -18,7 +18,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       const sub = (profile as { sub?: string } | undefined)?.sub;
       if (sub) {
         const email = (profile as { email?: string | null } | undefined)?.email ?? null;
-        token.userId = await upsertUser(sub, email);
+        try {
+          token.userId = await upsertUser(sub, email);
+        } catch (err) {
+          // Auth must not hard-fail just because the progress DB is unreachable.
+          // Log the real cause (surfaces in Vercel runtime logs) and let sign-in
+          // proceed; cross-device sync stays off (no userId) until the DB works.
+          console.error('[auth] user upsert failed — check DATABASE_URL / Neon reachability:', err);
+        }
       }
       return token;
     },
