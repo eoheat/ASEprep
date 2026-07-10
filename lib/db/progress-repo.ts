@@ -18,13 +18,13 @@ import {
 
 const { users, topicStatus, problemProgress, examAttempts } = schema;
 
-/** Upsert the user row by GitHub id; return the internal uuid used as the FK. */
-export async function upsertUser(githubId: string, email: string | null): Promise<string> {
+/** Upsert the user row by provider account id (Google `sub`); return the uuid FK. */
+export async function upsertUser(accountId: string, email: string | null): Promise<string> {
   const db = getDb();
   const rows = await db
     .insert(users)
-    .values({ githubId, email })
-    .onConflictDoUpdate({ target: users.githubId, set: { email } })
+    .values({ accountId, email })
+    .onConflictDoUpdate({ target: users.accountId, set: { email } })
     .returning({ id: users.id });
   return rows[0].id;
 }

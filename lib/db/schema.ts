@@ -10,7 +10,9 @@ import { pgTable, text, integer, boolean, numeric, jsonb, timestamp, primaryKey,
 export const users = pgTable('users', {
   id: uuid('id').defaultRandom().primaryKey(),
   email: text('email'),
-  githubId: text('github_id').notNull().unique(),
+  // Stable provider account id (Google's `sub`). Provider-neutral name so more
+  // providers can be added later without a rename.
+  accountId: text('account_id').notNull().unique(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
